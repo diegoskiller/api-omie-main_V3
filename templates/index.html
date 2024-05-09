@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} Home {% endblock %}
+
+{% block body %}
+
+
+
+<!-- <style>
+    body {
+        background-color: #f0f0f0c4; /* Substitua pela cor desejada */
+        background-image: url('{{ url_for("static", filename="imagens/fundo.jpg") }}');
+        background-size: cover;
+        background-position: center center;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Adicione estilos adicionais conforme necessário */
+</style> -->
+
+<body>
+
+<main class="cards margin-top">
+    <section class="card contact">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/list-check.svg')}}" alt="lista de itens">
+        </div>
+        <h3>Lista de itens</h3>
+        <span>Visualizar, acessar e editar itens</span>
+        <a href="{{ url_for('itens')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/pencil-square.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Controle de OPs</h3>
+        <span>Gerenciar ordens de produção</span>
+        <a href="{{ url_for('ordens_producao_visual')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/graf.svg')}}" alt="Indicadores">
+        </div>
+        <h3>Indicadores</h3>
+        <span>Relatórios e Indicadores</span>
+        <a href="{{ url_for('indicadores')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Carregar informações</h3>
+        <span>Upload de Planilha de Inventário</span>
+        <a href="{{ url_for('upload_excel')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Controle de Cobre</h3>
+        <span>Gerenciar Setor de Cobre</span>
+        <a href="{{ url_for('op_cards')}}"><button>Acessar</button></a>
+    </section>
+    
+    <section class="card about">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/inboxes.svg')}}" alt="gerenciar estoque">
+        </div>
+        <h3>Gerenciar Estoque</h3>
+        <span>Gerenciamento de estoque</span>
+        <a href="{{ url_for('gerenciar_estoque')}}"><button>Acessar</button></a>
+    </section>
+</main>
+
+</body>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Lista de movimentos {% endblock %}
+{% block body %}
+
+
+
+
+
+
+<div class="w-100">
+    
+   
+
+    <div class="row">
+        <div class="input-group mb-3 d-flex justify-content-end">
+   
+            <h3 class="d-flex justify-content-center mt-2">Movimentos de Estoque por Código</h3>
+            
+        </div>
+        
+        <div class="col">
+
+            
+            <div class="table-responsive container_table">
+
+                <div class="mb-2">
+                    
+                    <form method="POST" action="{{url_for('lista_movimento')}}" class="input-group">
+                        <a href="{{url_for('lista_movimento_filtro')}}" type="button" class="btn btn-success ms-2">Filtrar por Data</a>
+                        <input type="search"  class="form-control" placeholder="Pesquisar por item" name="item"
+                                aria-label="Pesquisar por item" aria-describedby="basic-addon2" autocomplete="off">
+                        <button type="submit" class="btn btn-info">Filtrar por Código</button>
+                    </form>        
+                </div>
+
+
+
+                
+                
+                <table class="table table table-striped table-secondary">
+
+                    <tr class="table-success">                        
+                        <th>Id</th>
+                        <th>Item</th>
+                        <th>Tipo de Movimento</th>
+                        <th>Lote</th>
+                        <th>Referencia</th>
+                        <th>Qtd</th>
+                        <th>Obs</th> 
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>usuario</th>
+                    </tr>
+
+
+                    {% for row in movimentos.items %}
+                    <tr>                      
+                        <td>{{row.id}}</td>
+                        <td>{{row.item}}</td>
+                        <td>{{row.tipo}}</td>
+                        <td>{{row.lote_visual}}</td>
+                        <td>{{row.referencia}}</td> 
+                        <td>{{row.quantidade}}</td>
+                        <td>{{row.obs}}</td> 
+                        <td>{{row.data_movimento}}</td>
+                        <td>{{row.hora_movimento}}</td>
+                        <td>{{row.usuario}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+            
+
+            {% for page_num in movimentos.iter_pages(left_edge=1, right_edge=1,
+                left_current=1, right_current=2) %} {% if page_num %} {% if movimentos.page ==
+                page_num %}
+                <a
+                  class="btn btn-dark mb-4"
+                  href="{{ url_for('lista_movimento', page=page_num) }}"
+                  >{{ page_num }}</a
+                >
+                {% else %}
+                <a
+                  class="btn btn-outline-dark mb-4"
+                  href="{{ url_for('lista_movimento', page=page_num) }}"
+                  >{{ page_num }}</a
+                >
+                {% endif %} {% else %} ... {% endif %} {% endfor %}
+         
+        </div>
+    </div>
+</div>
+
+{% endblock %}

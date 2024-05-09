@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Lotes produzidos na Ordem de Produção {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+       
+        padding: 8px;
+        text-align: left;
+        line-height: 6px; /* Altura de linha específica */
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+
+<div class=" p-2 w-100 table-responsive margin-top">
+    <div class="input-group mb-3 d-flex justify-content-center">
+        
+        <h3 class="d-flex justify-content-center mt-2">
+
+           Lotes Produzidos na Ordem de produção: {{op_referencia}}
+           
+        </h3>
+        
+        
+    </div>
+   
+   
+    <div class="input-group-append">
+        <a href="/op/{{op_referencia}}" type="button" class="btn btn-success ms-2">Voltar</a>
+    </div>
+    
+
+    <table class="table table-hover table-info">
+        <tr>
+            <td>OP Nº = {{op_referencia}}</td>
+            <td>Item = {{item_estrutura }}</td>
+            <td>{{descricao_item}}</td> 
+            <td>Qtd: = {{quantidade_item_total}}</td>
+            <td>Peso total do item = {{peso_item_total}}</td>
+            <td>Fino total do item = {{fino_item_total}}</td>
+            
+        </tr>
+
+    </table>
+
+
+
+
+
+
+    <div class="container w-100">
+
+        {% with messages=get_flashed_messages(with_categories=true) %}
+        {%if messages%}
+        {%for category, message in messages%}
+        {%if error == "Sucesso"%}
+        <div class="alert alert-success">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {%endif%}
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+
+        
+            
+
+
+<div class="posições w-100" >
+    
+
+
+
+
+
+
+
+
+
+    <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <tr class="bg-secondary">
+                <td>Item</td>
+                <td>Lote/Ref</td>
+                <td>Quantidade</td>
+                <td>Peso</td>
+                <td>Peso Fino</td>
+                <td>Data</td>
+                <td>Edições</td>
+                
+            </tr>
+            {% for row in Lotes_mov %}
+            <tr class="bg-muted">
+                
+                <td>{{ row.item }}</td>
+                <td>{{ row.numero_lote}}</td>         
+                <td>{{ row.quantidade }}</td>                       
+                <td>{{ row.peso }}</td>
+                <td>{{ row.fino }}</td> 
+                <td>{{ row.data_mov }}</td>
+                 
+                <td>
+                        <div class = "input-group-append">
+                         <div>
+                            <form action="{{url_for('deleta_lotes_mov_op')}}" method="post" type="hidden" onclick="return confirm('Deseja desfazer este movimento?')">
+                                <input type="hidden" name="id" value="{{row.id}}">
+                                <input type="hidden" name="id_lote" value="{{row.id_lote}}">
+                                <input type="hidden" name="quantidade" value="{{row.quantidade}}">
+                                <input type="hidden" name="peso" value="{{row.peso}}">     
+                                <button type="submit" class="btn btn-danger btn-xs"><img
+                                    src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
+                                </button>                           
+                            </form>
+                         </div>
+                        
+                         <div>
+                            <form action="/lotes_prod/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
+                                        <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
+                                        <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
+                                        
+                                        <button type="submit" class="btn btn-info btn-xs"><img
+                                src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+                            </form>
+                         </div>  
+                        </div>
+                    
+                </td>
+                </tr>
+           {%endfor%}
+           
+            
+        </table>
+      
+
+
+
+{% endblock %}

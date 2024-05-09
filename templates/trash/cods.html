@@ -1,0 +1,55 @@
+
+
+<div class="input-group-append ">
+                         
+    <!-- <form action="{{url_for('deleta_lote')}}" method="post" type="hidden" >
+        <input type="hidden" name="id" value="{{row.id}}">     
+        <button type="submit" class="btn btn-danger btn-xs"><img
+            src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
+        </button>                           
+    </form> -->
+
+    <form action="/estrutura_op/{{op}}/{{row.numero_lote}}" method="post" type="hidden" >
+                <input type="hidden" name="item" value="{{i.item}}">
+                <input type="hidden" name="numero_op" value="{{i.numero_op}}">
+                <input type="hidden" name="numero_lote" value="{{row.numero_lote}}">
+                <input type="hidden" name="op_qtd" value="{{row.quantidade}}">
+                <input type="hidden" name="descricao" value="{{i.descrição}}">     
+                <button type="submit" class="btn btn-info btn-xs"><img
+        src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+    </form>
+</div>
+
+
+
+
+
+<!-- 
+                     <form action="/movimentos_posicaos" method="post">
+                        <select class="form-select" aria-label="Default select example" name="posicao">
+                           --> <!-- <option selected>Posição</option> -->
+                           <!--  <option value="acabamento">Acabamento</option>
+                            <option value="separacao">Separação</option>
+                            <option value="qualidade">Qualidade</option>
+                            <option value="estoque">Estoque</option>
+                        </select> 
+                -->
+
+
+
+
+
+                <!-- <div class="icons">
+                        <div>
+                               
+                                <input type="hidden" name="item" value="{{i.item}}">
+                                <input type="hidden" name="descricao" value="{{i.descrição}}">
+                                <input type="hidden" name="quantidade_lote" value="{{row.quantidade}}"> 
+                                <input type="hidden" name="op_lote" value="{{row.referencia}}"> 
+                                <input type="hidden" name="lote" value="{{row.numero_lote}}">   
+                                <input type="hidden" name="operador" value="Colaborador_1">                               
+                                <button type="submit" class="editItem btn btn-success btn-xs">
+                                    Transferir saldo
+                                </button>                           
+                            </form>
+                        </div>-->

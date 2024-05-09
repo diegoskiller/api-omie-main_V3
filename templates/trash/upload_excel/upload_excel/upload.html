@@ -1,0 +1,67 @@
+
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} testes temporarios {% endblock %}
+{% block body %}
+<style>
+    .conteudo {
+        width: 600px;
+        height: 300px;
+        margin: 150px auto;
+        text-align: center; 
+        background-color: #f0f0f0; 
+        padding: 20px; 
+        border-radius: 10px; 
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .custom-file-upload {
+        border: 1px solid #ccc;
+        display: inline-block;
+        padding: 6px 12px;
+        cursor: pointer;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+    }
+
+    input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .file-name {
+        margin: 10px;
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    function displayFileName() {
+        var fileInput = document.getElementById('file');
+        var fileNameDisplay = document.getElementById('file-name-display');
+        fileNameDisplay.textContent = fileInput.files[0] ? fileInput.files[0].name : 'Nenhum arquivo selecionado';
+    }
+</script>
+
+<div class="conteudo">
+    <h3>Upload de Arquivo Excel</h3>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file" class="custom-file-upload">Escolher Arquivo</label>
+        <input type="file" name="file" id="file" accept=".xlsx" onchange="displayFileName()">
+        <div id="file-name-display" class="file-name">Nenhum arquivo selecionado</div>
+        <input type="submit" value="Enviar">
+    </form>
+</div>
+
+    
+{% endblock %}
+

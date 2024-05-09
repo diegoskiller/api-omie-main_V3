@@ -1,0 +1,69 @@
+{% block body %}
+   
+<div class="modal fade" id="transferir_lote_Modal{{row.id}}"  role="dialog" data-bs-backdrop="static">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transferir Lote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body">
+                <h2 for="recipient-name" class="col-form-label">Transferir lote: {{row.numero_lote}} do item: {{row.item}}</h2>
+                    
+
+                <h2 for="recipient-name" class="col-form-label">Do Estoque Almoxarifado A1</h2>
+                <form action="{{ url_for('transferir_saldo_posicao')}}" method="POST" class="submit">
+                        <input type="hidden" name="id" value="{{row.id}}">
+                        <input type="hidden" name="quantidade" value="{{row.quantidade}}">
+                        <input type="hidden" name="local" value="{{row.local}}">
+                        <input type="hidden" name="item" value="{{row.item}}">
+
+                        <label for="recipient-name" class="col-form-label">Para:</label>
+                        <select class="form-select" aria-label="Default select example" name="local_dest">
+                            <option selected disabled>Selecione o Setor destino</option>
+                            {%if row.local == "2436985075"%}
+                            {% else %}            
+                            <option value="2436985075">Estoque</option>
+                            {%endif%}
+                            {%if row.local == "2511785274"%}                    
+                            {% else %}            
+                            <option value="2511785274">Acabamento</option>
+                            {%endif%}
+                            {%if row.local == "4085566100"%}                    
+                            {% else %}            
+                            <option value="4085566100">Seleção</option>
+                            {%endif%}
+                            {%if row.local == "4085565942"%}                    
+                            {% else %}            
+                            <option value="4085565942">Qualidade</option>
+                            {%endif%}
+                            {%if row.local == "4085566245"%}                    
+                            {% else %}            
+                            <option value="4085566245">Embalagem</option>
+                            {%endif%}
+                            {%if row.local == "4084861665"%}                    
+                            {% else %}            
+                            <option value="4084861665">Cobre</option>
+                            {%endif%}
+                            {%if row.local == "4085566344"%}                    
+                            {% else %}            
+                            <option value="4085566344">MKM</option>
+                            {%endif%}
+                        </select> 
+       
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" onclick="this.disabled=true;this.value='Submitting...'; this.form.submit();">Transferir Lote</button>
+                    </div>
+                    
+                </form>
+
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}

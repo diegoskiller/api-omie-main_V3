@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} Lista de itens {% endblock %}
+{% block body %}
+
+
+
+
+<style>
+  table {
+      border-collapse: collapse;
+      width: 100%;
+  }
+
+  th, td {
+     
+      padding: 8px;
+      text-align: left;
+      line-height: 6px; /* Altura de linha específica */
+  }
+
+  th {
+      border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+  }
+</style>
+
+                    
+
+
+<div class="w-100" style="padding-top: 0px !important;">
+
+
+<h2 class="d-flex justify-content-center mt-2"><strong>Consulta de Rastreabilidade Simplificada</strong></h2>
+
+
+<form method="POST" action="{{url_for('rastreabilidade')}}" class="input-group">
+    <input type="search" class="form-control" placeholder="Pesquisar por Ordem de Produção" name="op_rastreio"
+        aria-label="Pesquisar por Ordem de Produção" aria-describedby="basic-addon2" autocomplete="off">
+    <div class="input-group-append">
+        <button class="btn btn-success" type="submit">Rastrear Produção</button>
+    </div>
+</form>
+
+
+
+
+       
+<div class="w-100 margin-top p-2">
+
+  <table class="table table-hover table-info">
+    <tr class="table-primary">  
+          <td>Produto/Quantidade</td>     
+          <td>Numero Lote/OP</td>
+          <td>Origem do Produto</td>
+          </tr>
+      {%for row in consulta%}
+      <tr class="bg-muted">
+        <td>{{ row.item }} / Qtd.: {{ row.quant_inicial }}</td>
+          <td>{{ row.lote_visual }}/{{ row.referencia }}</td>
+          <td> <a href="https://kels.up.railway.app/{{row.processado_op}}.pdf">{{ row.processado_op }}</a>
+          </td>
+          
+          
+      </tr>
+      {%for rowg in consulta_geral%}
+      {% if rowg.referencia == row.processado_op %}
+      <tr class="table-success">
+        <td><img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg.item }} / Qtd.: {{ rowg.quant_inicial}}</td>
+        <td><img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg.numero_lote }}/{{ rowg.referencia }}</td>
+        <td><img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;<a href="https://kels.up.railway.app/{{rowg.processado_op}}.pdf">{{ rowg.processado_op }}</a></td>
+      </tr>
+      {%for rowg2 in consulta_geral%}
+      {% if rowg2.referencia == rowg.processado_op %}
+      <tr class="table-info">
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg2.item }} / Qtd.: {{ rowg2.quant_inicial}} </td>
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg2.lote_visual }}/{{ rowg2.referencia }}</td>
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;<a href="https://kels.up.railway.app/{{rowg2.processado_op}}.pdf">{{ rowg2.processado_op }}</a></td>
+      </tr>
+      {%for rowg3 in consulta_geral%}
+      {% if rowg3.referencia == rowg2.processado_op %}
+      <tr class="table-warning">
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg3.item }} / Qtd.: {{ rowg3.quant_inicial}}</td>
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;{{ rowg3.lote_visual }}/{{ rowg3.referencia }}</td>
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <img src="{{url_for('static', filename='images/arrow-90deg-up.svg')}}">&nbsp;&nbsp;&nbsp;<a href="https://kels.up.railway.app/{{rowg3.processado_op}}.pdf">{{ rowg3.processado_op }}</a></td>
+      </tr>
+     
+     
+     
+     
+     
+      {% else %}
+
+      {% endif %}
+
+      {%endfor%}
+      {% else %}
+
+      {% endif %}
+
+
+
+
+
+
+      
+
+      {%endfor%}
+      
+      
+      
+      
+      {% else %}
+
+      {% endif %}
+
+     
+
+
+
+
+
+      
+
+      {%endfor%}
+      {%endfor%}
+      
+  </table>
+  
+
+{% endblock %}

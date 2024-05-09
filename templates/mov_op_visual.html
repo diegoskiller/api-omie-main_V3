@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Detalhes da Ordem de produção {% endblock %}
+{% block body %}
+
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+       
+        padding: 9px !important;
+        text-align: left;
+       /* line-height: 1px !important;  Altura de linha específica */
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"> </script>
+
+    <script type=text/javascript> $(function() { $("#bt_insumo").click(function (event) { $.getJSON('/temp_insumo', { },
+    function(data) { }); return false; }); }); </script>
+
+    <script type=text/javascript> $(function() { $("#bt_retalho").click(function (event) { $.getJSON('/temp_retalho', { },
+    function(data) { }); return false; }); }); </script>
+
+    <script type=text/javascript> $(function() { $("#bt_substituto").click(function (event) { $.getJSON('/temp_substituto', { },
+    function(data) { }); return false; }); }); </script>
+    
+    <script type=text/javascript> $(function() { $("#bt_produzido").click(function (event) { $.getJSON('/temp_produzido', { },
+        function(data) { }); return false; }); }); </script>
+
+    <script type=text/javascript> $(function() { $("#bt_retalhado").click(function (event) { $.getJSON('/temp_retalhado', { },
+    function(data) { }); return false; }); }); </script>
+
+    <script type=text/javascript> $(function() { $("#bt_sucata").click(function (event) { $.getJSON('/temp_sucata', { },
+    function(data) { }); return false; }); }); </script>
+
+    <script type=text/javascript> $(function() { $("#bt_coproduto").click(function (event) { $.getJSON('/temp_coproduto', { },
+    function(data) { }); return false; }); }); </script>
+
+
+
+
+<div class=" p-2 w-100 table-responsive margin-top">
+    <a href="{{url_for('ordens_producao_visual')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+    <div class="input-group mb-3 d-flex justify-content-center">
+        
+        <h3 class="d-flex justify-content-center mt-2">Ordem de produção: {{op}}</h3>
+        
+    </div>
+    <div class="input-group-append">
+        
+    </div>
+   
+    <div class="container w-100">
+
+        {% with messages=get_flashed_messages(with_categories=true) %}
+        {%if messages%}
+        {%for category, message in messages%}
+        {%if error == "Sucesso"%}
+        <div class="alert alert-success">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {%endif%}
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+
+        
+            
+
+
+<div class="posições w-100" >
+    
+
+
+
+
+
+
+    <table class="table table-hover table-success">
+        {%for row in op_info%}
+        <tr>
+            <td>Numero Ordem Produção= {{ row.numero_op_visual }}</td>
+            <td>Item = {{ row.item }}</td>
+            <td colspan="2">{{ row.descrição[0:50] }}</td> 
+            <td colspan="2">Setor = {{ row.setor }}</td>
+            <td colspan="2">Operador = {{ row.operador }}</td>
+        </tr>
+
+        <tr>
+        
+            <td>Quatidade Estimada: {{ row.quantidade }}</td>
+            <td>Quatidade Produzida: {{ row.quantidade_real }}</td>
+            <td>Saldo de Peso = {{ row.peso_enviado - row.peso_retornado }}</td>
+            <td>Saldo de Fino = {{ row.fino_enviado - row.fino_retornado }}</td>
+            <td>% Peso</td>
+            <td>
+            {%if row.peso_enviado == 0 %}
+                 <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+            {%else%}
+                <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.peso_retornado / row.peso_enviado)*100)}}%"></div>
+                    
+            {%endif%}
+                
+            </td>
+            
+            <td>% Fino </td>
+            <td>
+                {%if row.fino_enviado == 0 %}
+                <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                {%else%}
+                <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.fino_retornado / row.fino_enviado)*100)}}%"></div>
+                    
+            {%endif%}
+                
+            </td>
+
+
+
+        </tr>
+        
+    </table>
+
+    
+    {%if row.situação == "Aberta"%}
+   
+    <h6>Selecionar Materiais para Enviar na Ordem De Produção</h6>
+    
+    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+
+        <!-- <a type="button" class="btn btn-primary" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal">Material Para Envio</a>
+        -->
+        
+        
+        
+        <input  id="bt_insumo" value="Enviar Insumo" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-primary"></input>
+
+        <input  id="bt_retalho" value="Enviar Retalho" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-warning"></input>
+
+        <input  id="bt_substituto" value="Enviar item Substituto" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-success"></input>
+
+
+    </div>
+    {%endif%}
+    {% include 'add_lote_op_modal.html' %}
+
+    {%endfor%}
+
+
+
+    <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <b>
+            <tr class="bg-secondary">
+                <td>Tipo</td>
+                <td>Item</td>
+                <td>Descrição</td>
+                <td>Qtd. Estima</td>
+                <td>Qtd. Enviada</td>
+                <td>Peso</td>
+                <td>Peso Fino</td>
+                <td>Edições</td>
+            </b> 
+            </tr>
+            {%for row in mov_op%}
+            {%if row.tipo_mov == "insumo Enviado" or row.tipo_mov == "Retalho Enviado" or row.tipo_mov == "Substituto Enviado" %}
+            <tr class="bg-muted">
+                <td>{{ row.tipo_mov }}</td>
+                <td>{{ row.item_estrutura }}</td>
+                <td>{{ row.descricao_item }}</td>         
+                <td>{{ row.quantidade_item }}</td>
+                <td>{{ row.quantidade_real }}</td>                       
+                <td>{{ row.peso }}</td>
+                <td>{{ row.fino }}</td>  
+                <td>
+                        <div class = "input-group-append">
+                         <div>
+                           {%if row.peso + row.fino == 0.0%} 
+                            <form action="{{url_for('deleta_mov_op')}}" method="post" type="hidden" >
+                                <input type="hidden" name="id" value="{{row.id}}">     
+                                <button type="submit" class="btn btn-danger btn-xs"><img
+                                    src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
+                                </button>                           
+                            </form>
+                            {%endif%}
+                         </div>
+                        
+                         <div>
+                            <form action="/lotes/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
+                                        <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
+                                        <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
+                                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
+                                        <input type="hidden" name="descricao_item" value="{{row.descricao_item}}">
+                                        <input type="hidden" name="quantidade_item" value="{{row.quantidade_item}}">
+                                        <input type="hidden" name="peso" value="{{row.peso}}">
+                                        <input type="hidden" name="fino" value="{{row.fino}}">
+                                        <input type="hidden" name="id_mov" value="{{row.id}}">
+                                        
+                                        <button type="submit" class="btn btn-info btn-xs"><img
+                                src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+                            </form>
+                         </div>  
+        
+                      </div>
+                    
+                </td>
+                </tr>
+                {%endif%}
+           {%endfor%}
+           
+            
+        </table>
+      
+    <div class="border-top my-2"></div>
+
+    
+    {%for i in op_info%}
+    {%if i.situação == "Aberta"%}
+    
+    <h6>Selecionar Materiais Produzidos na Ordem De Produção</h6>
+
+
+    <div class="btn-group" role="group" aria-label="Basic mixed styles example">
+
+        <!-- <input  id="bt_produzido" value="Material Produzido" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-primary"></input> -->
+
+        <input  id="bt_retalhado" value="Retalho Produzido" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-warning"></input>
+
+        <input  id="bt_sucata" value="Sucata de Maquina" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-danger"></input>
+
+        <input  id="bt_coproduto" value="Coproduto" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal" method="post" type="button"
+        class="btn btn-success"></input>
+    
+    </div> 
+    {%endif%}
+    {% include 'add_lote_op_modal.html' %}
+
+    {%endfor%}
+
+
+
+    <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <tr class="bg-secondary">
+                
+                <td>Tipo</td>
+                <td>Item</td>
+                <td>Qtd. Estima</td>
+                <td>Qtd. Enviada</td>
+                <td>Peso</td>
+                <td>Peso Fino</td>
+                <td>Qtd. Produzida</td>
+                <td>Peso Do Lote</td>
+                <td>OP Origem</td>
+                <td>Local</td>
+                <td colspan="2">Edições</td>
+                
+                
+            </tr>
+            {%for row in mov_op%}
+            {%if row.tipo_mov == "Material Produzido" or row.tipo_mov == "Retalho Produzido" or row.tipo_mov == "Sucata Produzida" or row.tipo_mov == "Coproduto Produzido" %}
+            <tr class="bg-muted">
+                <td>{{ row.tipo_mov }}</td>
+                <td>{{ row.item_estrutura }}</td>
+                <td>{{ row.quantidade_item }}</td>
+                <td>{{ row.quantidade_real }}</td>                       
+                <td>{{ row.peso }}</td>
+                <td>{{ row.fino }}</td>
+                <td>
+                    {%for i in op_info%}
+                    {%if i.situação == "Aberta"%}   
+                    
+
+                    <form method="POST" action="{{url_for('add_lote_mov_op_prod')}}">
+
+                    
+                    <input class="form-control" type="number" placeholder="Quantidade" value={{row.quantidade_item - row.quantidade_real}} name="qtd_parcial">
+                </td>
+                <td> 
+                    {%if row.quantidade_real == 0%}
+                    <input class="form-control" type="number" placeholder="Peso" value={{row.peso}} name="peso_parcial">
+                    {%else%}
+                    <input class="form-control" type="number" placeholder="Peso" value={{(row.peso/row.quantidade_real)*(row.quantidade_item - row.quantidade_real)}} name="peso_parcial">
+                    {%endif%}
+                </td>
+                <td>
+                <input class="form-control" type="number" placeholder="" value="" name="OP_Origem">
+                </td>
+                <td>
+                <select class="form-select" aria-label="Default select example" name="local_dest">
+                    <option selected disabled>Selecione o Setor destino</option>
+                    {%if row.local == "2436985075"%}
+                    {% else %}            
+                    <option value="2436985075">Estoque</option>
+                    {%endif%}
+                    {%if row.local == "2511785274"%}                    
+                    {% else %}            
+                    <option value="2511785274">Acabamento</option>
+                    {%endif%}
+                    {%if row.local == "4085566100"%}                    
+                    {% else %}            
+                    <option value="4085566100">Seleção</option>
+                    {%endif%}
+                    {%if row.local == "4085565942"%}                    
+                    {% else %}            
+                    <option value="4085565942">Qualidade</option>
+                    {%endif%}
+                    {%if row.local == "4085566245"%}                    
+                    {% else %}            
+                    <option value="4085566245">Embalagem</option>
+                    {%endif%}
+                    {%if row.local == "4084861665"%}                    
+                    {% else %}            
+                    <option value="4084861665">Cobre</option>
+                    {%endif%}
+                    {%if row.local == "4085566344"%}                    
+                    {% else %}            
+                    <option value="4085566344">MKM</option>
+                    {%endif%}
+                </select>
+
+
+
+
+            </td>
+
+                <td>
+                    <div class = "input-group-append">
+                <div>
+                    
+                        <input type="hidden" name="item" value="{{row.item_estrutura}}">
+                        <input type="hidden" name="id" value="{{row.id}}">
+                        <input type="hidden" name="id_mov" value="{{id_mov}}">
+                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
+                        <input type="hidden" name="local" value="{{row.local}}">
+                        <input type="hidden" name="descricao" value="{{row.descricao_item}}">
+                        <input type="hidden" name="referencia" value="{{row.op_referencia}}">
+                        <button  type="submit" class="editItem btn btn-info btn-xs " data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">
+                        <img src="{{url_for('static', filename='images/tras.svg')}}" alt="">
+                        <img src="{{url_for('static', filename='images/plus.svg')}}" alt="">
+                    
+                    Lançar</button>
+                    </form>
+
+                </div>
+                </td>
+
+                <td>
+
+                   
+                        
+                        <div>
+                           <form action="/lotes_prod/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
+                                       <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
+                                       <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
+                                       <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
+                                       <input type="hidden" name="descricao_item" value="{{row.descricao_item}}">
+                                       <input type="hidden" name="quantidade_item" value="{{row.quantidade_item}}">
+                                       <input type="hidden" name="peso" value="{{row.peso}}">
+                                       <input type="hidden" name="fino" value="{{row.fino}}">
+                                       
+                                       <button type="submit" class="btn btn-success btn-xs"><img
+                               src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+                           </form>
+                        </div>  
+                       </div>
+                   
+
+
+
+            
+                </td> 
+                {%endif%}
+                
+                {%endfor%}
+                {%endif%}
+            </tr>
+            {%endfor%}
+
+            
+        </table>
+       
+    </div>
+    <div class="input-group-append">
+        
+    <div class="input-group mb-3 d-flex justify-content-end">
+            <form action="{{url_for('imprimir_op')}}" method="post" onclick="return confirm('Deseja imprimir esta ordem de produção?')">
+                <input type="hidden" name="referencia" value="{{op}}">
+                <button type="submit" for="myForm" class="btn btn-info btn-xs">
+                <img src="{{url_for('static', filename='images/printer.svg')}}" alt=""></button>
+            </form>
+        
+        
+            {%for row in op_info%}
+            <a href="{{url_for('ordens_producao_visual')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+            {% if row.situação == "Encerrada" %}
+            <form action="{{url_for('encerra_op')}}" method="post">
+                <input type="hidden" name="id" value="{{row.id}}">
+                <input type="hidden" name="situacao" value="Aberta">
+                <button type="submit" class="btn btn-secondary ms-2 encerraOP">Reabrir Ordem de Produção</button>
+            </form>
+
+            {% else %}
+
+            <form action="{{url_for('encerra_op')}}" method="post">
+                <input type="hidden" name="id" value="{{row.id}}">
+                <input type="hidden" name="situacao" value="Encerrada">
+                <button type="submit" class="btn btn-danger ms-2 encerraOP">Fechar Ordem Produção</button>
+            </form>
+            {%endif%}
+            {%endfor%}
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+    <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...
+    <div class="spinner-grow text-info" role="status">
+    <span class="visually-hidden">Loading...</span>
+    </div>
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body small">
+    <div id="pb1" class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+    </div>
+    </div>
+    </div>
+    <script>
+      let barra=document.getElementById("pb1");
+      let carga=0;
+      let intBarra=setInterval(()=>{
+          barra.style.width=carga+"%";
+          carga++;
+          if(carga>=100){
+              carga=0;
+          }
+      },80);
+    </script> 
+
+
+
+
+
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} testes temporarios {% endblock %}
+{% block body %}
+<style>
+    .loading {
+        width: 600px;
+        height: 400px;
+        margin: 150px auto;
+        text-align: center; 
+        background-color: #f0f0f0; 
+        padding: 20px; 
+        border-radius: 10px; 
+    }
+
+    .titlo{
+        padding-bottom: 20px;
+    }
+
+    .linhas{
+        padding-top: 20px;
+    }
+    
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    
+    @-webkit-keyframes rotate {
+        from {
+            -webkit-transform: rotate(0deg);
+        }
+        to {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+    
+    .load {
+        display: none;
+        width: 100px;
+        height: 100px;
+        margin: 20px auto; 
+        padding: 50px;
+        border: solid 10px #055817;
+        border-radius: 50%;
+        border-right-color: transparent;
+        border-bottom-color: transparent;
+        -webkit-transition: all 0.5s ease-in;
+        -webkit-animation-name: rotate;
+        -webkit-animation-duration: 1.0s;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-timing-function: linear;
+        transition: all 0.5s ease-in;
+        animation-name: rotate;
+        animation-duration: 1.0s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    function mostrarLoading() {
+        var divLoad = $('.load');
+        divLoad.show();
+        
+        var iniciar = $('.iniciar');
+        iniciar.hide();
+
+        var h4Element = $('.titlo h4');
+        var h5Element = $('.titlo h5');
+        var pElement = $('.linhas');
+        
+        h4Element.text('PROCESSANDO...');
+        h5Element.text('Por favor, aguarde enquanto os dados são lançados no banco!');
+        pElement.text('Lançando {{num_linhas}} no banco de dados');
+
+    }
+</script>
+
+<div class="loading">
+    <div class="titlo">
+        <h4>Arquivo excel carregado!</h4>
+        <h5>Deseja salvar no banco de dados?</h5>
+    </div>
+    <div class="load"></div>
+    <p class="linhas">Número de linhas no arquivo: {{num_linhas}}</p>
+    <a class="btn btn-info iniciar" href="{{ url_for('processar') }}" onclick="mostrarLoading()">Iniciar processamento</a>
+</div>
+
+{% endblock %}

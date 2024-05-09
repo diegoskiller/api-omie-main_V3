@@ -1,0 +1,299 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Gerenciador do Setor de Cobre</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #525151;
+        margin: 0;
+        padding: 0;
+    }
+    h2 {
+        text-align: center;
+        margin-top: 20px;
+        color: #fff;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+    }
+    .column {
+        width: 22%;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 8px 16px rgba(248, 247, 247, 0.411); /* Suavizado a sombra */
+    }
+    .column h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    #pedidos-setor {
+        background-color: #2196F3; /* Azul */
+    }
+    #producao-setor {
+        background-color: #FF9800; /* Laranja */
+    }
+    #qualidade-setor {
+        background-color: #E91E63; /* Rosa */
+    }
+    #expedicao-setor {
+        background-color: #4CAF50; /* Verde */
+    }
+    .setor {
+        min-height: 200px;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 20px;
+        background-color: rgba(145, 143, 143, 0.479); /* Sombra mais clara */
+    }
+    .card {
+        background-color: #d3dff591;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .card:hover {
+        background-color: #f2f2f2;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        border-radius: 8px;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .detail-field {
+        margin-bottom: 10px;
+    }
+    .detail-field label {
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+
+<h2>Gerenciador de Pedidos de Cobre</h2>
+
+<div class="container">
+    <div class="column">
+        <h3>Pedidos</h3>
+        <div class="setor" id="pedidos-setor">
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b>
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Emitido' %}
+            <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.status }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.peso }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <h3>Produção</h3>
+        <div class="setor" id="producao-setor">
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b>
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Produzindo' %}
+            <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.status }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.peso }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+        </div>
+            {% endif %}
+            {% endfor %}
+    </div>
+    </div>
+    <div class="column">
+        <h3>Qualidade</h3>
+        <div class="setor" id="qualidade-setor"> 
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b>
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Qualidade' %}
+            <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.status }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.peso }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <h3>Expedição</h3>
+        <div class="setor" id="expedicao-setor">
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b>
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Expedindo' %}
+            <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.status }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.peso }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="detail-field">
+            <label>Data:</label>
+            <span id="detail-data"></span>
+        </div>
+        <div class="detail-field">
+            <label>Medida:</label>
+            <span id="detail-medida"></span>
+        </div>
+        <div class="detail-field">
+            <label>Descrição:</label>
+            <span id="detail-descricao"></span>
+        </div>
+        
+        <div class="detail-field">
+            <label>Cliente:</label>
+            <span id="detail-cliente"></span>
+        </div>
+        <div class="detail-field">
+            <label>Qualidade:</label>
+            <span id="detail-qualidade"></span>
+        </div>
+        <div class="detail-field">
+            <label>Código:</label>
+            <span id="detail-codigo"></span>
+        </div>
+        <div class="detail-field">
+            <label>Pedido:</label>
+            <span id="detail-pedido"></span>
+        </div>
+        <div class="detail-field">
+            <label>Ação:</label>
+            <span id="detail-acao"></span>
+        </div>
+        <div class="detail-field">
+            <label>Estoque Disponível:</label>
+            <span id="detail-estoque"></span>
+        </div>
+    </div>
+</div>
+
+<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script>
+    function showDetails(data, medida, descricao, cliente, status, codigo, pedido, peso) {
+        document.getElementById("detail-data").innerText = data;
+        document.getElementById("detail-medida").innerText = medida;
+        document.getElementById("detail-descricao").innerText = descricao;
+        document.getElementById("detail-cliente").innerText = cliente;
+        document.getElementById("detail-qualidade").innerText = status;
+        document.getElementById("detail-codigo").innerText = codigo;
+        document.getElementById("detail-pedido").innerText = pedido;
+        document.getElementById("detail-acao").innerText = status;
+        document.getElementById("detail-estoque").innerText = peso;
+        document.getElementById("myModal").style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById("myModal").style.display = "none";
+    }
+
+    $(function() {
+        $(".card").draggable({
+            revert: "invalid",
+            zIndex: 100,
+            start: function(event, ui) {
+                $(this).data("startPosition", ui.helper.position());
+            }
+        });
+
+        $(".setor").droppable({
+            accept: ".card",
+            drop: function(event, ui) {
+                var startPosition = $(ui.draggable).data("startPosition");
+                var endPosition = ui.helper.position();
+                var deltaX = endPosition.left - startPosition.left;
+                var deltaY = endPosition.top - startPosition.top;
+
+                ui.helper.animate({
+                    left: '+=' + deltaX,
+                    top: '+=' + deltaY
+                }, "slow");
+
+                $(ui.draggable).appendTo(this).removeAttr("style");
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

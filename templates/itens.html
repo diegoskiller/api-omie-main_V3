@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} Lista de itens {% endblock %}
+{% block body %}
+
+
+
+<div class="w-100 margin-top p-1">
+    <div>
+        <div>
+            <div>
+                <h2 class=" d-flex justify-content-center"><strong>Cadastro de itens</strong></h2>
+                <div class="page-top-itens">
+                    <div class="container w-100 d-flex justify-content-center">
+                        <form method="POST" action="{{url_for('itens')}}" class="input-group">
+                            <input type="search" class="form-control" placeholder="Pesquisar por item" name="item"
+                                aria-label="Pesquisar por item" aria-describedby="basic-addon2" autocomplete="off">
+                            <div class="input-group-append">
+                                <button class="btn btn-success" type="submit">Buscar</button>
+                            </div>
+                        </form>
+                        
+                        
+                    </div>
+
+                    
+
+                    <div class="container w-100">
+
+                        {% with messages=get_flashed_messages(with_categories=true) %}
+                        {%if messages%}
+                        {%for category, message in messages%}
+                        <div class="alert alert-success">
+                            {{message}}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+                            </button>
+                        </div>
+                        {%endfor%}
+                        {%endif%}
+                        {%endwith%}
+                    </div>
+                </div>
+                <div class="container_table">
+                    
+                    <table class="table table-hover table-info">
+
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Tipo</th>
+                            <th>Ncm</th>
+                            <th>Unidade</th>
+                            <th>Edições</th>
+                        </tr>
+
+
+                        
+                        <tr class="table-primary">
+                            <td>{{dados[6]}}</td>
+                            <td>{{dados[5]}}</td>
+                            <td>{{dados[1]}}</td>
+                            <td>{{dados[11]}}</td>
+                            <td>{{dados[3]}}</td>
+                            <td><div>
+                                <form action="{{ url_for('estrutura') }}" method="post" type="hidden">
+                                    <button name="item"  value="{{dados[6]}}" class="btn btn-info btn-xs" ><img
+                                        src="{{url_for('static', filename='images/card-list.svg')}}" alt="">Estrutura</button>
+                                </form>
+                            </div>
+                            </td>
+                        </tr>
+                           
+                            
+                            
+
+                            <tr>
+                                
+                                <th>Valor Unitário</th>
+                                <th>Nome do Cliente</th>
+                                <th>Código do Cliente</th>
+                                <th>Liga Principal</th>
+                                <th>ID Interno</th>
+                                <th><div>
+                                    <a href="update" class="editItem btn btn-warning btn-xs" data-bs-toggle="modal"
+                                        data-bs-target="#edit_item_Modal{{dados[6]}}"><img
+                                            src="{{url_for('static', filename='images/pencil-fill.svg')}}" alt="">Alterar
+                                    </a>
+                                </div>
+                                </th>
+
+                            </tr>
+    
+                            <tr class="table-primary">
+                                <td>{{dados[4]}}</td>
+                                <td>{{dados[7]}}</td>
+                                <td>{{dados[8]}}</td>
+                                <td>{{dados[9]}}</td>
+                                <td>{{dados[0]}}</td>
+                                <td><div>
+                                    <a href="delete/{{dados[6]}}" class="btn btn-danger btn-xs"
+                                        onclick="return confirm('Tem certeza que quer deletar este item ?')"><img
+                                            src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt=""> Excluir
+                                    </a>
+                                </div></td>
+                              
+                                <div  class="icons">
+                                    
+                                </div>
+
+                                  </td> 
+                        
+                            </tr>
+                           
+                            
+
+                        </tr>
+                        
+                        
+                    </table>
+
+                </div>
+
+
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

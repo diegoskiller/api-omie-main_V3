@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Lista de movimentos {% endblock %}
+{% block body %}
+
+
+
+
+
+<div class="w-100">
+
+    <div class="row">
+
+        <div class="input-group mb-3 d-flex justify-content-end">
+          
+            <h3 class="d-flex justify-content-center mt-2">Movimentos de Estoque por Data</h3>
+            
+        </div>
+
+        <div class="col">
+            <div class="table-responsive container_table">
+                
+                <div class="col">
+                    <form method="POST" action="{{url_for('lista_movimento_filtro')}}" class="input-group">
+                        <a href="{{url_for('lista_movimento')}}" type="button" class="btn btn-success ms-2">Filtrar por Código</a>
+                        <input type="search"  class="form-control" placeholder="Pesquisar por Data" name="data"
+                                aria-label="Pesquisar por Data" aria-describedby="basic-addon2" autocomplete="off">
+                        <button type="submit" class="btn btn-info">Filtrar por Data</button>
+                    </form>
+                    
+                </div>
+<!--                 
+                <div><h4>data de filtragem: {{data_movimento}}</h4></div>
+                 -->
+                <table class="table table table-striped table-Primary movimento">
+
+                    <tr class="table-info">                        
+                        <th>Id</th>
+                        <th>Item</th>
+                        <th>Qtd</th>
+                        <th>Referencia</th>
+                        <th>tipo</th>
+                        <th>Obs</th>
+                        <th>Lote</th>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Usuario</th>
+
+                    </tr>
+
+
+                    {% for row in filtro.items %}
+                    <tr>                      
+                        <td>{{row.id}}</td>
+                        <td>{{row.item}}</td>
+                        <td>{{row.qualidade}}</td>
+                        <td>{{row.referencia}}</td>
+                        <td>{{row.tipo}}</td>
+                        <td>{{row.obs}}</td>
+                        <td>{{row.lote_visual}}</td>
+                        <td>{{row.data_movimento}}</td>
+                        <td>{{row.hora_movimento}}</td> 
+                        <td>{{row.usuario}}</td>
+                    </tr>
+
+                    {% endfor %}
+                </table>
+
+                
+             
+            </div>
+
+            {% for page_num in filtro.iter_pages(left_edge=1, right_edge=1,
+                left_current=1, right_current=2) %} {% if page_num %} {% if filtro.page ==
+                page_num %}
+                <a
+                  class="btn btn-dark mb-4"
+                  href="{{ url_for('lista_movimento_filtro', page=page_num) }}"
+                  >{{ page_num }}</a
+                >
+                {% else %}
+                <a
+                  class="btn btn-outline-dark mb-4"
+                  href="{{ url_for('lista_movimento_filtro', page=page_num) }}"
+                  >{{ page_num }}</a
+                >
+                {% endif %} {% else %} ... {% endif %} {% endfor %}
+   
+
+
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

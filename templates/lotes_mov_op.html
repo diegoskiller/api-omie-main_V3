@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Lotes de Envio de Ordem de Produção {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+       
+        padding: 8px;
+        text-align: left;
+        line-height: 6px; /* Altura de linha específica */
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+
+<div class=" p-2 w-100 table-responsive margin-top">
+    <div class="input-group mb-3 d-flex justify-content-center">
+        
+        <h3 class="d-flex justify-content-center mt-2">
+
+           "{{tipo_mov}}" ==> Ordem de produção: {{op_referencia}}
+           
+        </h3>
+        
+        
+    </div>
+   
+   
+    <div class="input-group-append">
+        <a href="/op/{{op_referencia}}" type="button" class="btn btn-success ms-2">Voltar</a>
+    </div>
+    
+
+    <table class="table table-hover table-info">
+        <tr>
+            <td>OP Nº = {{op_referencia}}</td>
+            <td>Item = {{item_estrutura }}</td>
+            <td>{{descricao_item}}</td> 
+            <td>Qtd: = {{quantidade_item_total}}</td>
+            <td>Peso total do item = {{peso_item_total}}</td>
+            <td>Fino total do item = {{fino_item_total}}</td>
+            
+        </tr>
+
+    </table>
+
+
+
+
+
+
+    <div class="container w-100">
+
+        {% with messages=get_flashed_messages(with_categories=true) %}
+        {%if messages%}
+        {%for category, message in messages%}
+        {%if error == "Sucesso"%}
+        <div class="alert alert-success">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {%endif%}
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+
+        
+            
+
+
+<div class="posições w-100" >
+    
+
+
+
+
+
+
+
+
+
+    <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <tr class="bg-secondary">
+                <td>Item</td>
+                <td>Lote/Ref</td>
+                <td>Quantidade</td>
+                <td>Peso</td>
+                <td>Peso Fino</td>
+                <td>Data</td>
+                <td>Edições</td>
+                
+            </tr>
+            {% for row in Lotes_mov %}
+            <tr class="bg-muted">
+                
+                <td>{{ row.item }}</td>
+                <td>{{ row.numero_lote}}</td>         
+                <td>{{ row.quantidade }}</td>                       
+                <td>{{ row.peso }}</td>
+                <td>{{ row.fino }}</td> 
+                <td>{{ row.data_mov }}</td>
+                 
+                <td>
+                        <div class = "input-group-append">
+                         <div>
+                            <form action="{{url_for('deleta_lotes_mov_op')}}" method="post" type="hidden" onclick="return confirm('Deseja desfazer este movimento?')">
+                                <input type="hidden" name="id" value="{{row.id}}">
+                                <input type="hidden" name="id_lote" value="{{row.id_lote}}">
+                                <input type="hidden" name="quantidade" value="{{row.quantidade}}">
+                                <input type="hidden" name="id_mov" value="{{id_mov}}">
+                                <input type="hidden" name="peso" value="{{row.peso}}">     
+                                <button type="submit" class="btn btn-danger btn-xs"><img
+                                    src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
+                                </button>                           
+                            </form>
+                         </div>
+                        
+                         <div>
+                            <form action="/lotes/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
+                                        <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
+                                        <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
+                                        
+                                        <button type="submit" class="btn btn-info btn-xs"><img
+                                src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+                            </form>
+                         </div>  
+                        </div>
+                    
+                </td>
+                </tr>
+           {%endfor%}
+           
+            
+        </table>
+      
+    <div class="border-top my-2"></div>
+    <h6>Selecionar lote para Envio na OP</h6>
+
+     
+     <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <tr class="bg-secondary">
+                <td>Numero OP</td>
+                <td>Lote/Ref</td>
+                <td>Quantidade Lote</td>
+                <td>Data criação</td>
+                <td>Setor</td>
+                <td>Quantidade</td>
+                <td>Peso</td>
+                <td>Enviar</td>
+            </tr>
+            {% for row in lotes %}
+    
+   
+            <tr class="bg-muted">
+                
+                <td>{{ row.referencia }}</td>
+                <td>{{ row.numero_lote }}</td>         
+                <td>{{ row.quantidade }}</td>                       
+                <td>{{ row.data_criacao }}</td>
+                {% if row.local == "2436985075"%}
+                <td>Estoque(A1)</td>
+                
+                {%endif%}
+                {% if row.local == "2511785274"%}
+                <td>Acabamento(AC)</td>
+                {%else%}
+                {%endif%}
+                {% if row.local == "4084861665"%}
+                <td>Cobre(A3)</td>
+                {%else%}
+                {%endif%}
+                {% if row.local == "4085565942"%}
+                <td>Qualidade(CQ)</td>
+                {%else%}
+                {%endif%}
+                {% if row.local == "4085566100"%}
+                <td>Seleção(SE)</td>
+                {%else%}
+                {%endif%}
+                {% if row.local == "4085566245"%}
+                <td>Embalagem(AS)</td>
+                {%else%}
+                {%endif%}
+                {% if row.local == "4085566344"%}
+                <td>Terceiro(MKM)</td>
+                {%else%}
+                {%endif%}
+
+                <td>
+                    <form method="POST" action="{{url_for('add_lote_mov_op')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+
+                    
+                    <input class="form-control" type="text" placeholder="Quantidade" value={{row.quantidade}} name="qtd_parcial">
+                </td>
+                <td>
+                    <input class="form-control" type="text" placeholder="Peso" value={{row.peso}} name="peso_parcial">
+                    
+                </td>
+                <td>
+                <div>
+                    
+                        <input type="hidden" name="item" value="{{row.item}}">
+                        <input type="hidden" name="quantidade" value="{{row.quantidade}}">
+                        <input type="hidden" name="id" value="{{row.id}}">
+                        <input type="hidden" name="id_mov" value="{{id_mov}}">
+                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
+                        <input type="hidden" name="local" value="{{row.local}}">
+                        <input type="hidden" name="referencia" value="{{op_referencia}}">
+                        <input type="hidden" name="lote_visual" value="{{row.lote_visual}}">
+                        <input type="hidden" name="numero_lote" value="{{row.numero_lote}}">
+                        <input type="hidden" name="fino" value="{{row.fino}}">
+                        <button  type="submit" class="editItem btn btn-info btn-xs "><img
+                    src="{{url_for('static', filename='images/box-arrow-up.svg')}}" alt="">
+                    Lançar</button>
+                    </form>
+
+
+
+
+
+                </div>
+                </td>
+                  
+                
+            </tr>
+ 
+            {%endfor%}
+
+            
+        </table>
+       
+    </div>
+    
+    
+
+       
+          <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Toggle bottom offcanvas</button>
+          <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+          <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...
+          <div class="spinner-grow text-info" role="status">
+          <span class="visually-hidden">Loading...</span>
+          </div>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body small">
+          <div id="pb1" class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+          </div>
+          </div>
+          </div>
+
+          <script>
+            let barra=document.getElementById("pb1");
+            let carga=0;
+            let intBarra=setInterval(()=>{
+                barra.style.width=carga+"%";
+                carga++;
+                if(carga>=100){
+                    carga=0;
+                }
+            },80);
+          </script>        
+     
+ 
+
+
+
+{% endblock %}
