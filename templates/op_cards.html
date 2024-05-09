@@ -40,7 +40,9 @@
         box-shadow: 0 8px 16px rgba(248, 247, 247, 0.411); /* Suavizado a sombra */
     }
     input {
-    width: 150px;
+        width: 130px;
+        height: 12px;
+        padding: 2px;
     }
     .column h3 {
         text-align: center;
@@ -239,15 +241,15 @@
             Status:{{ pedido.Status }}
             <hr/>
             <div class="container">
-                <div>
-                    <label class="edit-input" style="display:none;">Qtd. Produzida:<br></label>
-                    <label class="ed0it-input" style="display:none;">Peso Total(emb.):<br></label>
-                    <label class="edit-input" style="display:none;">Materia Prima:<br></label>
-                    <label class="edit-input" style="display:none;">Peso mat. usado:<br></label>
+                <div style="text-align: right; line-height: 20px;"><b>
+                    <label class="edit-input" style="display:none;">Qtd. Prod.:<br></label>
+                    <label class="edit-input" style="display:none;">Peso Total:<br></label>
+                    <label class="edit-input" style="display:none;">Mat. Prima:<br></label>
+                    <label class="edit-input" style="display:none;">Peso Mat.P.:<br></label>
                     <label class="edit-input" style="display:none;">Qtd.Amarrados:<br></label>
                     <label class="edit-input" style="display:none;">Dimenc. Enc.:<br></label>
                     <label class="edit-input" style="display:none;">Observaçóes:<br></label>
-
+                </b>
                 </div>
                 <div>
                     <input type="number" class="edit-input" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;">
@@ -264,7 +266,7 @@
             
             <!-- Adicione outros campos da mesma forma -->
                 <button class="edit-btn">Produzir / Editar Produção</button>
-                <button class="save-btn" style="display:none;">Produzir / Salvar</button>
+                <button class="save-btn" style="display:none;">Produzir ou Salvar alteração na OP</button>
                
             </div>
             {% endif %}
