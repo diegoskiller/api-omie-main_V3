@@ -170,7 +170,7 @@
             <a class="nav-link card-menu text-center" href="{{url_for('index')}}"> Ínicio Home</a>   
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="#">Abrir Pedido</a>
+            <a class="nav-link" href="{{url_for('pedidos')}}">Abrir Pedido</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="#">Faturados</a>
@@ -201,7 +201,7 @@
             
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
@@ -220,15 +220,19 @@
     <div class="column">
         <h3>Produção</h3>
         <div class="setor" id="producao-setor">
-            <b> Pedido | Cliente | Peso<br>
+            <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                <button class="save-ccl" style="background-color: #3da5fa; border-radius: 15px;">
+                    <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
+                </button>
+                <br>
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Produzindo' %}
             
 
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
-            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+           '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
              '{{ pedido.obs }}')" draggable="true">
             Desc.: {{ pedido.descricao }}<br>
@@ -241,14 +245,14 @@
             Status:{{ pedido.Status }}
             <hr/>
             <div class="container">
-                <div style="text-align: right; line-height: 20px;"><b>
-                    <label class="edit-input" style="display:none;">Qtd. Prod.:<br></label>
-                    <label class="edit-input" style="display:none;">Peso Total:<br></label>
-                    <label class="edit-input" style="display:none;">Mat. Prima:<br></label>
-                    <label class="edit-input" style="display:none;">Peso Mat.P.:<br></label>
+                <div style="text-align: left; line-height: 20px;"><b>
+                    <label class="edit-input" style="display:none;">Qtd. Produzida:<br></label>
+                    <label class="edit-input" style="display:none;">Peso com Emb:<br></label>
+                    <label class="edit-input" style="display:none;">Matéria Prima :<br></label>
+                    <label class="edit-input" style="display:none;">Peso Mat. Pri. :<br></label>
                     <label class="edit-input" style="display:none;">Qtd.Amarrados:<br></label>
-                    <label class="edit-input" style="display:none;">Dimenc. Enc.:<br></label>
-                    <label class="edit-input" style="display:none;">Observaçóes:<br></label>
+                    <label class="edit-input" style="display:none;">Dimensional   :<br></label>
+                    <label class="edit-input" style="display:none;">Observaçóes  :<br></label>
                 </b>
                 </div>
                 <div>
@@ -264,10 +268,11 @@
             </div>
             
             
-            <!-- Adicione outros campos da mesma forma -->
-                <button class="edit-btn">Produzir / Editar Produção</button>
-                <button class="save-btn" style="display:none;">Produzir ou Salvar alteração na OP</button>
-               
+            <!-- Adicione outros campos da mesma forma --><b>
+                <button class="edit-btn" style="background-color: #9aacff; border-radius: 5px;">Produzir ou Editar Produção ></button>
+                <button class="save-btn" style="display:none; background-color: #9aacff; border-radius: 5px;">Salvar/Produzir</button>
+                <button class="save-ccl" style="display:none; background-color: #f84444; border-radius: 5px;">Cancelar Alteração</button>
+            </b>
             </div>
             {% endif %}
             
@@ -283,7 +288,7 @@
             {% if pedido.Status == 'Qualidade' %}
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
@@ -308,8 +313,8 @@
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Expedindo' %}
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
-            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+           '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
@@ -362,9 +367,14 @@
             <span id="detail-pedido"></span>
         </div>
         <div class="detail-field">
-            <label>Ação:</label>
+            <label>Status:</label>
             <span id="detail-acao"></span>
         </div>
+        <div class="detail-field">
+            <label>Obs.Entrega:</label>
+            <span id="detail-obs_entrega"></span>
+        </div>
+   
    
     </div>
 
@@ -394,7 +404,7 @@
             <span id="detail-amarrados"></span>
         </div>
         <div class="detail-field">
-            <label>Dimencional Encontrado</label>
+            <label>Dimensional Encontrado</label>
             <span id="detail-dimencional_real"></span>
         </div>
         <div class="detail-field">
@@ -411,7 +421,7 @@
 <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <script>
-   function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, peso, peso_total,
+   function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total,
                  material, peso_material, amarrados, dimencional_real, obs) {
         document.getElementById("detail-data").innerText = data;
         document.getElementById("detail-medida").innerText = medida;
@@ -421,6 +431,7 @@
         document.getElementById("detail-codigo").innerText = codigo;
         document.getElementById("detail-pedido").innerText = pedido;
         document.getElementById("detail-acao").innerText = Status;
+        document.getElementById("detail-obs_entrega").innerText = obs_entrega;
         document.getElementById("detail-peso").innerText = peso;
         document.getElementById("detail-peso_total").innerText = peso_total;
         document.getElementById("detail-material").innerText = material;
@@ -506,7 +517,12 @@
         card.find('.edit-input').show();
         $(this).hide();
         card.find('.save-btn').show();
+        card.find('.save-ccl').show();
     });
+
+    $('.save-ccl').click(function() {
+        location.reload()
+    }),   
 
     $('.save-btn').click(function() {
     var card = $(this).closest('.card');
@@ -536,14 +552,18 @@
 
             // Oculta o botão salvar e mostra o botão editar novamente
             card.find('.save-btn').hide();
+            card.find('.save-ccl').hide();
             card.find('.edit-btn').show();
 
             location.reload()
         },
+
         error: function(xhr) {
             alert('Erro ao salvar as alterações: ' + xhr.responseText);
         }
     });
+    
+
 });
 
 });

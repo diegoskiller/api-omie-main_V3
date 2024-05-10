@@ -3,6 +3,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from models import *
 import pymysql
 import os
 from dotenv import load_dotenv
@@ -29,3 +30,7 @@ migrate = Migrate(app, db)
 app.config['SECRET_KEY'] = 'my-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = conexao
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# flask db init
+#  flask db migrate -m "teste de migraçãoo"
+# flask db upgrade

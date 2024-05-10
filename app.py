@@ -4,6 +4,7 @@ from flask import Flask, render_template, flash, redirect, url_for, request, ses
 from datetime import date, datetime, timedelta, timezone
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido
 from models.forms import LoginForm, RegisterForm
+from models import *
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
 from operator import neg
@@ -1166,7 +1167,7 @@ def rastreabilidade():
 @app.route('/op_cards', methods = ['GET','POST'])
 def op_cards():
 
-    pedidos = Pedido.query.filter_by().all()
+    pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
     
     return render_template('op_cards.html',pedidos = pedidos)
 
@@ -1181,6 +1182,42 @@ def atualizar_status_pedido():
     else:
         return jsonify({'error': 'Pedido não encontrado'}), 404 
 
+@app.route('/pedidos', methods = ['GET','POST'])
+def pedidos():
+
+    #pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
+    
+    filtro_pd = request.form.get("filtro_pd")
+    filtro_cod = request.form.get("filtro_cod")
+    
+    if not current_user.is_authenticated:
+     return redirect( url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    if filtro_pd == "":
+        filtro_pd = None
+    
+    if filtro_cod == "":
+        filtro_cod = None
+
+
+    if filtro_pd != None:
+        pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(pedido = filtro_pd).paginate(page=page,per_page=10)
+    else:
+        if filtro_cod != None:
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(codigo = filtro_cod).paginate(page=page,per_page=10)
+        else:
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).paginate(page=page,per_page=10)    
+    
+
+
+
+
+
+
+
+    return render_template('pedidos.html',pedidos = pedidos)
 
 @app.route('/update_pedido', methods=['POST'])
 def update_pedido():
@@ -2111,6 +2148,7 @@ def indicadores():
 
 
 if __name__ == "__main__":
+    
     db.create_all()
     db.session.commit()
 

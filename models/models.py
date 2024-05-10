@@ -289,12 +289,16 @@ class Pedido(db.Model):
     amarrados = db.Column(db.Integer)
     dimencional_real = db.Column(db.String(255))
     obs = db.Column(db.String(250))
+    canto = db.Column(db.String(50))
+    furo = db.Column(db.String(50))
+    embalagem = db.Column(db.String(250))
+    status2 = db.Column(db.String(50))
     
 
     
     def __init__(self, id, pedido, emissao, descricao, cliente, codigo, data_entrega,
                  obs_entrega, dimensional, quantidade, peso, peso_total, status,
-                 material, peso_material, amarrados, dimencional_real, obs):  
+                 material, peso_material, amarrados, dimencional_real, obs, canto, furo, embalagem, status2):
 
         self.id = id
         self.pedido = pedido
@@ -314,14 +318,18 @@ class Pedido(db.Model):
         self.amarrados = amarrados
         self.dimencional_real = dimencional_real
         self.obs = obs
+        self.canto = canto
+        self.furo = furo
+        self.embalagem = embalagem
+        self.status2 = status2
        
 
     def __repr__(self):
-        return 'pedido: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.pedido, self.emissao, self.descricao, self.cliente,
+        return 'pedido: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}- {}' .format(self.id, self.pedido, self.emissao, self.descricao, self.cliente,
                                                                                                           self.codigo, self.data_entrega, self.obs_entrega, self.dimensional,
                                                                                                           self.quantidade, self.peso, self.peso_total, self.Status,
                                                                                                           self.material, self.peso_material, self.amarrados,
-                                                                                                          self.dimencional_real, self.obs)
+                                                                                                          self.dimencional_real, self.obs, self.canto, self.furo, self.embalagem, self.status2 )
 
 
 
