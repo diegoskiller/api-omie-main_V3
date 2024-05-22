@@ -1,7 +1,5 @@
 
 
-
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -30,7 +28,6 @@
         padding: 0px;
     }
     .containerModal {
-       
         min-width: 250px;
     }
     .column {
@@ -83,6 +80,10 @@
     .card:hover {
         background-color: #f2f2f2;
     }
+    .status-estoque {
+        color: green;
+        font-weight: bold;
+    }
     .modal {
         display: none;
         position: fixed;
@@ -103,7 +104,6 @@
         border: 1px solid #888;
         width: 50%;
         border-radius: 8px;
-    
     }
     .close {
         color: #f00505;
@@ -159,7 +159,6 @@
         font-size: 18px;
     }
 </style>
-/
 </head>
 <body>
 
@@ -192,7 +191,6 @@
     <div class="column">
         <h3>Pedidos</h3>
 
-        
         <div class="setor" id="pedidos-setor">
             <b> Pedido | Cliente | Peso<br>
                 Código | Data Ent | Estoque<br></b><hr/> 
@@ -201,17 +199,21 @@
             
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
             <hr/>  
             Med.:{{ pedido.dimensional }}
             <hr/>
-            Status:{{ pedido.Status }}
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Pedido em Estoque</span>
+            {% else %}
+                <span>Status: Precisa Produzir</span>
+            {% endif %}
         </div>
             {% endif %}
             {% endfor %}
@@ -221,14 +223,13 @@
         <h3>Produção</h3>
         <div class="setor" id="producao-setor">
             <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
-                <button class="save-ccl" style="background-color: #3da5fa; border-radius: 15px;">
+                <button class="save-ccl" style="background-color: #ffffff; border-radius: 15px;">
                     <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
                 </button>
                 <br>
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Produzindo' %}
-            
 
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
@@ -237,12 +238,16 @@
              '{{ pedido.obs }}')" draggable="true">
             Desc.: {{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
             <hr/> 
             Med.:{{ pedido.dimensional }}
             <hr/>
-            Status:{{ pedido.Status }}
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Item em Estoque</span>
+            {% else %}
+                <span>Status: Produzindo</span>
+            {% endif %}
             <hr/>
             <div class="container">
                 <div style="text-align: left; line-height: 20px;"><b>
@@ -267,9 +272,8 @@
                  </div>
             </div>
             
-            
             <!-- Adicione outros campos da mesma forma --><b>
-                <button class="edit-btn" style="background-color: #9aacff; border-radius: 5px;">Produzir ou Editar Produção ></button>
+                <button class="edit-btn" style="background-color: #fcae90; border-radius: 5px;">Produzir ou Editar Produção ></button>
                 <button class="save-btn" style="display:none; background-color: #9aacff; border-radius: 5px;">Salvar/Produzir</button>
                 <button class="save-ccl" style="display:none; background-color: #f84444; border-radius: 5px;">Cancelar Alteração</button>
             </b>
@@ -293,12 +297,16 @@
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
-            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            <hr/>  
             Med.:{{ pedido.dimensional }}
             <hr/>
-            Status:{{ pedido.Status }}
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Emitindo Certificado</span>
+            {% else %}
+                <span>Status: Emitindo Certificado</span>
+            {% endif %}
 
         </div>
             {% endif %}
@@ -319,13 +327,18 @@
              '{{ pedido.obs }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.peso }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.quantidade }}<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
             <hr/> 
             Med.:{{ pedido.dimensional }}
             <hr/>
-            Status:{{ pedido.Status }}
-
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Disponivel Para Faturar</span>
+            {% else %}
+                <span>Status: Disponivel Para Faturar</span>
+            {% endif %}
+            <button class="expe-btn" data-pedido-id="{{ pedido.id }}" data-pedido-numero="{{ pedido.pedido }}" style="background-color: #a0f89d; border-radius: 5px;">Faturar X</button>
+                
         </div>
             {% endif %}
             {% endfor %}
@@ -374,41 +387,38 @@
             <label>Obs.Entrega:</label>
             <span id="detail-obs_entrega"></span>
         </div>
-   
-   
     </div>
 
     <div class="containerModal">
-
         <span class="close" onclick="closeModal()">&times;</span>
         <div class="detail-field">
-            <label>Peso/Qtd do Material Produzido:</label>
+            <label>Peso/Qtd Produzido:</label>
             <span id="detail-peso"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Produzido total </label>
+            <label>Peso Produzido total:</label>
             <span id="detail-peso_total"></span>
-            <label>com embalagem </label>
+            <label>C/Emb. </label>
         </div>
         <div class="detail-field">
-            <label>Material Prima</label>
+            <label>Material Prima:</label>
             <span id="detail-material"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Material Usado</label>
+            <label>Peso Material Usado:</label>
             <span id="detail-peso_material"></span>
         </div>
         
         <div class="detail-field">
-            <label>Qtd. de Amarrados</label>
+            <label>Qtd. de Amarrados:</label>
             <span id="detail-amarrados"></span>
         </div>
         <div class="detail-field">
-            <label>Dimensional Encontrado</label>
+            <label>Dimensional Encontrado:</label>
             <span id="detail-dimencional_real"></span>
         </div>
         <div class="detail-field">
-            <label>Observações de Produção</label>
+            <label>Observações de Produção:</label>
             <span id="detail-obs"></span>
         </div>
     </div>
@@ -423,24 +433,36 @@
 <script>
    function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total,
                  material, peso_material, amarrados, dimencional_real, obs) {
-        document.getElementById("detail-data").innerText = data;
-        document.getElementById("detail-medida").innerText = medida;
-        document.getElementById("detail-descricao").innerText = descricao;
-        document.getElementById("detail-cliente").innerText = cliente;
-        document.getElementById("detail-quantidade").innerText = quantidade;
-        document.getElementById("detail-codigo").innerText = codigo;
-        document.getElementById("detail-pedido").innerText = pedido;
-        document.getElementById("detail-acao").innerText = Status;
-        document.getElementById("detail-obs_entrega").innerText = obs_entrega;
-        document.getElementById("detail-peso").innerText = peso;
-        document.getElementById("detail-peso_total").innerText = peso_total;
-        document.getElementById("detail-material").innerText = material;
-        document.getElementById("detail-peso_material").innerText = peso_material;
-        document.getElementById("detail-amarrados").innerText = amarrados;
-        document.getElementById("detail-dimencional_real").innerText = dimencional_real;
-        document.getElementById("detail-obs").innerText = obs;
+        toggleFieldVisibility("detail-data", data);
+        toggleFieldVisibility("detail-medida", medida);
+        toggleFieldVisibility("detail-descricao", descricao);
+        toggleFieldVisibility("detail-cliente", cliente);
+        toggleFieldVisibility("detail-quantidade", quantidade);
+        toggleFieldVisibility("detail-codigo", codigo);
+        toggleFieldVisibility("detail-pedido", pedido);
+        toggleFieldVisibility("detail-acao", Status);
+        toggleFieldVisibility("detail-obs_entrega", obs_entrega);
+        toggleFieldVisibility("detail-peso", peso);
+        toggleFieldVisibility("detail-peso_total", peso_total);
+        toggleFieldVisibility("detail-material", material);
+        toggleFieldVisibility("detail-peso_material", peso_material);
+        toggleFieldVisibility("detail-amarrados", amarrados);
+        toggleFieldVisibility("detail-dimencional_real", dimencional_real);
+        toggleFieldVisibility("detail-obs", obs);
+
         document.getElementById("myModal").style.display = "block";
     }
+
+    function toggleFieldVisibility(fieldId, value) {
+        var field = document.getElementById(fieldId).parentElement;
+        if (value && value !== "None") {
+            document.getElementById(fieldId).innerText = value;
+            field.style.display = "block";
+        } else {
+            field.style.display = "none";
+        }
+    }
+
     function closeModal() {
         document.getElementById("myModal").style.display = "none";
     }
@@ -562,14 +584,31 @@
             alert('Erro ao salvar as alterações: ' + xhr.responseText);
         }
     });
-    
-
 });
+
+    $('.expe-btn').click(function() {
+        var pedidoId = $(this).data('pedido-id');
+        var pedidoNumero = $(this).data('pedido-numero');
+        var faturadoOmie = confirm("O item foi faturado pelo sistema Omie?");
+
+        $.ajax({
+            url: '/faturar_pedido',
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify({ pedidoId: pedidoId, pedidoNumero: pedidoNumero, faturado_omie: faturadoOmie  }),
+            success: function(response) {
+                alert('Pedido faturado com sucesso!');
+                location.reload();
+            },
+            error: function(xhr) {
+                alert('Erro ao faturar o pedido: ' + xhr.responseText);
+            }
+        });
+    });
 
 });
 
 </script>
-
 
 </body>
 </html>

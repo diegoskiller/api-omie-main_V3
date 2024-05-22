@@ -1,5 +1,6 @@
 import requests
 from sqlalchemy import desc
+from sqlalchemy.orm import aliased
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
 from datetime import date, datetime, timedelta, timezone
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido
@@ -13,6 +14,7 @@ from reportlab.pdfgen import canvas
 import re
 import os
 import pandas as pd
+import logging
 
 
 #============variaveis gerais=============# 
@@ -47,6 +49,9 @@ text_botoes = ""
 def load_user(user_id):
     return User.query.get(user_id)
 
+# Configuração do logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 #============== REGISTER ============#
 @app.route('/register', methods=["POST", "GET"])
@@ -1164,12 +1169,25 @@ def rastreabilidade():
 
     return render_template('rastreabilidade.html',op_rastreio = op_rastreio, consulta = consulta, consulta_geral = consulta_geral )
 
-@app.route('/op_cards', methods = ['GET','POST'])
+@app.route('/op_cards', methods=['GET', 'POST'])
 def op_cards():
+    LoteVisualAlias = aliased(Lote_visual)
+    pedidos = db.session.query(
+        Pedido,
+        LoteVisualAlias.quantidade.label('estoque')
+    ).outerjoin(
+        LoteVisualAlias, Pedido.codigo == LoteVisualAlias.item
+    ).filter(
+        Pedido.status2 == "Emitido"
+    ).all()
 
-    pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
-    
-    return render_template('op_cards.html',pedidos = pedidos)
+    # Convertendo o resultado da consulta para adicionar o campo 'estoque' em cada pedido
+    pedidos_com_estoque = []
+    for pedido, estoque in pedidos:
+        pedido.estoque = estoque if estoque is not None else 0
+        pedidos_com_estoque.append(pedido)
+
+    return render_template('op_cards.html', pedidos=pedidos_com_estoque)
 
 @app.route('/atualizar_status_pedido', methods=['POST'])
 def atualizar_status_pedido():
@@ -1212,23 +1230,32 @@ def pedidos():
     
 
 
-
+    #pedidos = pedidos.query.filter_by(status2 = "Emitido").all()
 
 
 
 
     return render_template('pedidos.html',pedidos = pedidos)
 
-@app.route('/update_pedido', methods=['POST'])
-def update_pedido():
-    if not current_user.is_authenticated:
-        return redirect(url_for('login'))
-
+@app.route('/faturar_pedido', methods = ['GET','POST'])
+def faturar_pedido():
     data = request.get_json()  # Obter dados como JSON
     pedido_id = data['pedidoId']
+    faturadoOmie = data['faturadoOmie']
+    if faturadoOmie == True:
+        print("faturado Omie")
+    else:
+        print("Faturado Direto")
+
     edit_item = Pedido.query.get(pedido_id)
- 
+
     if edit_item:
+        qtd_visual = data['data']['peso']
+        qtd_visual = int(qtd_visual)
+        qtd_visual = qtd_visual * 1000
+        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
+        print(Status_mov, edit_item.codigo)
+
         edit_item.peso = data['data']['peso']
         edit_item.peso_total = data['data']['peso_total']
         edit_item.material = data['data']['material']
@@ -1240,6 +1267,48 @@ def update_pedido():
 
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Pedido atualizado com sucesso!'})
+
+
+
+    return jsonify({'status': 'error', 'message': 'Pedido não encontrado'})
+
+
+
+@app.route('/update_pedido', methods = ['GET','POST'])
+def update_pedido():
+    #if not current_user.is_authenticated:
+    #    return redirect( url_for('login'))
+    
+    print("teste1")
+    data = request.get_json()  # Obter dados como JSON
+    pedido_id = data['pedidoId']
+    edit_item = Pedido.query.get(pedido_id)
+ 
+    if edit_item:
+        print("teste2")
+        qtd_visual = data['data']['peso']
+        qtd_visual = int(qtd_visual)
+        qtd_visual = qtd_visual * 1000
+        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"SAI", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
+        print(Status_mov, edit_item.codigo)
+
+
+
+
+
+        edit_item.peso = data['data']['peso']
+        edit_item.peso_total = data['data']['peso_total']
+        edit_item.material = data['data']['material']
+        edit_item.peso_material = data['data']['peso_material']
+        edit_item.amarrados = data['data']['amarrados']
+        edit_item.dimencional_real = data['data']['dimencional_real']
+        edit_item.Status = "Qualidade"
+        edit_item.obs = data['data']['obs']  # Certifique-se de que a chave 'obs' está correta no JSON
+
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Pedido atualizado com sucesso!'})
+    
+    
 
     return jsonify({'status': 'error', 'message': 'Pedido não encontrado'})
 
@@ -1523,6 +1592,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
         convert = Def_Convert_Unidade(tipom, unidade)
         
         valor_unitario = cadastro[4]
+        print(quan)
         quan_omie = int(quan) * convert[1]
         
         if valor_unitario == None:
@@ -1583,24 +1653,75 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
         data_criacao = datahora("data")
         numero_lote =  "".join([str(lote), "/", str(referencia) ])
         tempfino = Def_Caracter(id_produto)
+        
         if tempfino[0] == None:
                 fino = 0
                 quantidade = int(quan)
+                print("point 2")
         else:
-            if tipomov == "ENT":
-                fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
-                fino = int(fino)
-                novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote, numero_lote=numero_lote, quantidade=quan, peso=peso, fino=fino, local=local, obs=obs, data_criacao=data_criacao, processado_op=0, quant_inicial = quan)
-                
+            fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
+            fino = int(fino)
+
+        print("point 1")
+        if tipomov == "ENT":
+            
+            
+            # Configuração do logging
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+
+
+
+
+            try:
+                novo_lote = Lote_visual(
+                referencia=referencia, 
+                tipo=tipo, 
+                item=item, 
+                lote_visual=lote, 
+                numero_lote=numero_lote, 
+                quantidade=quan, 
+                peso=peso, 
+                fino=fino, 
+                local=local, 
+                obs=obs, 
+                data_criacao=data_criacao, 
+                processado_op=0, 
+                quant_inicial=quan
+                )
+            
                 db.session.add(novo_lote)
                 db.session.commit()
+                
                 id_lote = novo_lote.id
                 if id_lote == None:
                     id_lote = 0
                 quantidade = int(quan)
+                logger.info("Dados salvos com sucesso no Lote_visual.")
+                print("Dados salvos com sucesso no Lote_visual.")
+                return {"status": "success", "message": "Dados salvos com sucesso."}
+                
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
+                print("Erro ao salvar os dados no Lote_visual: %s", e)
+                return {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
+                
+
+
+        
+
+
+
+
+
+
+
+                
     
-            else:
-                quantidade = neg(quan)
+        else:
+            quantidade = neg(quan)
 
         Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
         return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote]

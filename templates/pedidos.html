@@ -15,7 +15,9 @@
        
         padding: 8px;
         text-align: left;
-        line-height: 6px; /* Altura de linha específica */
+        line-height: 6px;
+        
+        /*max-width: 200px;*/
     }
 
     th {
@@ -92,7 +94,8 @@
                         <th>Embalagem</th>
                         <th>Dimensional</th>
                         <th>Quantidade</th>
-                        <th>Um</th>      
+                        <th>Um</th>
+                        <th>Descrição</th>      
                     </tr>
 
 
@@ -105,14 +108,15 @@
                         <td>-</td>
                         <td>{{row.codigo}}</td>
                         <td>{{row.data_entrega}}</td>
-                        <td>{{row.obs_entrega}}</td>
+                        <td>{{row.obs_entrega|default('-', true)}}</td>
                         <td>Cobre</td>
-                        <td>{{row.canto}}</td>
-                        <td>{{row.furo}}</td>
-                        <td>{{row.embalagem}}</td>
-                        <td>{{row.dimensional}}</td>
-                        <td>{{row.peso}}</td>
+                        <td>{{row.canto|default('-', true)}}</td>
+                        <td>{{row.furo|default('-', true)}}</td>
+                        <td><font size="1">{{row.embalagem|default('-', true)}}</font></td>
+                        <td>{{row.dimensional[0:30]}}</td>
+                        <td>{{row.quantidade|default('', true)}}</td>
                         <td>KG</td>
+                        <td><font size="1">{{row.descricao}}</font></td>
 
                         {% if row.status2 == "Faturado" %}
                         <td rowspan="2">
@@ -134,14 +138,9 @@
                                 </td>
                             {% else %}
                             {% endif %}
-                        
-                        
-
-
-
-
-                    </tr>
-                    <!-- <tr class='{{"table-dark" if row.situação == "Encerrada" else ""}}' style="border-bottom: 6px solid #82a6e9 !important;" >                      
+                     
+                        </tr>
+                    <!-- <tr class='{{"table-dark" if row.status2 == "Cancelado" else ""}}' style="border-bottom: 6px solid #82a6e9 !important;" >                      
                     
                         
                         <td><b>Peso Env.: </b>{{row.peso_enviado}}<b> / Rec.: </b> {{row.peso_retornado}}</td>
@@ -151,7 +150,7 @@
                         <td colspan="2"><b>Qtd. Estimada : </b>{{row.quantidade}}</td>
                         <td><b> Qtd. Produzida : </b>{{row.quantidade_real}}</td>
                     </tr> -->
-                    <!-- {% include 'edit_modal_visual.html' %} -->
+                    {% include 'edit_modal_visual.html' %}
                     {% endfor %}
                 </table>
             </div></div>

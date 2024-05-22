@@ -55,7 +55,7 @@ class Lote_visual(db.Model):
     __tablename__='lote_visual'
 
     id = db.Column(db.Integer, primary_key=True)
-    referencia = db.Column(db.Integer, nullable=False)
+    referencia = db.Column(db.String(50), nullable=False)
     tipo = db.Column(db.String(50), nullable=False)
     item = db.Column(db.String(50), nullable=False)
     lote_visual = db.Column(db.String(50), nullable=False)
@@ -212,7 +212,7 @@ class Movimentos_estoque(db.Model):
     item = db.Column(db.String(50))
     tipo = db.Column(db.String(50))
     lote_visual = db.Column(db.String(50))
-    referencia = db.Column(db.Integer)
+    referencia = db.Column(db.String(50))
     quantidade = db.Column(db.Integer)
     local = db.Column(db.String(50))
     obs = db.Column(db.String(250))
@@ -272,7 +272,7 @@ class Pedido(db.Model):
     __tablename__='pedido'
 
     id = db.Column(db.Integer, primary_key=True)
-    pedido = db.Column(db.Integer, unique=True) 
+    pedido = db.Column(db.Integer) 
     emissao = db.Column(db.String(250), nullable=False)
     descricao = db.Column(db.String(255))
     cliente = db.Column(db.String(255))
