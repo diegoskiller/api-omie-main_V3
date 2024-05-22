@@ -1,52 +1,614 @@
-{% extends 'base.html' %}
-{% include 'header.html' %}
-
-{% block title %} testes temporarios {% endblock %}
-{% block body %}
 
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciador do Setor de Cobre</title>
 
-<form method="POST" action="{{url_for('cadastro_prod')}}" class="input-group">
-    <input type="search" class="form-control" placeholder="Pesquisar por item" name="item"
-        aria-label="Pesquisar por item" aria-describedby="basic-addon2" autocomplete="off">
-    <div class="input-group-append">
-        <button class="btn btn-danger" type="submit">Consultar item</button>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #525151;
+        margin: 0;
+        padding: 0;
+    }
+    h2 {
+        text-align: center;
+        margin-top: 20px;
+        color: #fff;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px;
+    }
+    .containerModal {
+        min-width: 250px;
+    }
+    .column {
+        width: 22%;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 8px 16px rgba(248, 247, 247, 0.411); /* Suavizado a sombra */
+    }
+    input {
+        width: 130px;
+        height: 12px;
+        padding: 2px;
+    }
+    .column h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    #pedidos-setor {
+        background-color: #2196F3; /* Azul */
+    }
+    #producao-setor {
+        background-color: #FF9800; /* Laranja */
+    }
+    #qualidade-setor {
+        background-color: #E91E63; /* Rosa */
+    }
+    #expedicao-setor {
+        background-color: #4CAF50; /* Verde */
+    }
+    .setor {
+        min-height: 200px;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 20px;
+        background-color: rgba(145, 143, 143, 0.479); /* Sombra mais clara */
+    }
+    .card {
+        background-color: #d3dff591;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .card:hover {
+        background-color: #f2f2f2;
+    }
+    .status-estoque {
+        color: green;
+        font-weight: bold;
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        text-align: left;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+    }
+    .modal-content {
+        background-color: #eeeded;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%;
+        border-radius: 8px;
+    }
+    .close {
+        color: #f00505;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .detail-field {
+        margin-bottom: 10px;
+    }
+    .detail-field label {
+        color: rgb(2, 8, 66);
+        font-weight: bold;
+    }
+    .navbar {
+        background-color: #343a40;
+        color: #fff;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .navbar-brand {
+        font-size: 24px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+    .navbar-nav {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+    }
+    .nav-item {
+        margin-right: 10px;
+    }
+    .nav-link {
+        color: #fff;
+        text-decoration: none;
+        font-size: 18px;
+        transition: color 0.3s ease;
+    }
+    .nav-link:hover {
+        color: #ffc107;
+    }
+    .usuario {
+        font-size: 18px;
+    }
+</style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg  navbar-light bg-light w-100 fixed-top header  border-bottom border-2 border-dark">
+        <img src="{{ url_for('static', filename='images/logo-iso.png')}}" width = 200 alt="logo">
+          <ul class="navbar-nav">
+        <li class="nav-item">
+            <a class="nav-link card-menu text-center" href="{{url_for('index')}}"> Ínicio Home</a>   
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{url_for('pedidos')}}">Abrir Pedido</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Faturados</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Ferramentas</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#">Estoque</a>
+        </li>
+    </ul>
+    <div class="usuario">
+        <p>Bem vindo: {{ current_user.name }}  | <a href="/logout" class="text-warning">Sair</a></p>
     </div>
-</form>
+</nav>
 
+<h2>Gerenciador do Setor de Cobre</h2>
+<div class="container">
+    <div class="column">
+        <h3>Pedidos</h3>
 
+        <div class="setor" id="pedidos-setor">
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b><hr/> 
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Emitido' %}
+            
+            <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+             '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
+             '{{ pedido.obs }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            <hr/>  
+            Med.:{{ pedido.dimensional }}
+            <hr/>
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Pedido em Estoque</span>
+            {% else %}
+                <span>Status: Precisa Produzir</span>
+            {% endif %}
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <h3>Produção</h3>
+        <div class="setor" id="producao-setor">
+            <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                <button class="save-ccl" style="background-color: #3da5fa; border-radius: 15px;">
+                    <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
+                </button>
+                <br>
+                Código | Data Ent | Estoque<br></b><hr/> 
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Produzindo' %}
 
+            <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+           '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+             '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
+             '{{ pedido.obs }}')" draggable="true">
+            Desc.: {{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+            <hr/>
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Item em Estoque</span>
+            {% else %}
+                <span>Status: Produzindo</span>
+            {% endif %}
+            <hr/>
+            <div class="container">
+                <div style="text-align: left; line-height: 20px;"><b>
+                    <label class="edit-input" style="display:none;">Qtd. Produzida:<br></label>
+                    <label class="edit-input" style="display:none;">Peso com Emb:<br></label>
+                    <label class="edit-input" style="display:none;">Matéria Prima :<br></label>
+                    <label class="edit-input" style="display:none;">Peso Mat. Pri. :<br></label>
+                    <label class="edit-input" style="display:none;">Qtd.Amarrados:<br></label>
+                    <label class="edit-input" style="display:none;">Dimensional   :<br></label>
+                    <label class="edit-input" style="display:none;">Observaçóes  :<br></label>
+                </b>
+                </div>
+                <div>
+                    <input type="number" class="edit-input" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="number" class="edit-input" name="peso_total" data-field="peso_total" value="{{ pedido.peso_total|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="text" class="edit-input" name="material" data-field="material" value="{{ pedido.material|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="number" class="edit-input" name="peso_material" data-field="peso_material" value="{{ pedido.peso_material|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="text" class="edit-input" name="amarrados" data-field="amarrados" value="{{ pedido.amarrados|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="text" class="edit-input" name="dimencional_real" data-field="dimencional_real" value="{{ pedido.dimencional_real|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="text" class="edit-input" name="obs" data-field="obs" value="{{ pedido.obs|default('', true) }}" autocomplete="off" style="display:none;">
 
-<table class="table table-secondary">
-    <thead>
-      <tr>
-        <th scope="col">Codigo</th>
-        <th scope="col">Id-Prod</th>
-        <th scope="col">Tipo do item</th>
-        <th scope="col">Quantidade em estoque</th>
-        <th scope="col">Unidade</th>
-      </tr>
-    </thead>
-    
-    <tbody>
-      <tr>
-        <td>{{cadastro.codigo}}</td>
-        <td>{{id_produto}}</td>
-        <td>{{tipo}}</td>
-        <td>{{saldoFisico}}</td>
-        <td>{{cadastro.unidade}}</td>
+                 </div>
+            </div>
+            
+            <!-- Adicione outros campos da mesma forma --><b>
+                <button class="edit-btn" style="background-color: #9aacff; border-radius: 5px;">Produzir ou Editar Produção ></button>
+                <button class="save-btn" style="display:none; background-color: #9aacff; border-radius: 5px;">Salvar/Produzir</button>
+                <button class="save-ccl" style="display:none; background-color: #f84444; border-radius: 5px;">Cancelar Alteração</button>
+            </b>
+            </div>
+            {% endif %}
+            
+            {% endfor %}
+    </div>
+    </div>
+    <div class="column">
+        <h3>Qualidade</h3>
+        <div class="setor" id="qualidade-setor"> 
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b><hr/> 
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Qualidade' %}
+            <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+             '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
+             '{{ pedido.obs }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            <hr/>  
+            Med.:{{ pedido.dimensional }}
+            <hr/>
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Emitindo Certificado</span>
+            {% else %}
+                <span>Status: Emitindo Certificado</span>
+            {% endif %}
+
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="column">
+        <h3>Expedição</h3>
+        <div class="setor" id="expedicao-setor">
+            <b> Pedido | Cliente | Peso<br>
+                Código | Data Ent | Estoque<br></b><hr/> 
+            {% for pedido in pedidos %}
+            {% if pedido.Status == 'Expedindo' %}
+            <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
+           '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+             '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
+             '{{ pedido.obs }}')" draggable="true">
+            Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }}
+            <hr/>
+            {% if pedido.estoque >= pedido.quantidade %}
+                <span class="status-estoque">Status: Disponivel Para Faturar</span>
+            {% else %}
+                <span>Status: Disponivel Para Faturar</span>
+            {% endif %}
+            <button class="expe-btn" data-pedido-id="{{ pedido.id }}" data-pedido-numero="{{ pedido.pedido }}" style="background-color: #d31111; border-radius: 5px;">Faturar X</button>
+                
+        </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de detalhes do pedido -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <div class="container">
+        <div class="containerModal">
+        <div class="detail-field">
+            <label>Data de Entrega:</label>
+            <span id="detail-data"></span>
+        </div>
+        <div class="detail-field">
+            <label>Medida:</label>
+            <span id="detail-medida"></span>
+        </div>
+        <div class="detail-field">
+            <label>Descrição:</label>
+            <span id="detail-descricao"></span>
+        </div>
+        <div class="detail-field">
+            <label>Cliente:</label>
+            <span id="detail-cliente"></span>
+        </div>
+        <div class="detail-field">
+            <label>Quantidade do Pedido:</label>
+            <span id="detail-quantidade"></span>
+        </div>
+        <div class="detail-field">
+            <label>Código:</label>
+            <span id="detail-codigo"></span>
+        </div>
+        <div class="detail-field">
+            <label>Pedido:</label>
+            <span id="detail-pedido"></span>
+        </div>
+        <div class="detail-field">
+            <label>Status:</label>
+            <span id="detail-acao"></span>
+        </div>
+        <div class="detail-field">
+            <label>Obs.Entrega:</label>
+            <span id="detail-obs_entrega"></span>
+        </div>
+    </div>
+
+    <div class="containerModal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div class="detail-field">
+            <label>Peso/Qtd Produzido:</label>
+            <span id="detail-peso"></span>
+        </div>
+        <div class="detail-field">
+            <label>Peso Produzido total:</label>
+            <span id="detail-peso_total"></span>
+            <label>C/Emb. </label>
+        </div>
+        <div class="detail-field">
+            <label>Material Prima:</label>
+            <span id="detail-material"></span>
+        </div>
+        <div class="detail-field">
+            <label>Peso Material Usado:</label>
+            <span id="detail-peso_material"></span>
+        </div>
         
-        
-        
-      </tr>
-    
-    </tbody>
-  </table>
-  {{cadastro}}<p>
-  <p>--saldo--{{cadastro.codigo}}--saldo--</p>  
-  {{cadastro_saldo}}
+        <div class="detail-field">
+            <label>Qtd. de Amarrados:</label>
+            <span id="detail-amarrados"></span>
+        </div>
+        <div class="detail-field">
+            <label>Dimensional Encontrado:</label>
+            <span id="detail-dimencional_real"></span>
+        </div>
+        <div class="detail-field">
+            <label>Observações de Produção:</label>
+            <span id="detail-obs"></span>
+        </div>
+    </div>
+</div>
+</div>
 
 
+<!-- JavaScript libraries -->
+<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
+<script>
+   function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total,
+                 material, peso_material, amarrados, dimencional_real, obs) {
+        toggleFieldVisibility("detail-data", data);
+        toggleFieldVisibility("detail-medida", medida);
+        toggleFieldVisibility("detail-descricao", descricao);
+        toggleFieldVisibility("detail-cliente", cliente);
+        toggleFieldVisibility("detail-quantidade", quantidade);
+        toggleFieldVisibility("detail-codigo", codigo);
+        toggleFieldVisibility("detail-pedido", pedido);
+        toggleFieldVisibility("detail-acao", Status);
+        toggleFieldVisibility("detail-obs_entrega", obs_entrega);
+        toggleFieldVisibility("detail-peso", peso);
+        toggleFieldVisibility("detail-peso_total", peso_total);
+        toggleFieldVisibility("detail-material", material);
+        toggleFieldVisibility("detail-peso_material", peso_material);
+        toggleFieldVisibility("detail-amarrados", amarrados);
+        toggleFieldVisibility("detail-dimencional_real", dimencional_real);
+        toggleFieldVisibility("detail-obs", obs);
 
-  {% endblock %}
+        document.getElementById("myModal").style.display = "block";
+    }
+
+    function toggleFieldVisibility(fieldId, value) {
+        var field = document.getElementById(fieldId).parentElement;
+        if (value && value !== "None") {
+            document.getElementById(fieldId).innerText = value;
+            field.style.display = "block";
+        } else {
+            field.style.display = "none";
+        }
+    }
+
+    function closeModal() {
+        document.getElementById("myModal").style.display = "none";
+    }
+
+    $(function() {
+        $(".card").draggable({
+            revert: "invalid",
+            zIndex: 100,
+            start: function(event, ui) {
+                $(this).data("startPosition", ui.helper.position());
+            }
+        });
+
+        $(".setor").droppable({
+            accept: ".card",
+            drop: function(event, ui) {
+                var startPosition = $(ui.draggable).data("startPosition");
+                var endPosition = ui.helper.position();
+                var deltaX = endPosition.left - startPosition.left;
+                var deltaY = endPosition.top - startPosition.top;
+
+                ui.helper.animate({
+                    left: '+=' + deltaX,
+                    top: '+=' + deltaY
+                }, "slow");
+
+                $(ui.draggable).appendTo(this).removeAttr("style");
+
+                // Atualizar o status do pedido com base no setor onde o card foi solto
+                var novoStatus;
+                if ($(this).attr('id') === 'pedidos-setor') {
+                    novoStatus = 'Emitido';
+                } else if ($(this).attr('id') === 'producao-setor') {
+                    novoStatus = 'Produzindo';
+                } else if ($(this).attr('id') === 'qualidade-setor') {
+                    novoStatus = 'Qualidade';
+                } else if ($(this).attr('id') === 'expedicao-setor') {
+                    novoStatus = 'Expedindo';
+                }
+
+                // Obter o ID do pedido
+                var pedidoId = $(ui.draggable).data('pedidoId');
+                if (confirm("Tem certeza de que deseja ?")) {
+                    // Lógica para atualizar o status do pedido
+                    atualizarStatusPedido(pedidoId, novoStatus);
+                } else {
+                    // Cancelado pelo usuário
+                    location.reload()
+                }
+            }
+        });
+
+        function atualizarStatusPedido(pedidoId, novoStatus) {
+            $.ajax({
+                type: "POST",
+                url: "/atualizar_status_pedido", // Endpoint do servidor para atualizar status
+                data: JSON.stringify({ pedidoId: pedidoId, novoStatus: novoStatus }),
+                contentType: "application/json",
+                success: function(response) {
+                    console.log("Status atualizado com sucesso.", response);
+                },
+                error: function(error) {
+                    console.error("Erro ao atualizar o status do pedido:", error);
+                }
+            });
+        }
+
+    });
+
+    $(document).ready(function() {
+    $('.edit-btn').click(function() {
+        var card = $(this).closest('.card');
+        card.find('.editable').hide();
+        card.find('.edit-input').show();
+        $(this).hide();
+        card.find('.save-btn').show();
+        card.find('.save-ccl').show();
+    });
+
+    $('.save-ccl').click(function() {
+        location.reload()
+    }),   
+
+    $('.save-btn').click(function() {
+    var card = $(this).closest('.card');
+    var pedidoId = card.data('pedido-id');
+    var updatedData = {};
+
+    card.find('.edit-input').each(function() {
+        var field = $(this).attr('name');
+        updatedData[field] = $(this).val();
+    });
+
+    $.ajax({
+        url: '/update_pedido',
+        type: 'POST',
+        contentType: "application/json",
+        data: JSON.stringify({ pedidoId: pedidoId, data: updatedData }),
+        success: function(response) {
+            console.log("Resposta do servidor:", response);
+            alert('Dados atualizados com sucesso!');
+
+            // Esconde os inputs e mostra os valores atualizados
+            card.find('.edit-input').each(function() {
+                $(this).hide();
+                var field = $(this).attr('name');
+                card.find('.editable[data-field="' + field + '"]').text($(this).val()).show();
+            });
+
+            // Oculta o botão salvar e mostra o botão editar novamente
+            card.find('.save-btn').hide();
+            card.find('.save-ccl').hide();
+            card.find('.edit-btn').show();
+
+            location.reload()
+        },
+
+        error: function(xhr) {
+            alert('Erro ao salvar as alterações: ' + xhr.responseText);
+        }
+    });
+});
+
+    $('.expe-btn').click(function() {
+        var pedidoId = $(this).data('pedido-id');
+        var pedidoNumero = $(this).data('pedido-numero');
+        var faturadoOmie = confirm("O item foi faturado pelo sistema Omie?");
+
+        $.ajax({
+            url: '/faturar_pedido',
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify({ pedidoId: pedidoId, pedidoNumero: pedidoNumero, faturado_omie: faturadoOmie  }),
+            success: function(response) {
+                alert('Pedido faturado com sucesso!');
+                location.reload();
+            },
+            error: function(xhr) {
+                alert('Erro ao faturar o pedido: ' + xhr.responseText);
+            }
+        });
+    });
+
+});
+
+</script>
+
+</body>
+</html>

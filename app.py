@@ -1253,17 +1253,18 @@ def faturar_pedido():
         qtd_visual = data['data']['peso']
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
-        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
+        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"SAI", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
         print(Status_mov, edit_item.codigo)
 
-        edit_item.peso = data['data']['peso']
-        edit_item.peso_total = data['data']['peso_total']
-        edit_item.material = data['data']['material']
-        edit_item.peso_material = data['data']['peso_material']
-        edit_item.amarrados = data['data']['amarrados']
-        edit_item.dimencional_real = data['data']['dimencional_real']
-        edit_item.Status = "Qualidade"
-        edit_item.obs = data['data']['obs']  # Certifique-se de que a chave 'obs' está correta no JSON
+        # edit_item.peso = data['data']['peso']
+        # edit_item.peso_total = data['data']['peso_total']
+        # edit_item.material = data['data']['material']
+        # edit_item.peso_material = data['data']['peso_material']
+        # edit_item.amarrados = data['data']['amarrados']
+        # edit_item.dimencional_real = data['data']['dimencional_real']
+        edit_item.Status = "Faturado"
+        edit_item.Status2 = "Faturado"
+        # edit_item.obs = data['data']['obs']  # Certifique-se de que a chave 'obs' está correta no JSON
 
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Pedido atualizado com sucesso!'})
