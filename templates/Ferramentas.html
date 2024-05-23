@@ -1,0 +1,150 @@
+
+
+
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Ferramentas {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <button type="button" class="btn btn-primary ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#addFerramentaModal">Adicionar Ferramenta</button>
+
+        <h2 class="d-flex justify-content-center mt-2"><strong>Ferramentas</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('ferramentas')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control  w-50" placeholder="Pesquisar por Dimensional" name="filtro_cod" aria-label="Pesquisar por Dimensional" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar por Dimensional</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Dimensional</th>
+                    <th>Quantidade</th>
+                    <th>Obs</th>
+                    <th>Ações</th> <!-- Nova coluna -->
+                </tr>
+
+                {% for row in ferramentas.items %}
+                <tr class='{{ "table-dark" if row.situação == "Encerrada" else "" }}'>                      
+                    <td>{{ row.dimensional }}</td>
+                    <td>{{ row.quantidade }}</td>
+                    <td>{{ row.obs }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deletarFerramenta('{{ row.id }}')">Deletar</button>
+                    </td>
+                </tr>
+                {% include 'edit_modal_visual.html' %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in ferramentas.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if page_num %}
+    {% if ferramentas.page == page_num %}
+    <a class="btn btn-dark mb-4" href="{{ url_for('ferramentas', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+    <a class="btn btn-outline-dark mb-4" href="{{ url_for('ferramentas', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+    {% else %}
+    ...
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar Ferramenta -->
+<div class="modal fade" id="addFerramentaModal" tabindex="-1" aria-labelledby="addFerramentaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_ferramentas') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFerramentaModalLabel">Adicionar Ferramenta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="dimensional" class="form-label">Dimensional</label>
+                        <input type="text" class="form-control" id="dimensional" name="dimensional" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantidade" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidade" name="quantidade" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="obs" class="form-label">Obs</label>
+                        <input type="text" class="form-control" id="obs" name="obs">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function deletarFerramenta(id) {
+    if (confirm('Tem certeza de que deseja deletar esta ferramenta?')) {
+        fetch(`/deletar_ferramenta/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Erro ao deletar ferramenta.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao deletar ferramenta.');
+        });
+    }
+}
+</script>
+
+{% endblock %}

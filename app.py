@@ -3,7 +3,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import aliased
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -1198,7 +1198,116 @@ def atualizar_status_pedido():
         db.session.commit()
         return jsonify({'message': 'Status atualizado com sucesso!'}), 200
     else:
-        return jsonify({'error': 'Pedido não encontrado'}), 404 
+        return jsonify({'error': 'Pedido não encontrado'}), 404
+    
+@app.route('/add_pedido', methods=['POST'])
+def add_pedido():
+    if request.method == 'POST':
+        pedido = request.form.get('pedido')
+        descricao = request.form.get('descricao')
+        cliente = request.form.get('cliente')
+        codigo = request.form.get('codigo')
+        data_entrega = request.form.get('data_entrega')
+        obs_entrega = request.form.get('obs_entrega')
+        dimensional = request.form.get('dimensional')
+        quantidade = request.form.get('quantidade')
+        canto = request.form.get('canto')
+        furo = request.form.get('furo')
+        embalagem = request.form.get('embalagem')
+        date = datahora("data")
+
+        novo_pedido = Pedido(pedido=pedido,
+            emissao=date,
+            descricao=descricao,
+            cliente=cliente,
+            codigo=codigo,
+            data_entrega=data_entrega,
+            obs_entrega=obs_entrega,
+            dimensional=dimensional,
+            quantidade=quantidade,
+            canto=canto,
+            furo=furo,
+            embalagem=embalagem,
+            Status="Emitido",
+            status2="Emitido")
+        
+        db.session.add(novo_pedido)
+        try:
+            db.session.commit()
+            flash('Pedido adicionado com sucesso!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao adicionar pedido: {e}', 'danger')
+        
+        return redirect(url_for('pedidos'))
+
+@app.route('/deletar_pedido', methods=['POST'])
+def deletar_pedido():
+    data = request.get_json()
+    pedido_id = data.get('id')
+    
+    pedido = Pedido.query.get(pedido_id)
+    if pedido:
+        db.session.delete(pedido)
+        try:
+            db.session.commit()
+            return jsonify(success=True)
+        except Exception as e:
+            db.session.rollback()
+            return jsonify(success=False, message=str(e))
+    return jsonify(success=False, message="Pedido não encontrado.")
+
+
+@app.route('/ferramentas', methods = ['GET','POST'])
+def ferramentas():
+
+   
+    
+    filtro_cod = request.form.get("filtro_cod")
+    
+    if not current_user.is_authenticated:
+     return redirect( url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    
+    if filtro_cod == "":
+        filtro_cod = None
+
+
+    if filtro_cod != None:
+        ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).filter_by(dimensional = filtro_cod).paginate(page=page,per_page=10)
+    else:
+        ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).paginate(page=page,per_page=10)
+
+
+        return render_template('Ferramentas.html', ferramentas = ferramentas)
+
+@app.route('/estoque_cobre', methods = ['GET','POST'])
+def estoque_cobre():
+
+    #pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
+    
+    
+    filtro_cod = request.form.get("filtro_cod")
+    
+    if not current_user.is_authenticated:
+     return redirect( url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    
+    if filtro_cod == "":
+        filtro_cod = None
+
+
+    if filtro_cod != None:
+        cobre = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo = "Setor_Cobre", item = filtro_cod).paginate(page=page,per_page=10)
+    else:
+        cobre = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo = "Setor_Cobre").paginate(page=page,per_page=10)
+
+
+        return render_template('Estoque_Cobre.html',cobre = cobre)
 
 @app.route('/pedidos', methods = ['GET','POST'])
 def pedidos():
@@ -1221,12 +1330,12 @@ def pedidos():
 
 
     if filtro_pd != None:
-        pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(pedido = filtro_pd).paginate(page=page,per_page=10)
+        pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2 = "Emitido", pedido = filtro_pd).paginate(page=page,per_page=10)
     else:
         if filtro_cod != None:
-            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(codigo = filtro_cod).paginate(page=page,per_page=10)
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2 = "Emitido", codigo = filtro_cod).paginate(page=page,per_page=10)
         else:
-            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).paginate(page=page,per_page=10)    
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2 = "Emitido").paginate(page=page,per_page=10)
     
 
 
@@ -1237,41 +1346,138 @@ def pedidos():
 
     return render_template('pedidos.html',pedidos = pedidos)
 
+@app.route('/pedidos_faturados', methods = ['GET','POST'])
+def pedidos_faturados():
+
+    #pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
+    
+    filtro_pd = request.form.get("filtro_pd")
+    filtro_cod = request.form.get("filtro_cod")
+    
+    if not current_user.is_authenticated:
+     return redirect( url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    if filtro_pd == "":
+        filtro_pd = None
+    
+    if filtro_cod == "":
+        filtro_cod = None
+
+
+    if filtro_pd != None:
+        pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(pedido = filtro_pd, status2 = "Faturado").paginate(page=page,per_page=10)
+    else:
+        if filtro_cod != None:
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(codigo = filtro_cod, status2 = "Faturado").paginate(page=page,per_page=10)
+        else:
+            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2 = "Faturado").paginate(page=page,per_page=10)
+    
+
+
+    #pedidos = pedidos.query.filter_by(status2 = "Emitido").all()
+
+
+
+
+    return render_template('pedidos_faturados.html',pedidos = pedidos)
+
+@app.route('/add_ferramentas', methods=['POST'])
+def add_ferramentas():
+    if not current_user.is_authenticated:
+        flash('Você precisa estar logado para adicionar uma ferramenta.', 'danger')
+        return redirect(url_for('login'))
+    
+    dimensional = request.form.get('dimensional')
+    quantidade = request.form.get('quantidade')
+    obs = request.form.get('obs')
+    
+    nova_ferramenta = Ferramentas(dimensional, quantidade, obs)
+    
+    try:
+        db.session.add(nova_ferramenta)
+        db.session.commit()
+        flash('Ferramenta adicionada com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao adicionar ferramenta: {str(e)}', 'danger')
+    
+    return redirect(url_for('ferramentas'))
+
+
+@app.route('/deletar_ferramenta/<int:id>', methods=['POST'])
+def deletar_ferramenta(id):
+    if not current_user.is_authenticated:
+        flash('Você precisa estar logado para deletar uma ferramenta.', 'danger')
+        return redirect(url_for('login'))
+    
+    ferramenta = Ferramentas.query.get_or_404(id)
+    
+    try:
+        db.session.delete(ferramenta)
+        db.session.commit()
+        flash('Ferramenta deletada com sucesso!', 'success')
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao deletar ferramenta: {str(e)}', 'danger')
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+
 @app.route('/faturar_pedido', methods = ['GET','POST'])
 def faturar_pedido():
-    data = request.get_json()  # Obter dados como JSON
-    pedido_id = data['pedidoId']
-    faturadoOmie = data['faturadoOmie']
-    if faturadoOmie == True:
+    
+
+    data = request.get_json()
+    pedido_id = data.get('pedidoId')
+    faturado_omie = data.get('faturado_omie')
+    
+    print(faturado_omie)
+    if faturado_omie == True:
         print("faturado Omie")
     else:
         print("Faturado Direto")
 
-    edit_item = Pedido.query.get(pedido_id)
+    pedido = Pedido.query.get(pedido_id)
 
-    if edit_item:
-        qtd_visual = data['data']['peso']
+    if pedido:
+        qtd_visual = pedido.peso
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
-        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"SAI", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
-        print(Status_mov, edit_item.codigo)
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
+        print(Status_mov, pedido.codigo)
 
-        # edit_item.peso = data['data']['peso']
-        # edit_item.peso_total = data['data']['peso_total']
-        # edit_item.material = data['data']['material']
-        # edit_item.peso_material = data['data']['peso_material']
-        # edit_item.amarrados = data['data']['amarrados']
-        # edit_item.dimencional_real = data['data']['dimencional_real']
-        edit_item.Status = "Faturado"
-        edit_item.Status2 = "Faturado"
-        # edit_item.obs = data['data']['obs']  # Certifique-se de que a chave 'obs' está correta no JSON
-
+        pedido.Status = "Faturado"
+        pedido.status2 = "Faturado"
+        
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Pedido atualizado com sucesso!'})
 
+    else:
+        return jsonify({'status': 'error', 'message': 'Pedido não encontrado'})
 
 
-    return jsonify({'status': 'error', 'message': 'Pedido não encontrado'})
+@app.route('/add_saldo', methods=['POST'])
+def add_saldo():
+    data = request.get_json()
+    codigo = data.get('codigo')
+    quantidade = data.get('quantidade')
+    referencia = data.get('referencia')
+    #date = datahora("data") 
+
+
+    try:
+        Def_ajuste_estoque(codigo, quantidade,"ENT", "4084861665", referencia, "Setor_Cobre", quantidade, "Cobre", 0)
+
+
+
+
+        return jsonify({"success": True, "message": "Saldo adicionado com sucesso!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 
@@ -1290,7 +1496,7 @@ def update_pedido():
         qtd_visual = data['data']['peso']
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
-        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"SAI", "4084861665", edit_item.pedido, "Visual", data['data']['peso'], "Cobre", 0)
+        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
         print(Status_mov, edit_item.codigo)
 
 

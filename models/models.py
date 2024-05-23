@@ -337,18 +337,18 @@ class Ferramentas(db.Model):
     __tablename__='ferramentas'
 
     id = db.Column(db.Integer, primary_key=True)
-    dimencional = db.Column(db.String(250), unique=True)
+    dimensional = db.Column(db.String(250), unique=True)
     quantidade = db.Column(db.Float)
     obs = db.Column(db.String(250))
     
-    def __init__(self, id, dimencional, quantidade, obs):
+    def __init__(self, dimensional, quantidade, obs):
 
-        self.id = id
-        self.dimencional = dimencional
+        
+        self.dimensional = dimensional
         self.quantidade = quantidade
         self.obs = obs
 
 
     def __repr__(self):
-        return 'sequencia: {} - {} - {} - {}' .format(self.id, self.dimencional, self.quantidade, self.obs) 
+        return 'sequencia: {} - {} - {} - {}' .format(self.id, self.dimensional, self.quantidade, self.obs) 
 
