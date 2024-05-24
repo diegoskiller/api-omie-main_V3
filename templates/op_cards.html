@@ -192,7 +192,11 @@
         <h3>Pedidos</h3>
 
         <div class="setor" id="pedidos-setor">
-            <b> Pedido | Cliente | Peso<br>
+            <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                <button class="save-ccl" style="background-color: #ffffff; border-radius: 15px;">
+                    <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
+                </button>
+                <br>
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Emitido' %}
@@ -212,7 +216,9 @@
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Pedido em Estoque</span>
             {% else %}
-                <span>Status: Precisa Produzir</span>
+            <p style="color: red; background-color: #ccc;">
+                <span>Status: Precisa Produzir</span></p>
+                
             {% endif %}
         </div>
             {% endif %}
@@ -286,7 +292,11 @@
     <div class="column">
         <h3>Qualidade</h3>
         <div class="setor" id="qualidade-setor"> 
-            <b> Pedido | Cliente | Peso<br>
+            <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                <button class="save-ccl" style="background-color: #ffffff; border-radius: 15px;">
+                    <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
+                </button>
+                <br>
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Qualidade' %}
@@ -305,7 +315,8 @@
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Emitindo Certificado</span>
             {% else %}
-                <span>Status: Emitindo Certificado</span>
+            <p style="color: red; background-color: #ccc;">
+                <span>Status: Sem Estoque Suficiente</span></p>
             {% endif %}
 
         </div>
@@ -316,7 +327,11 @@
     <div class="column">
         <h3>Expedição</h3>
         <div class="setor" id="expedicao-setor">
-            <b> Pedido | Cliente | Peso<br>
+            <b> Pedido | Cliente | Peso &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  
+                <button class="save-ccl" style="background-color: #ffffff; border-radius: 15px;">
+                    <img src="{{ url_for('static', filename='images/repeat.svg')}}" alt="Atualizando">
+                </button>
+                <br>
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Expedindo' %}
@@ -335,7 +350,8 @@
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Disponivel Para Faturar</span>
             {% else %}
-                <span>Status: Disponivel Para Faturar</span>
+            <p style="color: red; background-color: #ccc;">
+                <span>Status: Sem Estoque Suficiente</span></p>
             {% endif %}
             <button class="expe-btn" data-pedido-id="{{ pedido.id }}" data-pedido-numero="{{ pedido.pedido }}" style="background-color: #a0f89d; border-radius: 5px;">Faturar X</button>
                 
