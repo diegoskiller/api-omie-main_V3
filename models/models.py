@@ -272,7 +272,7 @@ class Pedido(db.Model):
     __tablename__='pedido'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    pedido = db.Column(db.Integer) 
+    pedido = db.Column(db.String(50)) 
     emissao = db.Column(db.String(250), nullable=False)
     descricao = db.Column(db.String(255))
     cliente = db.Column(db.String(255))

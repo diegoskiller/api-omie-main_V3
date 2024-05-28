@@ -1,5 +1,6 @@
 
 
+
 {% extends 'base.html' %}
 
 {% include 'header.html' %}
@@ -101,6 +102,7 @@
                         <td>KG</td>
                         <td><font size="1">{{ row.descricao }}</font></td>
                         <td>
+                            <button class="btn btn-warning btn-sm" onclick="showAlterarModal('{{ row.id }}')">Alterar</button>
                             <button class="btn btn-danger btn-sm" onclick="deletarPedido('{{ row.id }}')">Deletar</button>
                         </td>
                     </tr>
@@ -175,7 +177,94 @@
     </div>
 </div>
 
+<!-- Modal de Alterar Pedido -->
+<div class="modal fade" id="alterarPedidoModal" tabindex="-1" aria-labelledby="alterarPedidoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="alterarPedidoForm" action="{{ url_for('alterar_pedido') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alterarPedidoModalLabel">Alterar Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="alterarPedidoId" name="id">
+                    <div class="mb-3">
+                        <label for="alterarPedido" class="form-label">Pedido</label>
+                        <input type="text" class="form-control" id="alterarPedido" name="pedido" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarDescricao" class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="alterarDescricao" name="descricao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarCliente" class="form-label">Cliente</label>
+                        <input type="text" class="form-control" id="alterarCliente" name="cliente" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarCodigo" class="form-label">Código</label>
+                        <input type="text" class="form-control" id="alterarCodigo" name="codigo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarDataEntrega" class="form-label">Data de Entrega</label>
+                        <input type="date" class="form-control" id="alterarDataEntrega" name="data_entrega" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarObsEntrega" class="form-label">Observação de Entrega</label>
+                        <input type="text" class="form-control" id="alterarObsEntrega" name="obs_entrega">
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarDimensional" class="form-label">Dimensional</label>
+                        <input type="text" class="form-control" id="alterarDimensional" name="dimensional" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarQuantidade" class="form-label">Quantidade</label>
+                        <input type="number" class="form-control" id="alterarQuantidade" name="quantidade" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarCanto" class="form-label">Canto</label>
+                        <input type="text" class="form-control" id="alterarCanto" name="canto">
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarFuro" class="form-label">Furo</label>
+                        <input type="text" class="form-control" id="alterarFuro" name="furo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterarEmbalagem" class="form-label">Embalagem</label>
+                        <input type="text" class="form-control" id="alterarEmbalagem" name="embalagem">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+function showAlterarModal(id) {
+    fetch('/get_pedido/' + id)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('alterarPedidoId').value = data.id;
+            document.getElementById('alterarPedido').value = data.pedido;
+            document.getElementById('alterarDescricao').value = data.descricao;
+            document.getElementById('alterarCliente').value = data.cliente;
+            document.getElementById('alterarCodigo').value = data.codigo;
+            document.getElementById('alterarDataEntrega').value = data.data_entrega;
+            document.getElementById('alterarObsEntrega').value = data.obs_entrega;
+            document.getElementById('alterarDimensional').value = data.dimensional;
+            document.getElementById('alterarQuantidade').value = data.quantidade;
+            document.getElementById('alterarCanto').value = data.canto;
+            document.getElementById('alterarFuro').value = data.furo;
+            document.getElementById('alterarEmbalagem').value = data.embalagem;
+
+            var alterarPedidoModal = new bootstrap.Modal(document.getElementById('alterarPedidoModal'));
+            alterarPedidoModal.show();
+        });
+}
+
 function deletarPedido(id) {
     if (confirm('Tem certeza de que deseja deletar este pedido?')) {
         fetch('/deletar_pedido', {

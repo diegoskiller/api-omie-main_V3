@@ -173,10 +173,10 @@
     <img src="{{ url_for('static', filename='images/logo-iso.png')}}" width=200 alt="logo">
     <ul class="navbar-nav">
         <li class="nav-item">
-            <a class="nav-link card-menu text-center" href="{{url_for('index')}}">Ínicio Home</a>
+            <a class="nav-link card-menu text-center" href="{{url_for('index')}}">Sistema kels</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{{url_for('pedidos')}}">Abrir Pedido</a>
+            <a class="nav-link" href="{{url_for('pedidos')}}">Pedidos</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="{{url_for('pedidos_faturados')}}">Faturados</a>
@@ -215,8 +215,8 @@
              '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
             Med.:{{ pedido.dimensional }}
             <hr/>
@@ -224,7 +224,7 @@
                 <span class="status-estoque">Status: Pedido em Estoque</span>
             {% else %}
             <p style="color: red; background-color: #ccc;">
-                <span>Status: Precisa Produzir</span></p>
+                <span>Status: Precisa Produzir {{pedido.quantidade - pedido.estoque}}kg</span></p>
                 
             {% endif %}
         </div>
@@ -251,8 +251,8 @@
              '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.: {{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
             Med.:{{ pedido.dimensional }}
             <hr/>
@@ -314,8 +314,8 @@
              '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
             Med.:{{ pedido.dimensional }}
             <hr/>
@@ -349,8 +349,8 @@
              '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque/1000 }}kg<br>
+            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
             Med.:{{ pedido.dimensional }}
             <hr/>

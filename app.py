@@ -1192,6 +1192,7 @@ def op_cards():
     # Convertendo o resultado da consulta para adicionar o campo 'estoque' em cada pedido
     pedidos_com_estoque = []
     for pedido, estoque in pedidos:
+        estoque = float(estoque/1000) if estoque is not None else 0.0
         pedido.estoque = estoque if estoque is not None else 0
         pedidos_com_estoque.append(pedido)
 
@@ -1253,7 +1254,7 @@ def add_pedido():
 
             db.session.commit()
             flash('Pedido adicionado com sucesso!', 'success')
-            return jsonify({"success": True, "message": "Pedido adicionado com sucesso!"}), 200
+            #return jsonify({"success": True, "message": "Pedido adicionado com sucesso!"}), 200
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao adicionar pedido: {e}', 'danger')
@@ -1391,6 +1392,52 @@ def pedidos():
 
 
     return render_template('pedidos.html',pedidos = pedidos)
+
+@app.route('/get_pedido/<int:id>', methods=['GET'])
+def get_pedido(id):
+    pedido = Pedido.query.get(id)
+    if pedido:
+        return jsonify({
+            'id': pedido.id,
+            'pedido': pedido.pedido,
+            'descricao': pedido.descricao,
+            'cliente': pedido.cliente,
+            'codigo': pedido.codigo,
+            'data_entrega': pedido.data_entrega,
+            'obs_entrega': pedido.obs_entrega,
+            'dimensional': pedido.dimensional,
+            'quantidade': pedido.quantidade,
+            'canto': pedido.canto,
+            'furo': pedido.furo,
+            'embalagem': pedido.embalagem
+        })
+    return jsonify({'error': 'Pedido não encontrado'}), 404
+
+@app.route('/alterar_pedido', methods=['POST'])
+def alterar_pedido():
+    data = request.form
+    pedido_id = data.get('id')
+    pedido = Pedido.query.get(pedido_id)
+    
+    if not pedido:
+        return jsonify({'error': 'Pedido não encontrado'}), 404
+    
+    pedido.pedido = data.get('pedido')
+    pedido.descricao = data.get('descricao')
+    pedido.cliente = data.get('cliente')
+    pedido.codigo = data.get('codigo')
+    pedido.data_entrega = data.get('data_entrega')
+    pedido.obs_entrega = data.get('obs_entrega')
+    pedido.dimensional = data.get('dimensional')
+    pedido.quantidade = data.get('quantidade')
+    pedido.canto = data.get('canto')
+    pedido.furo = data.get('furo')
+    pedido.embalagem = data.get('embalagem')
+    
+    db.session.commit()
+    flash('Pedido alterado com sucesso!', 'success')
+    return redirect(url_for('pedidos'))
+
 
 @app.route('/pedidos_faturados', methods = ['GET','POST'])
 def pedidos_faturados():
