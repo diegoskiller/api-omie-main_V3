@@ -3,7 +3,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import aliased
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Validacao
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -15,7 +15,7 @@ import re
 import os
 import pandas as pd
 import logging
-
+from sqlalchemy.sql import func
 
 #============variaveis gerais=============# 
 
@@ -1172,11 +1172,19 @@ def rastreabilidade():
 @app.route('/op_cards', methods=['GET', 'POST'])
 def op_cards():
     LoteVisualAlias = aliased(Lote_visual)
+    
+    # Consulta para somar as quantidades por código
+    subquery = db.session.query(
+        LoteVisualAlias.item,
+        func.sum(LoteVisualAlias.quantidade).label('estoque')
+    ).group_by(LoteVisualAlias.item).subquery()
+
+    # Consulta para juntar os pedidos com as somas das quantidades de estoque
     pedidos = db.session.query(
         Pedido,
-        LoteVisualAlias.quantidade.label('estoque')
+        subquery.c.estoque
     ).outerjoin(
-        LoteVisualAlias, Pedido.codigo == LoteVisualAlias.item
+        subquery, Pedido.codigo == subquery.c.item
     ).filter(
         Pedido.status2 == "Emitido"
     ).all()
@@ -1188,6 +1196,7 @@ def op_cards():
         pedidos_com_estoque.append(pedido)
 
     return render_template('op_cards.html', pedidos=pedidos_com_estoque)
+
 
 @app.route('/atualizar_status_pedido', methods=['POST'])
 def atualizar_status_pedido():
@@ -1210,13 +1219,15 @@ def add_pedido():
         data_entrega = request.form.get('data_entrega')
         obs_entrega = request.form.get('obs_entrega')
         dimensional = request.form.get('dimensional')
-        quantidade = request.form.get('quantidade')
+        quantidade = float(request.form.get('quantidade'))
         canto = request.form.get('canto')
         furo = request.form.get('furo')
         embalagem = request.form.get('embalagem')
         date = datahora("data")
+        status_text = "Emitido"
 
-        novo_pedido = Pedido(pedido=pedido,
+        try:
+            novo_pedido = Pedido(pedido=pedido,
             emissao=date,
             descricao=descricao,
             cliente=cliente,
@@ -1225,21 +1236,31 @@ def add_pedido():
             obs_entrega=obs_entrega,
             dimensional=dimensional,
             quantidade=quantidade,
+            peso=0,
+            peso_total=0,
+            Status=status_text,
+            material="",
+            peso_material=0,
+            amarrados=0,
+            dimencional_real="",
+            obs="",
             canto=canto,
             furo=furo,
             embalagem=embalagem,
-            Status="Emitido",
-            status2="Emitido")
-        
-        db.session.add(novo_pedido)
-        try:
+            status2=status_text)
+
+            db.session.add(novo_pedido)
+
             db.session.commit()
             flash('Pedido adicionado com sucesso!', 'success')
+            return jsonify({"success": True, "message": "Pedido adicionado com sucesso!"}), 200
         except Exception as e:
             db.session.rollback()
             flash(f'Erro ao adicionar pedido: {e}', 'danger')
+            return jsonify({"success": False, "message": str(e)}), 500
+            
         
-        return redirect(url_for('pedidos'))
+    return redirect(url_for('pedidos'))
 
 @app.route('/deletar_pedido', methods=['POST'])
 def deletar_pedido():
@@ -1308,6 +1329,31 @@ def estoque_cobre():
 
 
         return render_template('Estoque_Cobre.html',cobre = cobre)
+
+@app.route('/deletar_estoque_cobre', methods=['POST'])
+def deletar_estoque_cobre():
+    data = request.get_json()
+    item_id = data.get('id')
+    
+    if not item_id:
+        return jsonify({"success": False, "message": "ID do item não fornecido."}), 400
+
+    try:
+        item = Lote_visual.query.get(item_id)
+        
+        if not item:
+            return jsonify({"success": False, "message": "Item não encontrado."}), 404
+
+        db.session.delete(item)
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Item excluído com sucesso."}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Erro ao excluir item: {str(e)}"}), 500
+
+
 
 @app.route('/pedidos', methods = ['GET','POST'])
 def pedidos():
@@ -1459,8 +1505,8 @@ def faturar_pedido():
         return jsonify({'status': 'error', 'message': 'Pedido não encontrado'})
 
 
-@app.route('/add_saldo', methods=['POST'])
-def add_saldo():
+@app.route('/add_saldo_cobre', methods=['POST'])
+def add_saldo_cobre():
     data = request.get_json()
     codigo = data.get('codigo')
     quantidade = data.get('quantidade')
@@ -1499,18 +1545,27 @@ def update_pedido():
         Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
         print(Status_mov, edit_item.codigo)
 
+        if data['data']['obs'] == "":
+            observ="-"
+        else:
+            observ=data['data']['obs']
+
+        if data['data']['dimencional_real'] =="":
+            dimen = "-"
+        else:
+            dimen = data['data']['dimencional_real']    
 
 
 
 
-        edit_item.peso = data['data']['peso']
-        edit_item.peso_total = data['data']['peso_total']
+        edit_item.peso = float(data['data']['peso'])
+        edit_item.peso_total = float(data['data']['peso_total'])
         edit_item.material = data['data']['material']
-        edit_item.peso_material = data['data']['peso_material']
+        edit_item.peso_material = float(data['data']['peso_material'])
         edit_item.amarrados = data['data']['amarrados']
-        edit_item.dimencional_real = data['data']['dimencional_real']
+        edit_item.dimencional_real = dimen 
         edit_item.Status = "Qualidade"
-        edit_item.obs = data['data']['obs']  # Certifique-se de que a chave 'obs' está correta no JSON
+        edit_item.obs = observ   # Certifique-se de que a chave 'obs' está correta no JSON
 
         db.session.commit()
         return jsonify({'status': 'success', 'message': 'Pedido atualizado com sucesso!'})

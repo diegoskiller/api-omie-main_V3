@@ -271,7 +271,7 @@ class User(db.Model, UserMixin):
 class Pedido(db.Model):
     __tablename__='pedido'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     pedido = db.Column(db.Integer) 
     emissao = db.Column(db.String(250), nullable=False)
     descricao = db.Column(db.String(255))
@@ -283,8 +283,8 @@ class Pedido(db.Model):
     quantidade = db.Column(db.Float)
     peso = db.Column(db.Float)
     peso_total = db.Column(db.Float)
-    Status = db.Column(db.String(50))
-    material = db.Column(db.String(50))
+    Status = db.Column(db.String(50), default='Emitido')
+    material = db.Column(db.String(50), default='01CU800')
     peso_material = db.Column(db.Float)
     amarrados = db.Column(db.Integer)
     dimencional_real = db.Column(db.String(255))
@@ -292,15 +292,14 @@ class Pedido(db.Model):
     canto = db.Column(db.String(50))
     furo = db.Column(db.String(50))
     embalagem = db.Column(db.String(250))
-    status2 = db.Column(db.String(50))
+    status2 = db.Column(db.String(50), default='Emitido')
     
 
     
-    def __init__(self, id, pedido, emissao, descricao, cliente, codigo, data_entrega,
-                 obs_entrega, dimensional, quantidade, peso, peso_total, status,
+    def __init__(self, pedido, emissao, descricao, cliente, codigo, data_entrega,
+                 obs_entrega, dimensional, quantidade, peso, peso_total, Status,
                  material, peso_material, amarrados, dimencional_real, obs, canto, furo, embalagem, status2):
 
-        self.id = id
         self.pedido = pedido
         self.emissao = emissao
         self.descricao = descricao
@@ -312,7 +311,7 @@ class Pedido(db.Model):
         self.quantidade = quantidade
         self.peso = peso
         self.peso_total = peso_total
-        self.Status = status
+        self.Status = Status
         self.material = material
         self.peso_material = peso_material
         self.amarrados = amarrados
@@ -351,4 +350,43 @@ class Ferramentas(db.Model):
 
     def __repr__(self):
         return 'sequencia: {} - {} - {} - {}' .format(self.id, self.dimensional, self.quantidade, self.obs) 
+
+class Validacao(db.Model):
+    __tablename__='validacao'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    usuario = db.Column(db.String(250), unique=True)
+    telas = db.Column(db.String(250))
+    validacao_1 = db.Column(db.String(250))
+    validacao_2 = db.Column(db.String(250))
+    validacao_3 = db.Column(db.String(250))
+    validacao_4 = db.Column(db.String(250))
+    validacao_5 = db.Column(db.String(250))
+    validacao_6 = db.Column(db.String(250))
+    validacao_7 = db.Column(db.String(250))
+    validacao_8 = db.Column(db.String(250))
+    validacao_9 = db.Column(db.String(250))
+    validacao_10 = db.Column(db.String(250))
+
+
+    def __init__(self, usuario, telas, validacao_1, validacao_2, validacao_3, validacao_4, validacao_5,
+                  validacao_6, validacao_7, validacao_8, validacao_9, validacao_10):
+
+        
+        self.usuario = usuario
+        self.telas = telas
+        self.validacao_1 = validacao_1
+        self.validacao_2 = validacao_2
+        self.validacao_3 = validacao_3
+        self.validacao_4 = validacao_4
+        self.validacao_5 = validacao_5
+        self.validacao_6 = validacao_6
+        self.validacao_7 = validacao_7
+        self.validacao_8 = validacao_8
+        self.validacao_9 = validacao_9
+        self.validacao_10 = validacao_10
+
+
+    def __repr__(self):
+        return 'sequencia: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.usuario, self.telas, self.validacao_1, self.validacao_2, self.validacao_3, self.validacao_4, self.validacao_5, self.validacao_6, self.validacao_7, self.validacao_8, self.validacao_9, self.validacao_10) 
 

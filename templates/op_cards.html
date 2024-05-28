@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -142,17 +143,23 @@
         margin: 0;
         padding: 0;
         display: flex;
+        gap: 10px; /* Espaçamento entre os botões */
     }
     .nav-item {
         margin-right: 10px;
     }
     .nav-link {
+        display: inline-block;
         color: #fff;
         text-decoration: none;
         font-size: 18px;
-        transition: color 0.3s ease;
+        padding: 10px 20px;
+        border-radius: 25px; /* Bordas arredondadas */
+        background-color: #007bff; /* Cor do fundo */
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
     .nav-link:hover {
+        background-color: #0056b3; /* Cor do fundo ao passar o mouse */
         color: #ffc107;
     }
     .usuario {
@@ -162,11 +169,11 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg  navbar-light bg-light w-100 fixed-top header  border-bottom border-2 border-dark">
-        <img src="{{ url_for('static', filename='images/logo-iso.png')}}" width = 200 alt="logo">
-          <ul class="navbar-nav">
+<nav class="navbar navbar-expand-lg navbar-light bg-light w-100 fixed-top header border-bottom border-2 border-dark">
+    <img src="{{ url_for('static', filename='images/logo-iso.png')}}" width=200 alt="logo">
+    <ul class="navbar-nav">
         <li class="nav-item">
-            <a class="nav-link card-menu text-center" href="{{url_for('index')}}"> Ínicio Home</a>   
+            <a class="nav-link card-menu text-center" href="{{url_for('index')}}">Ínicio Home</a>
         </li>
         <li class="nav-item">
             <a class="nav-link" href="{{url_for('pedidos')}}">Abrir Pedido</a>
@@ -182,7 +189,7 @@
         </li>
     </ul>
     <div class="usuario">
-        <p>Bem vindo: {{ current_user.name }}  | <a href="/logout" class="text-warning">Sair</a></p>
+        <p>Bem vindo: {{ current_user.name }} | <a href="/logout" class="text-warning">Sair</a></p>
     </div>
 </nav>
 
@@ -200,12 +207,12 @@
                 Código | Data Ent | Estoque<br></b><hr/> 
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Emitido' %}
-            
+
             <div class="card" data-pedido-id="{{ pedido.id }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}')" draggable="true">
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
@@ -241,7 +248,7 @@
            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}')" draggable="true">
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.: {{ pedido.descricao }}<br>
             <hr/> 
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
@@ -304,7 +311,7 @@
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}')" draggable="true">
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
@@ -339,7 +346,7 @@
            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}')" draggable="true">
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
             Desc.:{{ pedido.descricao }}<br>
             <hr/> 
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}<br>
@@ -348,7 +355,7 @@
             Med.:{{ pedido.dimensional }}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
-                <span class="status-estoque">Status: Disponivel Para Faturar</span>
+                <span class="status-estoque">Status: Disponível Para Faturar</span>
             {% else %}
             <p style="color: red; background-color: #ccc;">
                 <span>Status: Sem Estoque Suficiente</span></p>
@@ -448,7 +455,7 @@
 
 <script>
    function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total,
-                 material, peso_material, amarrados, dimencional_real, obs) {
+                 material, peso_material, amarrados, dimencional_real, obs, estoque) {
         toggleFieldVisibility("detail-data", data);
         toggleFieldVisibility("detail-medida", medida);
         toggleFieldVisibility("detail-descricao", descricao);
@@ -483,6 +490,22 @@
         document.getElementById("myModal").style.display = "none";
     }
 
+    function userHasPermission(action) {
+        const user = "{{ current_user.name }}";
+        const permissions = {
+            "Valdemir": ["move_to_pedidos", "move_to_production", "produce"],
+            "Joseane": ["move_to_expedition"],
+            "Rodrigo": ["move_to_quality", "invoice"],
+            "Diego": ["move_to_pedidos", "move_to_production", "produce", "move_to_expedition", "move_to_quality", "invoice"]
+        };
+
+        if (permissions[user] && permissions[user].includes(action)) {
+            return true;
+        }
+
+        return false;
+    }
+
     $(function() {
         $(".card").draggable({
             revert: "invalid",
@@ -509,24 +532,49 @@
 
                 // Atualizar o status do pedido com base no setor onde o card foi solto
                 var novoStatus;
+                var action;
+
                 if ($(this).attr('id') === 'pedidos-setor') {
                     novoStatus = 'Emitido';
+                    action = "move_to_pedidos";
                 } else if ($(this).attr('id') === 'producao-setor') {
                     novoStatus = 'Produzindo';
+                    action = "move_to_production";
                 } else if ($(this).attr('id') === 'qualidade-setor') {
                     novoStatus = 'Qualidade';
+                    action = "move_to_quality";
+
+                    // Verifica se o estoque é suficiente antes de permitir mover para Qualidade
+                    var card = $(ui.draggable);
+                    var estoque = parseFloat(card.attr('data-estoque'));
+                    var quantidade = parseFloat(card.attr('data-quantidade'));
+
+                    if (estoque < quantidade) {
+                        alert("Não é possível mover para Qualidade, estoque insuficiente.");
+                        location.reload();
+                        return;
+                    }
                 } else if ($(this).attr('id') === 'expedicao-setor') {
                     novoStatus = 'Expedindo';
+                    action = "move_to_expedition";
+                }
+
+                if (action === "move_to_quality" && (estoque >= quantidade)) {
+                    // Permitir qualquer usuário mover para Qualidade se o estoque for suficiente
+                } else if (!userHasPermission(action)) {
+                    alert("Você não tem acesso para isso");
+                    location.reload();
+                    return;
                 }
 
                 // Obter o ID do pedido
                 var pedidoId = $(ui.draggable).data('pedidoId');
-                if (confirm("Tem certeza de que deseja ?")) {
+                if (confirm("Tem certeza de que deseja mover o pedido?")) {
                     // Lógica para atualizar o status do pedido
                     atualizarStatusPedido(pedidoId, novoStatus);
                 } else {
                     // Cancelado pelo usuário
-                    location.reload()
+                    location.reload();
                 }
             }
         });
@@ -549,81 +597,94 @@
     });
 
     $(document).ready(function() {
-    $('.edit-btn').click(function() {
-        var card = $(this).closest('.card');
-        card.find('.editable').hide();
-        card.find('.edit-input').show();
-        $(this).hide();
-        card.find('.save-btn').show();
-        card.find('.save-ccl').show();
-    });
+        $('.edit-btn').click(function() {
+            if (!userHasPermission("produce")) {
+                alert("Você não tem acesso para isso");
+                return;
+            }
 
-    $('.save-ccl').click(function() {
-        location.reload()
-    }),   
+            var card = $(this).closest('.card');
+            card.find('.editable').hide();
+            card.find('.edit-input').show();
+            $(this).hide();
+            card.find('.save-btn').show();
+            card.find('.save-ccl').show();
+        });
 
-    $('.save-btn').click(function() {
-    var card = $(this).closest('.card');
-    var pedidoId = card.data('pedido-id');
-    var updatedData = {};
+        $('.save-ccl').click(function() {
+            location.reload()
+        });
 
-    card.find('.edit-input').each(function() {
-        var field = $(this).attr('name');
-        updatedData[field] = $(this).val();
-    });
+        $('.save-btn').click(function() {
+            var card = $(this).closest('.card');
+            var pedidoId = card.data('pedido-id');
+            var updatedData = {};
 
-    $.ajax({
-        url: '/update_pedido',
-        type: 'POST',
-        contentType: "application/json",
-        data: JSON.stringify({ pedidoId: pedidoId, data: updatedData }),
-        success: function(response) {
-            console.log("Resposta do servidor:", response);
-            alert('Dados atualizados com sucesso!');
-
-            // Esconde os inputs e mostra os valores atualizados
             card.find('.edit-input').each(function() {
-                $(this).hide();
                 var field = $(this).attr('name');
-                card.find('.editable[data-field="' + field + '"]').text($(this).val()).show();
+                var value = $(this).val();
+
+                if (field === 'peso' || field === 'peso_total' || field === 'peso_material') {
+                    updatedData[field] = parseFloat(value);  // Convertendo para float
+                } else {
+                    updatedData[field] = value;
+                }
             });
 
-            // Oculta o botão salvar e mostra o botão editar novamente
-            card.find('.save-btn').hide();
-            card.find('.save-ccl').hide();
-            card.find('.edit-btn').show();
+            $.ajax({
+                url: '/update_pedido',
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify({ pedidoId: pedidoId, data: updatedData }),
+                success: function(response) {
+                    console.log("Resposta do servidor:", response);
+                    alert('Dados atualizados com sucesso!');
 
-            location.reload()
-        },
+                    // Esconde os inputs e mostra os valores atualizados
+                    card.find('.edit-input').each(function() {
+                        $(this).hide();
+                        var field = $(this).attr('name');
+                        card.find('.editable[data-field="' + field + '"]').text($(this).val()).show();
+                    });
 
-        error: function(xhr) {
-            alert('Erro ao salvar as alterações: ' + xhr.responseText);
-        }
-    });
-});
+                    // Oculta o botão salvar e mostra o botão editar novamente
+                    card.find('.save-btn').hide();
+                    card.find('.save-ccl').hide();
+                    card.find('.edit-btn').show();
 
-    $('.expe-btn').click(function() {
-        var pedidoId = $(this).data('pedido-id');
-        var pedidoNumero = $(this).data('pedido-numero');
-        var faturadoOmie = confirm("O item foi faturado pelo sistema Omie?");
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Erro ao salvar as alterações: ' + xhr.responseText);
+                }
+            });
+        });
 
-        $.ajax({
-            url: '/faturar_pedido',
-            type: 'POST',
-            contentType: "application/json",
-            data: JSON.stringify({ pedidoId: pedidoId, pedidoNumero: pedidoNumero, faturado_omie: faturadoOmie  }),
-            success: function(response) {
-                alert('Pedido faturado com sucesso!');
-                location.reload();
-            },
-            error: function(xhr) {
-                alert('Erro ao faturar o pedido: ' + xhr.responseText);
+        $('.expe-btn').click(function() {
+            if (!userHasPermission("invoice")) {
+                alert("Você não tem acesso para isso");
+                return;
             }
+
+            var pedidoId = $(this).data('pedido-id');
+            var pedidoNumero = $(this).data('pedido-numero');
+            var faturadoOmie = confirm("O item foi faturado pelo sistema Omie?");
+
+            $.ajax({
+                url: '/faturar_pedido',
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify({ pedidoId: pedidoId, pedidoNumero: pedidoNumero, faturado_omie: faturadoOmie }),
+                success: function(response) {
+                    alert('Pedido faturado com sucesso!');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Erro ao faturar o pedido: ' + xhr.responseText);
+                }
+            });
         });
     });
-
-});
-
 </script>
 
 </body>

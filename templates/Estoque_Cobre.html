@@ -58,19 +58,23 @@
             <table class="table table-hover table-info">
                 <tr class="table-primary">                        
                     <th>Referencia</th>
-                    <th>item</th>
+                    <th>Item</th>
                     <th>Lote</th>
                     <th>Peso</th>
                     <th>Unid</th>
+                    <th>Ações</th> <!-- Nova coluna para ações -->
                 </tr>
 
                 {% for row in cobre.items %}
-                    <tr class='{{"table-dark" if row.situação == "Encerrada" else ""}}'>                      
-                        <td>{{row.referecia}}</td>
+                    <tr class='{{"table-dark" if row.situacao == "Encerrada" else ""}}'>                      
+                        <td>{{row.referencia}}</td>
                         <td>{{row.item}}</td>
                         <td>{{row.numero_lote}}</td>
                         <td>{{row.quantidade / 1000}}</td>
                         <td>KG</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete({{row.id}})">Excluir</button>
+                        </td>
                     </tr>
                 {% endfor %}
             </table>
@@ -119,12 +123,61 @@
     </div>
 </div>
 
+<!-- Modal Confirmar Exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir este item?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    var itemIdToDelete;
+
+    function confirmDelete(itemId) {
+        itemIdToDelete = itemId;
+        var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        confirmDeleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+        fetch("/deletar_estoque_cobre", {
+            method: "POST",
+            body: JSON.stringify({ id: itemIdToDelete }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estoque excluído com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao excluir estoque: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao excluir estoque.");
+        });
+    });
+
     document.getElementById("addSaldoForm").addEventListener("submit", function(event) {
         event.preventDefault();
         var formData = new FormData(this);
         
-        fetch("/add_saldo", {
+        
+        fetch("/add_saldo_cobre", {
             method: "POST",
             body: JSON.stringify(Object.fromEntries(formData)),
             headers: {
