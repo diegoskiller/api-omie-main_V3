@@ -218,7 +218,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
-            Med.:{{ pedido.dimensional }}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Pedido em Estoque</span>
@@ -254,7 +254,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
-            Med.:{{ pedido.dimensional }}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Item em Estoque</span>
@@ -317,7 +317,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
-            Med.:{{ pedido.dimensional }}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Emitindo Certificado</span>
@@ -352,7 +352,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
-            Med.:{{ pedido.dimensional }}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
                 <span class="status-estoque">Status: Disponível Para Faturar</span>
