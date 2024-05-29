@@ -1298,49 +1298,38 @@ def ferramentas():
 
 
     if filtro_cod != None:
-         ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).paginate(page=page,per_page=10)
-
-         ferramentas.items = [lote for lote in ferramentas.items if filtro_cod in lote.dimensional.upper()]
-         
-
-      
+        ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).filter_by(dimensional = filtro_cod).paginate(page=page,per_page=10)
     else:
         ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).paginate(page=page,per_page=10)
 
 
-    return render_template('Ferramentas.html', ferramentas = ferramentas)
+        return render_template('Ferramentas.html', ferramentas = ferramentas)
 
-@app.route('/estoque_cobre', methods=['GET', 'POST'])
+@app.route('/estoque_cobre', methods = ['GET','POST'])
 def estoque_cobre():
-    page = request.args.get('page', 1, type=int)
-    filtro_cod = request.form.get('filtro_cod', '').upper()
-    filtro_desc = request.form.get('filtro_desc', '').upper()
 
+    #pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
+    
+    
+    filtro_cod = request.form.get("filtro_cod")
+    
+    if not current_user.is_authenticated:
+     return redirect( url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    
     if filtro_cod == "":
         filtro_cod = None
 
-    if filtro_desc == "":
-        filtro_desc = None
 
-    query = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo="Setor_Cobre")
-
-    if filtro_cod:
-        query = query.filter_by(item=filtro_cod)
-
-    cobre = query.paginate(page=page, per_page=10)
-
-    for lote in cobre.items:
-        desc = Def_cadastro_prod(lote.item)
-        descricao = desc[5] if len(desc) > 5 else 'N/A'
-        lote.descricao = descricao  # Adiciona a descrição ao lote
-
-    if filtro_desc:
-        # Filtra os itens já paginados com base na descrição
-        cobre.items = [lote for lote in cobre.items if filtro_desc in lote.descricao.upper()]
-
-    return render_template('Estoque_Cobre.html', cobre=cobre)
+    if filtro_cod != None:
+        cobre = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo = "Setor_Cobre", item = filtro_cod).paginate(page=page,per_page=10)
+    else:
+        cobre = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo = "Setor_Cobre").paginate(page=page,per_page=10)
 
 
+        return render_template('Estoque_Cobre.html',cobre = cobre)
 
 @app.route('/deletar_estoque_cobre', methods=['POST'])
 def deletar_estoque_cobre():
@@ -1600,10 +1589,8 @@ def update_pedido():
         qtd_visual = data['data']['peso']
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
-        if qtd_visual == "":
-            Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
-            print(Status_mov, qtd_visual)
-        print(qtd_visual)    
+        Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
+        print(Status_mov, edit_item.codigo)
 
         if data['data']['obs'] == "":
             observ="-"
@@ -1884,7 +1871,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
 
         
         #tipomov = "ENT"
-        #tipo = Visual / Temporario   = Normal / Adiantado ou Setor_Cobre
+        #tipo = Visual / Temporario   = Normal / Adiantado
 
         item = item
         estoque_movs = Config_Visual.query.get('Atualizar_omie')

@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -40,6 +39,11 @@
     input {
         width: 130px;
         height: 12px;
+        padding: 2px;
+    }
+    select {
+        width: 138px;
+        height: 20px;
         padding: 2px;
     }
     .column h3 {
@@ -84,6 +88,10 @@
     .status-estoque {
         color: green;
         font-weight: bold;
+    }
+    .readonly-input {
+        background-color: #e9e9e9; /* Cinza claro */
+        color: #666; /* Texto em cinza escuro */
     }
     .modal {
         display: none;
@@ -257,7 +265,7 @@
             Med.:{{ pedido.dimensional }} | {{pedido.canto}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %}
-                <span class="status-estoque">Status: Item em Estoque</span>
+                <span class="status-estoque">Status: já em Estoque, A quantidade precisa ser ajustada no almoxarifado</span>
             {% else %}
                 <span>Status: Produzindo</span>
             {% endif %}
@@ -274,15 +282,17 @@
                 </b>
                 </div>
                 <div>
-                    <input type="number" class="edit-input" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;">
+                    <input type="number" class="edit-input {% if pedido.peso %}readonly-input{% endif %}" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso %}readonly{% endif %}>
                     <input type="number" class="edit-input" name="peso_total" data-field="peso_total" value="{{ pedido.peso_total|default('', true) }}" autocomplete="off" style="display:none;">
-                    <input type="text" class="edit-input" name="material" data-field="material" value="{{ pedido.material|default('', true) }}" autocomplete="off" style="display:none;">
-                    <input type="number" class="edit-input" name="peso_material" data-field="peso_material" value="{{ pedido.peso_material|default('', true) }}" autocomplete="off" style="display:none;">
+                    <select class="edit-input" name="material" data-field="material" autocomplete="off" style="display:none;">
+                    <option value="01CUVERG6" {% if pedido.material == '01CUVERG6' %}selected{% endif %}>01CUVERG6</option>
+                    <option value="01CUVERG7" {% if pedido.material == '01CUVERG7' %}selected{% endif %}>01CUVERG7</option>
+                    </select>
+                    <input type="number" class="edit-input {% if pedido.peso_material %}readonly-input{% endif %}" name="peso_material" data-field="peso_material" value="{{ pedido.peso_material|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso_material %}readonly{% endif %}>
                     <input type="text" class="edit-input" name="amarrados" data-field="amarrados" value="{{ pedido.amarrados|default('', true) }}" autocomplete="off" style="display:none;">
                     <input type="text" class="edit-input" name="dimencional_real" data-field="dimencional_real" value="{{ pedido.dimencional_real|default('', true) }}" autocomplete="off" style="display:none;">
                     <input type="text" class="edit-input" name="obs" data-field="obs" value="{{ pedido.obs|default('', true) }}" autocomplete="off" style="display:none;">
-
-                 </div>
+                </div>
             </div>
             
             <!-- Adicione outros campos da mesma forma --><b>

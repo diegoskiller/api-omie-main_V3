@@ -38,6 +38,11 @@
                 <div class="input-group-append">
                     <button class="btn btn-info ms-1" type="submit">Buscar Código</button>
                 </div>
+            </form><form method="POST" action="{{url_for('estoque_cobre')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control  w-50" placeholder="Pesquisar Medida" name="filtro_desc" aria-label="Pesquisar por Medida" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-success ms-1" type="submit">Buscar por Medida</button>
+                </div>
             </form>
         </div>
 
@@ -59,6 +64,7 @@
                 <tr class="table-primary">                        
                     <th>Referencia</th>
                     <th>Item</th>
+                    <th>Descrição</th>
                     <th>Lote</th>
                     <th>Peso</th>
                     <th>Unid</th>
@@ -69,6 +75,7 @@
                     <tr class='{{"table-dark" if row.situacao == "Encerrada" else ""}}'>                      
                         <td>{{row.referencia}}</td>
                         <td>{{row.item}}</td>
+                        <td>{{row.descricao}}</td>
                         <td>{{row.numero_lote}}</td>
                         <td>{{row.quantidade / 1000}}</td>
                         <td>KG</td>
