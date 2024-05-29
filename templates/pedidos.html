@@ -79,7 +79,8 @@
                     <th>Dimensional</th>
                     <th>Quantidade</th>
                     <th>Um</th>
-                    <th>Descrição</th>      
+                    <th>Descrição</th>
+                    <th>Observaçóes</th>      
                     <th>Ações</th>
                 </tr>
 
@@ -101,6 +102,7 @@
                         <td>{{ row.quantidade|default('', true) }}</td>
                         <td>KG</td>
                         <td><font size="1">{{ row.descricao }}</font></td>
+                        <td><font size="1">{{ row.obs }}</font></td>
                         <td>
                             <button class="btn btn-warning btn-sm" onclick="showAlterarModal('{{ row.id }}')">Alterar</button>
                             <button class="btn btn-danger btn-sm" onclick="deletarPedido('{{ row.id }}')">Deletar</button>
@@ -166,6 +168,10 @@
                     <div class="mb-3">
                         <label for="embalagem" class="form-label">Embalagem</label>
                         <input type="text" class="form-control" id="embalagem" name="embalagem">
+                    </div>
+                    <div class="mb-3">
+                        <label for="obs" class="form-label">Observaçóes</label>
+                        <input type="text" class="form-control" id="obs" name="obs">
                     </div>
                 </div>
                 <div class="modal-footer">

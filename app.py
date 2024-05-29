@@ -1224,6 +1224,7 @@ def add_pedido():
         canto = request.form.get('canto')
         furo = request.form.get('furo')
         embalagem = request.form.get('embalagem')
+        obs = request.form.get('obs')
         date = datahora("data")
         status_text = "Emitido"
 
@@ -1244,7 +1245,7 @@ def add_pedido():
             peso_material=0,
             amarrados=0,
             dimencional_real="",
-            obs="",
+            obs=obs,
             canto=canto,
             furo=furo,
             embalagem=embalagem,
