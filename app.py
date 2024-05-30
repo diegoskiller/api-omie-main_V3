@@ -1360,6 +1360,10 @@ def deletar_estoque_cobre():
         db.session.delete(item)
         db.session.commit()
         
+        Status_mov = Def_ajuste_estoque(item.item, item.quantidade,"SAI", "4084861665", item.referencia, "Visual", item.peso, "Cobre", 0)
+        
+
+
         return jsonify({"success": True, "message": "Item excluído com sucesso."}), 200
 
     except Exception as e:
@@ -1538,21 +1542,49 @@ def faturar_pedido():
     data = request.get_json()
     pedido_id = data.get('pedidoId')
     faturado_omie = data.get('faturado_omie')
+    peso_faturado = data.get('peso_faturado')
+
+    qtd_visual = peso_faturado
+    qtd_visual = int(qtd_visual)
+    qtd_visual = qtd_visual * 1000
+    pedido = Pedido.query.get(pedido_id)    
+
+
     
-    print(faturado_omie)
     if faturado_omie == True:
         print("faturado Omie")
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
+        
+        id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
+        
+        for loop in id_lote:
+            zerar_lote = Lote_visual.query.get(loop.id)
+        
+        qtd_visual = qtd_visual
+        zerar_lote.quantidade = zerar_lote.quantidade - qtd_visual
+        db.session.commit()
+
+
+
     else:
         print("Faturado Direto")
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
+        
+        id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
+        
+        for loop in id_lote:
+            zerar_lote = Lote_visual.query.get(loop.id)
+        
+        qtd_visual = qtd_visual
+        zerar_lote.quantidade = zerar_lote.quantidade - qtd_visual
+        db.session.commit()
 
-    pedido = Pedido.query.get(pedido_id)
+
+
 
     if pedido:
-        qtd_visual = pedido.peso
-        qtd_visual = int(qtd_visual)
-        qtd_visual = qtd_visual * 1000
-        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
-        print(Status_mov, pedido.codigo)
+        
+        
 
         pedido.Status = "Faturado"
         pedido.status2 = "Faturado"
@@ -1601,10 +1633,10 @@ def update_pedido():
         qtd_visual = data['data']['peso']
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
-        if qtd_visual == "":
+        if edit_item.peso == "" or edit_item.peso == None:
             Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
             print(Status_mov, qtd_visual)
-        print(qtd_visual)    
+        print(edit_item.peso)    
 
         if data['data']['obs'] == "":
             observ="-"
