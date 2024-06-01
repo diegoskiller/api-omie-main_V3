@@ -99,6 +99,12 @@
         width: 80px;
         height: 10px;
     }
+    .readonly-input2 {
+        background-color: #d1cfcf; /* Cinza claro */
+        color: #666; /* Texto em cinza escuro */
+        width: 130px;
+        height: 10px;
+    }
     .read-input {
         background-color: #ffffff; /* Cinza claro */
         width: 80px;    
@@ -318,13 +324,13 @@
                 </b>
                 </div>
                 <div>
-                    <input type="number" class="edit-input {% if pedido.peso %}readonly-input{% endif %}" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso %}readonly{% endif %}>
+                    <input type="number" class="edit-input {% if pedido.peso %}readonly-input2{% endif %}" name="peso" data-field="peso" value="{{ pedido.peso|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso %}readonly{% endif %}>
                     <input type="number" class="edit-input" name="peso_total" data-field="peso_total" value="{{ pedido.peso_total|default('', true) }}" autocomplete="off" style="display:none;">
                     <select class="edit-input" name="material" data-field="material" autocomplete="off" style="display:none;">
                     <option value="01CUVERG6" {% if pedido.material == '01CUVERG6' %}selected{% endif %}>01CUVERG6</option>
                     <option value="01CUVERG7" {% if pedido.material == '01CUVERG7' %}selected{% endif %}>01CUVERG7</option>
                     </select>
-                    <input type="number" class="edit-input {% if pedido.peso_material %}readonly-input{% endif %}" name="peso_material" data-field="peso_material" value="{{ pedido.peso_material|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso_material %}readonly{% endif %}>
+                    <input type="number" class="edit-input {% if pedido.peso_material %}readonly-input2{% endif %}" name="peso_material" data-field="peso_material" value="{{ pedido.peso_material|default('', true) }}" autocomplete="off" style="display:none;" {% if pedido.peso_material %}readonly{% endif %}>
                     <input type="text" class="edit-input" name="amarrados" data-field="amarrados" value="{{ pedido.amarrados|default('', true) }}" autocomplete="off" style="display:none;">
                     <input type="text" class="edit-input" name="dimencional_real" data-field="dimencional_real" value="{{ pedido.dimencional_real|default('', true) }}" autocomplete="off" style="display:none;">
                     <input type="text" class="edit-input" name="obs" data-field="obs" value="{{ pedido.obs|default('', true) }}" autocomplete="off" style="display:none;">

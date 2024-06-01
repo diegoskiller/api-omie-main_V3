@@ -1281,35 +1281,23 @@ def deletar_pedido():
     return jsonify(success=False, message="Pedido não encontrado.")
 
 
-@app.route('/ferramentas', methods = ['GET','POST'])
+@app.route('/ferramentas', methods=['GET', 'POST'])
 def ferramentas():
-
-   
-    
-    filtro_cod = request.form.get("filtro_cod")
+    filtro_cod = request.form.get("filtro_cod", "").upper()
     
     if not current_user.is_authenticated:
-     return redirect( url_for('login'))
+        return redirect(url_for('login'))
     
     page = request.args.get('page', 1, type=int)
+
+    query = Ferramentas.query.order_by(Ferramentas.id.desc())
+
+    if filtro_cod:
+        query = query.filter(Ferramentas.dimensional.ilike(f"%{filtro_cod}%"))
     
-    
-    if filtro_cod == "":
-        filtro_cod = None
+    ferramentas = query.paginate(page=page, per_page=10)
 
-
-    if filtro_cod != None:
-         ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).paginate(page=page,per_page=10)
-
-         ferramentas.items = [lote for lote in ferramentas.items if filtro_cod in lote.dimensional.upper()]
-         
-
-      
-    else:
-        ferramentas = Ferramentas.query.order_by(Ferramentas.id.desc()).paginate(page=page,per_page=10)
-
-
-    return render_template('Ferramentas.html', ferramentas = ferramentas)
+    return render_template('Ferramentas.html', ferramentas=ferramentas)
 
 @app.route('/estoque_cobre', methods=['GET', 'POST'])
 def estoque_cobre():
@@ -1323,7 +1311,7 @@ def estoque_cobre():
     if filtro_desc == "":
         filtro_desc = None
 
-    query = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo="Setor_Cobre")
+    query = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(tipo="Setor_Cobre").filter(Lote_visual.quantidade > 0)
 
     if filtro_cod:
         query = query.filter_by(item=filtro_cod)
@@ -1455,42 +1443,47 @@ def alterar_pedido():
     return redirect(url_for('pedidos'))
 
 
-@app.route('/pedidos_faturados', methods = ['GET','POST'])
-def pedidos_faturados():
+from datetime import datetime
 
-    #pedidos = Pedido.query.filter_by(status2 = "Emitido").all()
-    
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from datetime import datetime
+
+@app.route('/pedidos_faturados', methods=['GET', 'POST'])
+def pedidos_faturados():
     filtro_pd = request.form.get("filtro_pd")
     filtro_cod = request.form.get("filtro_cod")
-    
+    filtro_data_inicio = request.form.get("filtro_data_inicio")
+    filtro_data_fim = request.form.get("filtro_data_fim")
+
     if not current_user.is_authenticated:
-     return redirect( url_for('login'))
-    
+        return redirect(url_for('login'))
+
     page = request.args.get('page', 1, type=int)
-    
-    if filtro_pd == "":
-        filtro_pd = None
-    
-    if filtro_cod == "":
-        filtro_cod = None
+    tqtd = 0
 
+    query = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2="Faturado")
 
-    if filtro_pd != None:
-        pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(pedido = filtro_pd, status2 = "Faturado").paginate(page=page,per_page=10)
-    else:
-        if filtro_cod != None:
-            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(codigo = filtro_cod, status2 = "Faturado").paginate(page=page,per_page=10)
-        else:
-            pedidos = Pedido.query.order_by(Pedido.pedido.desc()).filter_by(status2 = "Faturado").paginate(page=page,per_page=10)
-    
+    if filtro_pd:
+        query = query.filter(Pedido.pedido == filtro_pd)
+    if filtro_cod:
+        query = query.filter(Pedido.codigo == filtro_cod)
+    if filtro_data_inicio and filtro_data_fim:
+        try:
+            data_inicio = datetime.strptime(filtro_data_inicio, '%Y-%m-%d')
+            data_fim = datetime.strptime(filtro_data_fim, '%Y-%m-%d')
+            query = query.filter(Pedido.data_entrega.between(data_inicio.strftime('%d/%m/%y'), data_fim.strftime('%d/%m/%y')))
+        except ValueError:
+            flash('Formato de data inválido. Use o formato AAAA-MM-DD.', 'danger')
 
+    pedidos = query.paginate(page=page, per_page=10)
 
-    #pedidos = pedidos.query.filter_by(status2 = "Emitido").all()
+    for row in pedidos.items:
+        tqtd += row.quantidade
 
+    tqtd = int(tqtd)
 
-
-
-    return render_template('pedidos_faturados.html',pedidos = pedidos)
+    return render_template('pedidos_faturados.html', pedidos=pedidos, tqtd=tqtd)
 
 @app.route('/add_ferramentas', methods=['POST'])
 def add_ferramentas():
@@ -1636,7 +1629,22 @@ def update_pedido():
         if edit_item.peso == "" or edit_item.peso == None:
             Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
             print(Status_mov, qtd_visual)
-        print(edit_item.peso)    
+            Status_mov2 = Def_ajuste_estoque(data['data']['material'], data['data']['peso_material'],"SAI", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso_material'], "Cobre", 0)
+            print(Status_mov2, data['data']['peso_material'])
+        print(edit_item.peso)
+
+        id_lote = Lote_visual.query.filter_by(item = data['data']['material'], tipo = "Setor_Cobre").all()
+        
+        for loop in id_lote:
+            zerar_lote = Lote_visual.query.get(loop.id)
+        
+        qtd_visual = data['data']['peso_material']
+        zerar_lote.quantidade = zerar_lote.quantidade - qtd_visual
+        db.session.commit()
+
+
+
+
 
         if data['data']['obs'] == "":
             observ="-"
