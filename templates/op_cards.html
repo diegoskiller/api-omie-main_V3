@@ -268,7 +268,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
-            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %} 
                 <span class="status-estoque">Status: Pedido em Estoque</span> 
@@ -304,7 +304,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
-            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %} 
                 <span class="status-estoque">Status: já em Estoque, A quantidade precisa ser ajustada no almoxarifado</span> 
@@ -373,7 +373,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/>  
-            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %} 
                 <span class="status-estoque">Status: Emitindo Certificado</span> 
@@ -408,7 +408,7 @@
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
             <hr/> 
-            Med.:{{ pedido.dimensional }} | {{pedido.canto}}
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %} 
                 <span class="status-estoque">Status: Disponível Para Faturar</span> 
