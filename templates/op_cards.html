@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -78,13 +77,13 @@
     }
     .card {
         background-color: #d3dff591;
-        border: 1px solid #ddd;
+        border: 8px solid; /* Borda mais larga */
         border-radius: 4px;
         padding: 10px;
         margin-bottom: 10px;
         font-size: 13px;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        transition: background-color 0.3s ease, border-color 0.3s ease; /* Transição suave para a cor da borda */
     }
     .card:hover {
         background-color: #f2f2f2;
@@ -215,6 +214,16 @@
         justify-content: space-between;
         align-items: center;
     }
+    .status-bar {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px;
+        font-size: 16px;
+    }
 </style>
 </head>
 <body>
@@ -262,11 +271,12 @@
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}', '{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
-            Desc.:{{ pedido.descricao }}<br>
-            <hr/> 
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+            
+            <hr/> 
+            Desc.:{{ pedido.descricao }}<br>
             <hr/>  
             Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
@@ -298,11 +308,12 @@
            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
-            Desc.: {{ pedido.descricao }}<br>
-            <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
+           {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+           {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+           
+           <hr/> 
+           Desc.:{{ pedido.descricao }}<br>
             <hr/> 
             Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
@@ -367,11 +378,12 @@
             '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
-            Desc.:{{ pedido.descricao }}<br>
-            <hr/> 
-            {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
-            {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
+           {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+           {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+           
+           <hr/> 
+           Desc.:{{ pedido.descricao }}<br>
             <hr/>  
             Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
@@ -402,11 +414,12 @@
            '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
             '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
              '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-             '{{ pedido.obs }}', '{{ pedido.estoque }}')" draggable="true">
-            Desc.:{{ pedido.descricao }}<br>
-            <hr/> 
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
             {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
             {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+            
+            <hr/> 
+            Desc.:{{ pedido.descricao }}<br>
             <hr/> 
             Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
@@ -472,11 +485,11 @@
     <div class="containerModal">
         <span class="close" onclick="closeModal()">&times;</span>
         <div class="detail-field">
-            <label>Peso/Qtd Produzido:</label>
+            <label>Quantidade Produzida:</label>
             <span id="detail-peso"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Produzido total:</label>
+            <label>Peso Bruto:</label>
             <span id="detail-peso_total"></span>
             <label>C/Emb. </label>
         </div>
@@ -485,7 +498,7 @@
             <span id="detail-material"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Material Usado:</label>
+            <label>Peso Materia-Prima Usada:</label>
             <span id="detail-peso_material"></span>
         </div>
         
@@ -565,6 +578,10 @@
     </div>
 </div>
 
+<div class="status-bar" id="status-bar">
+    Total por Setor: Pedidos - 0, Produção - 0, Qualidade - 0, Expedição - 0
+</div>
+
 <!-- JavaScript libraries -->
 <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -615,7 +632,7 @@
         const permissions = {
             "Valdemir": ["move_to_pedidos", "move_to_production", "produce"],
             "Joseane": ["move_to_expedition"],
-            "Rodrigo Moreira": ["move_to_quality", "invoice"],
+            "André Marcelo": ["move_to_quality", "invoice"],
             "Diego": ["move_to_pedidos", "move_to_production", "produce", "move_to_expedition", "move_to_quality", "invoice"]
         };
 
@@ -844,6 +861,87 @@
                 }
             });
         });
+    });
+
+    $(document).ready(function() {
+        // Função para gerar uma cor aleatória
+        function generateRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Objeto para armazenar cores por prefixo de pedido
+        const prefixColors = {};
+
+        $('.card').each(function() {
+            const pedido = $(this).text().trim().split('|')[0].trim();
+            const prefix = pedido.substring(0, 4);
+
+            if (!prefixColors[prefix]) {
+                prefixColors[prefix] = generateRandomColor();
+            }
+
+            $(this).css('border-color', prefixColors[prefix]);
+        });
+
+        // Função para atualizar a barra de status
+        function updateStatusBar(selectedPedido = '') {
+            const statusBar = $('#status-bar');
+            const totalPedidos = $('.card').length;
+
+            let totalPedidosPedidos = 0;
+            let totalPedidosProducao = 0;
+            let totalPedidosQualidade = 0;
+            let totalPedidosExpedicao = 0;
+            let selectedPedidoDetails = '';
+
+            const selectedPrefix = selectedPedido.substring(0, 4);
+
+            $('.card').each(function() {
+                const setor = $(this).closest('.setor').attr('id');
+                const pedido = $(this).text().trim().split('|')[0].trim();
+                const prefix = pedido.substring(0, 4);
+
+                if (prefix === selectedPrefix) {
+                    if (setor === 'pedidos-setor') {
+                        totalPedidosPedidos++;
+                    } else if (setor === 'producao-setor') {
+                        totalPedidosProducao++;
+                    } else if (setor === 'qualidade-setor') {
+                        totalPedidosQualidade++;
+                    } else if (setor === 'expedicao-setor') {
+                        totalPedidosExpedicao++;
+                    }
+                }
+            });
+
+            if (selectedPedido) {
+                selectedPedidoDetails = `Numero do Pedido: ${selectedPrefix} | `;
+            }
+
+            statusBar.text(`${selectedPedidoDetails}Total por Setor: Pedidos Emitidos - ${totalPedidosPedidos}, Produzindo - ${totalPedidosProducao}, Qualidade - ${totalPedidosQualidade}, Expedição - ${totalPedidosExpedicao}`);
+        }
+
+        // Atualiza a barra de status quando um card é movido
+        $(".setor").on("drop", function(event, ui) {
+            const selectedPedido = $('.selected-card').text().trim().split('|')[0].trim();
+            updateStatusBar(selectedPedido);
+        });
+
+        // Função para selecionar um card e atualizar a barra de status
+        window.selectCard = function(card) {
+            $('.card').removeClass('selected-card');
+            $(card).addClass('selected-card');
+            const selectedPedido = $(card).text().trim().split('|')[0].trim();
+            updateStatusBar(selectedPedido);
+        };
+
+        // Atualiza a barra de status inicial
+        updateStatusBar();
     });
 </script>
 
