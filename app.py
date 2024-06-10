@@ -1929,25 +1929,29 @@ def imprimir_op():
 #===================Todas definições do diego prodx==================#  
 
 
+
 @app.route('/exportar_ferramentas')
 def exportar_ferramentas():
-    ferramentas = Ferramentas.query.all()
-    
-    data = {
-        "Dimensional": [ferramenta.dimensional for ferramenta in ferramentas],
-        "Quantidade": [ferramenta.quantidade for ferramenta in ferramentas],
-        "Obs": [ferramenta.obs for ferramenta in ferramentas]
-    }
-    
-    df = pd.DataFrame(data)
-    
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Ferramentas')
-    
-    output.seek(0)
-    
-    return send_file(output, download_name='Ferramentas.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    try:
+        ferramentas = Ferramentas.query.all()
+        
+        data = {
+            "Dimensional": [ferramenta.dimensional for ferramenta in ferramentas],
+            "Quantidade": [ferramenta.quantidade for ferramenta in ferramentas],
+            "Obs": [ferramenta.obs for ferramenta in ferramentas]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Ferramentas')
+        
+        output.seek(0)
+        
+        return send_file(output, download_name='Ferramentas.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
 
 def Def_cadastro_prod(item):
    item = item
