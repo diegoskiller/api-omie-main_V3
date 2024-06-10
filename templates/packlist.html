@@ -1,0 +1,54 @@
+
+
+
+{% extends 'base.html' %}
+
+{% block title %}Packing List{% endblock %}
+
+{% block body %}
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100">
+        <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <h2 class="d-flex justify-content-center mt-2"><strong>Packing List</strong></h2>
+        
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-success">
+                {{ message }}
+                <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">
+                    <th>ID</th>
+                    <th>Peso Líquido</th>
+                    <th>Peso Bruto</th>
+                    <th>Embalagem</th>
+                    <th>Observações de Entrega</th>
+                    <th>Observações</th>
+                    <th>Status</th>
+                </tr>
+
+                {% for packlist in packlists %}
+                <tr>
+                    <td>{{ packlist.packlist }}</td>
+                    <td>{{ packlist.peso_liquido }}</td>
+                    <td>{{ packlist.peso_bruto }}</td>
+                    <td>{{ packlist.embalagem }}</td>
+                    <td>{{ packlist.obs_entrega }}</td>
+                    <td>{{ packlist.obs }}</td>
+                    <td>{{ packlist.status }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -293,12 +293,16 @@ class Pedido(db.Model):
     furo = db.Column(db.String(50))
     embalagem = db.Column(db.String(250))
     status2 = db.Column(db.String(50), default='Emitido')
+    qtd_faturada = db.Column(db.Float)
+    packlist = db.Column(db.Integer)
+   
+    
     
 
     
     def __init__(self, pedido, emissao, descricao, cliente, codigo, data_entrega,
                  obs_entrega, dimensional, quantidade, peso, peso_total, Status,
-                 material, peso_material, amarrados, dimencional_real, obs, canto, furo, embalagem, status2):
+                 material, peso_material, amarrados, dimencional_real, obs, canto, furo, embalagem, status2, qtd_faturada, packlist):
 
         self.pedido = pedido
         self.emissao = emissao
@@ -321,14 +325,17 @@ class Pedido(db.Model):
         self.furo = furo
         self.embalagem = embalagem
         self.status2 = status2
-       
+        self.qtd_faturada = qtd_faturada
+        self.packlist = packlist
+      
 
     def __repr__(self):
-        return 'pedido: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}- {}' .format(self.id, self.pedido, self.emissao, self.descricao, self.cliente,
-                                                                                                          self.codigo, self.data_entrega, self.obs_entrega, self.dimensional,
-                                                                                                          self.quantidade, self.peso, self.peso_total, self.Status,
-                                                                                                          self.material, self.peso_material, self.amarrados,
-                                                                                                          self.dimencional_real, self.obs, self.canto, self.furo, self.embalagem, self.status2 )
+        return 'pedido: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.pedido, self.emissao,
+                                                                                                          self.descricao, self.cliente, self.codigo, self.data_entrega,
+                                                                                                          self.obs_entrega, self.dimensional, self.quantidade, self.peso,
+                                                                                                          self.peso_total, self.Status, self.material, self.peso_material,
+                                                                                                          self.amarrados, self.dimencional_real, self.obs, self.canto,
+                                                                                                          self.furo, self.embalagem, self.status2, self.qtd_faturada, self.packlist)
 
 
 
@@ -390,3 +397,28 @@ class Validacao(db.Model):
     def __repr__(self):
         return 'sequencia: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.usuario, self.telas, self.validacao_1, self.validacao_2, self.validacao_3, self.validacao_4, self.validacao_5, self.validacao_6, self.validacao_7, self.validacao_8, self.validacao_9, self.validacao_10) 
 
+
+class Packlist(db.Model):
+    __tablename__='packlist'
+    
+    packlist_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    peso_liquido = db.Column(db.Integer, nullable=False)
+    peso_bruto = db.Column(db.Integer, nullable=False)
+    embalagem = db.Column(db.String(250))
+    obs_entrega = db.Column(db.String(255))
+    obs = db.Column(db.String(255))
+    status2 = db.Column(db.String(50))
+
+   
+    def __init__(self, peso_liquido, peso_bruto, embalagem, obs_entrega, obs, status2):
+
+        self.peso_liquido = peso_liquido
+        self.peso_bruto = peso_bruto
+        self.embalagem = embalagem
+        self.obs_entrega = obs_entrega
+        self.obs = obs
+        self.status2 = status2
+    
+    def __repr__(self):
+        return 'sequencia: {} - {} - {} - {} - {} - {} - {}' .format(self.packlist_id, self.peso_liquido, self.peso_bruto,
+                                                                self.embalagem, self.obs_entrega, self.obs, self.status2) 

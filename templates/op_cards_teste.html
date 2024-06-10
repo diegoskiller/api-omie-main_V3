@@ -389,14 +389,13 @@
            
            <hr/> 
            Desc.:{{ pedido.descricao }}<br>
-            <hr/>  
+            <hr/> 
             Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
             <hr/>
             {% if pedido.estoque >= pedido.quantidade %} 
-                <span class="status-estoque">Status: Emitindo Certificado</span> 
+                <span class="status-estoque">Status: Pedido em Estoque</span> 
             {% else %} 
-            <p style="color: red; background-color: #ccc;">
-                <span>Status: Sem Estoque Suficiente</span></p>
+                <span>Status: Qualidade</span> 
             {% endif %}
 
         </div>
@@ -416,39 +415,28 @@
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Expedindo' %}
             <div class="card" data-pedido-id="{{ pedido.id }}" data-estoque="{{ pedido.estoque }}" data-quantidade="{{ pedido.quantidade }}" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
-                '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
-                '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
-                '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
-                '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
-                {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
-                {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
-
-                <hr/> 
-                Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
-                <hr/>
-                {% if pedido.estoque >= pedido.quantidade %} 
-                    <span class="status-estoque">Status: Disponível Para Faturar</span> 
-                {% else %} 
-                <p style="color: red; background-color: #ccc;">
-                    <span>Status: Sem Estoque Suficiente</span></p>
-                {% endif %}
-                <hr/> 
-                <div class="container">
-                Faturar ? <input type="checkbox" class="select-for-packlist" data-pedido-id="{{ pedido.id }}" style="background-color: #68a2e4; border-radius: 5px;">
-                </div>
-                <hr/> 
-                <div class="modal-buttons">
-
-                
-                <div class="container">
-                <button class="expe-btn" data-pedido-id="{{ pedido.id }}" data-pedido-numero="{{ pedido.pedido }}" data-pedido-estoque="{{ pedido.estoque }}" data-pedido-quantidade="{{ pedido.quantidade }}" style="background-color: #46b342; border-radius: 5px;">Sem Pack List</button>
-                <button onclick="openPacklistModal()" class="faturar-btn" style="background-color: #668bf1; border-radius: 5px;">Pack List</button>
-                </div>
-
-
-                </div>    
-                </div>
-
+           '{{ pedido.descricao }}', '{{ pedido.cliente }}', '{{ pedido.quantidade }}', '{{ pedido.codigo }}',
+            '{{ pedido.pedido }}', '{{ pedido.Status }}','{{ pedido.obs_entrega }}', '{{ pedido.peso }}', '{{ pedido.peso_total }}', '{{ pedido.material }}',
+             '{{ pedido.peso_material }}', '{{ pedido.amarrados }}', '{{ pedido.dimencional_real }}',
+             '{{ pedido.obs }}', '{{ pedido.estoque }}')" onclick="selectCard(this)" draggable="true">
+           {{ pedido.pedido }} | {{ pedido.cliente }} | {{ pedido.quantidade }}kg<br>
+           {{ pedido.codigo }} | {{ pedido.data_entrega }} | {{ pedido.estoque}}kg<br>
+           
+           <hr/> 
+           Desc.:{{ pedido.descricao }}<br>
+            <hr/> 
+            Med.:{{ pedido.dimensional }} | {{pedido.canto}} | {{pedido.furo}}
+            <hr/>
+            {% if pedido.estoque >= pedido.quantidade %} 
+                <span class="status-estoque">Status: Pedido em Estoque</span> 
+            {% else %} 
+                <span>Status: Qualidade</span> 
+            {% endif %}
+            <hr/>
+            <div class="modal-buttons">
+                <button class="expe-btn" style="background-color: #e6de0e; border-radius: 5px;"> Faturar X</button>
+            </div>
+        </div>
             {% endif %}
             {% endfor %}
         </div>
@@ -501,138 +489,125 @@
     <div class="containerModal">
         <span class="close" onclick="closeModal()">&times;</span>
         <div class="detail-field">
-            <label>Quantidade Produzida:</label>
+            <label>Peso/Qtd do Material Produzido:</label>
             <span id="detail-peso"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Bruto:</label>
+            <label>Peso Produzido total</label>
             <span id="detail-peso_total"></span>
-            <label>C/Emb. </label>
+            <label>com embalagem</label>
         </div>
         <div class="detail-field">
-            <label>Material Prima:</label>
+            <label>Material Prima</label>
             <span id="detail-material"></span>
         </div>
         <div class="detail-field">
-            <label>Peso Materia-Prima Usada:</label>
+            <label>Peso Material Usado</label>
             <span id="detail-peso_material"></span>
         </div>
-        
         <div class="detail-field">
-            <label>Qtd. de Amarrados:</label>
+            <label>Qtd. de Amarrados</label>
             <span id="detail-amarrados"></span>
         </div>
         <div class="detail-field">
-            <label>Dimensional Encontrado:</label>
+            <label>Dimensional Encontrado</label>
             <span id="detail-dimencional_real"></span>
         </div>
         <div class="detail-field">
-            <label>Observações de Produção:</label>
+            <label>Observações de Produção</label>
             <span id="detail-obs"></span>
         </div>
     </div>
 </div>
 </div>
 
-<!-- Modal para faturamento -->
-<div id="faturarModal" class="modal">
+<!-- Modal de Faturamento -->
+<div id="faturamentoModal" class="modal">
     <div class="modal-content2">
-        <span class="close" onclick="closeFaturarModal()">&times;</span>
-        <h2><p style="color: rgb(0, 0, 0); background-color: #cccccc00;">Dados para processar o Faturamento do Pedido</p></h2>
-        <form id="faturarForm">
-            <input type="hidden" id="faturar-pedido-id" name="pedido_id">
-            <div class="modal-aligned">
-                    <div class="detail-field">
-                        <label for="faturado-omie">O item foi faturado pelo sistema Omie?</label>
-                        <input type="checkbox" id="faturado-omie" name="faturado_omie"><span id="omie-status">Não</span>
-                    </div>
-                    
-                    <div class="detail-field">    
-                        
-                    </div>
-                <div class="containerModal2">
-                    
-                    <div class="detail-field">
-                        <label for="peso-pedido">Peso do Pedido :</label>
-                    </div>
-                    <div class="detail-field">
-                        <label for="peso-fabricado">Peso Fabricado :</label>
-                    </div>
-                    <div class="detail-field">
-                        <label for="estoque-atual">Estoque Atual :</label>
-                    </div>
-                    <div class="detail-field">
-                        <label for="faturar-peso">Peso Faturado :</label>
-                    </div>
-                    <div class="detail-field">
-                        <label for="saldo">Saldo Futuro :</label>
-                    </div>
+        <span class="close" onclick="closeFaturamentoModal()">&times;</span>
+        <h2>Faturar Pedido</h2>
+        <div class="modal-aligned">
+            <div class="containerModal2">
+                <div class="detail-field">
+                    <label>Peso do Pedido:</label>
+                    <span id="faturamento-peso-pedido"></span>
                 </div>
-                <div>
-                    <div class="detail-field">
-                        <input type="number" step="0.01" id="peso-pedido" name="peso_pedido" readonly class="readonly-input">
-                    </div>
-                    <div class="detail-field">
-                        <input type="number" step="0.01" id="peso-fabricado" name="peso_fabricado" readonly class="readonly-input">
-                    </div>
-                    <div class="detail-field">
-                        <input type="number" step="0.01" id="estoque-atual" name="estoque_atual" readonly class="readonly-input">
-                    </div>
-                    <div class="detail-field">
-                        <input type="number" step="0.01" id="faturar-peso" name="peso_faturado" required class="read-input">
-                    </div>
-                    <div class="detail-field">
-                        <input type="number" step="0.01" id="saldo" name="saldo" readonly class="readonly-input">
-                    </div>
+                <div class="detail-field">
+                    <label>Peso Fabricado:</label>
+                    <span id="faturamento-peso-fabricado"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Estoque Atual:</label>
+                    <span id="faturamento-estoque-atual"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Peso Faturado:</label>
+                    <input type="number" id="peso_faturado" oninput="atualizarSaldo()">
+                </div>
+                <div class="detail-field">
+                    <label>Saldo:</label>
+                    <span id="saldo"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Faturado pelo sistema Omie?</label>
+                    <input type="checkbox" id="faturado_omie" onclick="toggleOmieStatus()">
+                    <span id="omie-status">Não</span>
+                </div>
+                <div class="detail-field">
+                    <label>Observações:</label>
+                    <input type="text" id="obs_faturamento">
                 </div>
             </div>
-            <div class="modal-buttons">
-                <button type="submit" style="background-color: #59b0eb;">Processar o Faturamento</button>
-                <button type="button" style="background-color: #f84444;" onclick="closeFaturarModal()">Cancelar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-
-<!-- Modal de criação de packing list -->
-<div id="packlistModal" class="modal">
-    <div class="modal-content2">
-        <span class="close" onclick="closePacklistModal()">&times;</span>
-        <p style="color: rgb(46, 17, 73);font-size:xx-large;text-align: center;">Criar Packing List</p>
-        <div id="selectedCards"></div>
-        <div class="modal-aligned">
-            <label for="totalAmarrados">Total de Amarrados:</label>
-            <input type="number" id="totalAmarrados" readonly>
-        </div>
-        <div class="modal-aligned">
-            <label for="totalPesoFaturado">Peso Total Faturado:</label>
-            <input type="number" id="totalPesoFaturado" readonly>
-        </div>
-        <div class="modal-aligned">
-            <label for="totalPesoBruto">Peso Total Bruto:</label>
-            <input type="number" id="totalPesoBruto" readonly>
-        </div>
-        <div class="modal-aligned">
-            <label for="obsEntrega">Observação Entrega:</label>
-            <input type="text" id="obsEntrega">
-        </div>
-        <div class="modal-aligned">
-            <label for="obs">Observação:</label>
-            <input type="text" id="obs">
         </div>
         <div class="modal-buttons">
-            <button onclick="criarPackingList()" style="background-color: #4059e6;">Criar</button>
-            <button onclick="closePacklistModal()" style="background-color: #f84444;">Cancelar</button>
+            <button onclick="faturarPedido()">Faturar</button>
+            <button onclick="closeFaturamentoModal()">Cancelar</button>
         </div>
     </div>
 </div>
 
-
+<!-- Modal de Criar Packing List -->
+<div id="packingListModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePackingListModal()">&times;</span>
+        <h2>Criar Packing List</h2>
+        <div class="modal-aligned">
+            <div class="containerModal2">
+                <div class="detail-field">
+                    <label>Pedidos Selecionados:</label>
+                    <span id="selected-orders"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Total Amarrados:</label>
+                    <span id="total-amarrados"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Peso Total Faturado:</label>
+                    <span id="total-peso-faturado"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Peso Total Bruto:</label>
+                    <span id="total-peso-bruto"></span>
+                </div>
+                <div class="detail-field">
+                    <label>Observação Entrega:</label>
+                    <input type="text" id="obs_entrega">
+                </div>
+                <div class="detail-field">
+                    <label>Observação:</label>
+                    <input type="text" id="obs_packing">
+                </div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button onclick="criarPackingList()">Criar</button>
+            <button onclick="closePackingListModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
 
 <div class="status-bar" id="status-bar">
-    Total por Setor: Pedidos - 0, Produção - 0, Qualidade - 0, Expedição - 0
+    <!-- A barra de status aparecerá aqui -->
 </div>
 
 <!-- JavaScript libraries -->
@@ -640,60 +615,27 @@
 <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <script>
-   function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total,
-                 material, peso_material, amarrados, dimencional_real, obs, estoque) {
-        toggleFieldVisibility("detail-data", data);
-        toggleFieldVisibility("detail-medida", medida);
-        toggleFieldVisibility("detail-descricao", descricao);
-        toggleFieldVisibility("detail-cliente", cliente);
-        toggleFieldVisibility("detail-quantidade", quantidade);
-        toggleFieldVisibility("detail-codigo", codigo);
-        toggleFieldVisibility("detail-pedido", pedido);
-        toggleFieldVisibility("detail-acao", Status);
-        toggleFieldVisibility("detail-obs_entrega", obs_entrega);
-        toggleFieldVisibility("detail-peso", peso);
-        toggleFieldVisibility("detail-peso_total", peso_total);
-        toggleFieldVisibility("detail-material", material);
-        toggleFieldVisibility("detail-peso_material", peso_material);
-        toggleFieldVisibility("detail-amarrados", amarrados);
-        toggleFieldVisibility("detail-dimencional_real", dimencional_real);
-        toggleFieldVisibility("detail-obs", obs);
-
+   function showDetails(data, medida, descricao, cliente, quantidade, codigo, pedido, Status, obs_entrega, peso, peso_total, material, peso_material, amarrados, dimencional_real, obs, estoque) {
+        document.getElementById("detail-data").innerText = data;
+        document.getElementById("detail-medida").innerText = medida;
+        document.getElementById("detail-descricao").innerText = descricao;
+        document.getElementById("detail-cliente").innerText = cliente;
+        document.getElementById("detail-quantidade").innerText = quantidade;
+        document.getElementById("detail-codigo").innerText = codigo;
+        document.getElementById("detail-pedido").innerText = pedido;
+        document.getElementById("detail-acao").innerText = Status;
+        document.getElementById("detail-obs_entrega").innerText = obs_entrega;
+        document.getElementById("detail-peso").innerText = peso;
+        document.getElementById("detail-peso_total").innerText = peso_total;
+        document.getElementById("detail-material").innerText = material;
+        document.getElementById("detail-peso_material").innerText = peso_material;
+        document.getElementById("detail-amarrados").innerText = amarrados;
+        document.getElementById("detail-dimencional_real").innerText = dimencional_real;
+        document.getElementById("detail-obs").innerText = obs;
         document.getElementById("myModal").style.display = "block";
     }
-
-    function toggleFieldVisibility(fieldId, value) {
-        var field = document.getElementById(fieldId).parentElement;
-        if (value && value !== "None") {
-            document.getElementById(fieldId).innerText = value;
-            field.style.display = "block";
-        } else {
-            field.style.display = "none";
-        }
-    }
-
     function closeModal() {
         document.getElementById("myModal").style.display = "none";
-    }
-
-    function closeFaturarModal() {
-        document.getElementById("faturarModal").style.display = "none";
-    }
-
-    function userHasPermission(action) {
-        const user = "{{ current_user.name }}";
-        const permissions = {
-            "Valdemir": ["move_to_pedidos", "move_to_production", "produce"],
-            "Joseane": ["move_to_expedition"],
-            "André Marcelo": ["move_to_quality", "invoice"],
-            "Diego": ["move_to_pedidos", "move_to_production", "produce", "move_to_expedition", "move_to_quality", "invoice"]
-        };
-
-        if (permissions[user] && permissions[user].includes(action)) {
-            return true;
-        }
-
-        return false;
     }
 
     $(function() {
@@ -722,44 +664,25 @@
 
                 // Atualizar o status do pedido com base no setor onde o card foi solto
                 var novoStatus;
-                var action;
-
                 if ($(this).attr('id') === 'pedidos-setor') {
                     novoStatus = 'Emitido';
-                    action = "move_to_pedidos";
                 } else if ($(this).attr('id') === 'producao-setor') {
                     novoStatus = 'Produzindo';
-                    action = "move_to_production";
                 } else if ($(this).attr('id') === 'qualidade-setor') {
-                    novoStatus = 'Qualidade';
-                    action = "move_to_quality";
-
-                    // Verifica se o estoque é suficiente antes de permitir mover para Qualidade
-                    var card = $(ui.draggable);
-                    var estoque = parseFloat(card.attr('data-estoque'));
-                    var quantidade = parseFloat(card.attr('data-quantidade'));
-
-                    if (estoque < quantidade) {
-                        alert("Não é possível mover para Qualidade, estoque insuficiente.");
+                    if ($(ui.draggable).data('estoque') >= $(ui.draggable).data('quantidade')) {
+                        novoStatus = 'Qualidade';
+                    } else {
+                        alert('Você não tem saldo em estoque para mover este item para a Qualidade.');
                         location.reload();
                         return;
                     }
                 } else if ($(this).attr('id') === 'expedicao-setor') {
                     novoStatus = 'Expedindo';
-                    action = "move_to_expedition";
-                }
-
-                if (action === "move_to_quality" && (estoque >= quantidade)) {
-                    // Permitir qualquer usuário mover para Qualidade se o estoque for suficiente
-                } else if (!userHasPermission(action)) {
-                    alert("Você não tem acesso para isso");
-                    location.reload();
-                    return;
                 }
 
                 // Obter o ID do pedido
                 var pedidoId = $(ui.draggable).data('pedidoId');
-                if (confirm("Tem certeza de que deseja mover o pedido?")) {
+                if (confirm("Tem certeza de que deseja mover este pedido para o setor " + novoStatus + "?")) {
                     // Lógica para atualizar o status do pedido
                     atualizarStatusPedido(pedidoId, novoStatus);
                 } else {
@@ -788,11 +711,6 @@
 
     $(document).ready(function() {
         $('.edit-btn').click(function() {
-            if (!userHasPermission("produce")) {
-                alert("Você não tem acesso para isso");
-                return;
-            }
-
             var card = $(this).closest('.card');
             card.find('.editable').hide();
             card.find('.edit-input').show();
@@ -802,7 +720,7 @@
         });
 
         $('.save-ccl').click(function() {
-            location.reload()
+            location.reload();
         });
 
         $('.save-btn').click(function() {
@@ -812,13 +730,7 @@
 
             card.find('.edit-input').each(function() {
                 var field = $(this).attr('name');
-                var value = $(this).val();
-
-                if (field === 'peso' || field === 'peso_total' || field === 'peso_material') {
-                    updatedData[field] = parseFloat(value);  // Convertendo para float
-                } else {
-                    updatedData[field] = value;
-                }
+                updatedData[field] = $(this).val();
             });
 
             $.ajax({
@@ -844,6 +756,7 @@
 
                     location.reload();
                 },
+
                 error: function(xhr) {
                     alert('Erro ao salvar as alterações: ' + xhr.responseText);
                 }
@@ -851,30 +764,31 @@
         });
 
         $('.expe-btn').click(function() {
-            if (!userHasPermission("invoice")) {
-                alert("Você não tem acesso para isso");
-                return;
-            }
+            var card = $(this).closest('.card');
+            var pedidoId = card.data('pedido-id');
+            var pesoPedido = card.find('.edit-input[name="peso"]').val();
+            var pesoFabricado = card.find('.edit-input[name="peso_total"]').val();
+            var estoqueAtual = card.data('estoque');
 
-            var pedidoId = $(this).data('pedido-id');
-            var pedidoQuantidade = $(this).data('pedido-quantidade');
-            var estoqueAtual = $(this).data('pedido-estoque'); // Pega o valor do estoque atual
-            var pesoFaturado = pedidoQuantidade; // Seta o valor padrão de peso faturado como o peso do pedido
+            $('#faturamento-peso-pedido').text(pesoPedido);
+            $('#faturamento-peso-fabricado').text(pesoFabricado);
+            $('#faturamento-estoque-atual').text(estoqueAtual);
+            $('#peso_faturado').val(pesoPedido);
+            $('#saldo').text((estoqueAtual - pesoPedido).toFixed(2));
 
-            $('#faturar-pedido-id').val(pedidoId);
-            $('#faturar-peso').val(pesoFaturado); // Define o valor do peso faturado
-            $('#peso-pedido').val(pedidoQuantidade); // Define o peso do pedido
-            $('#peso-fabricado').val(estoqueAtual); // Define o peso fabricado
-            $('#estoque-atual').val(estoqueAtual); // Define o estoque atual
-            $('#saldo').val((estoqueAtual - pesoFaturado).toFixed(2)); // Define o saldo inicial
-            $('#faturarModal').show();
+            $('#faturamentoModal').data('pedido-id', pedidoId);
+            $('#faturamentoModal').show();
         });
 
-        $('#faturar-peso').on('input', function() {
+        $('.create-packing-list-btn').click(function() {
+            $('#packingListModal').show();
+        });
+
+        $('#packingListModal').on('input', '#peso_faturado', function() {
             var pesoFaturado = parseFloat($(this).val());
-            var estoque = parseFloat($('#estoque-atual').val());
-            var saldo = estoque - pesoFaturado;
-            $('#saldo').val(saldo.toFixed(2)); // Atualiza o saldo
+            var estoqueAtual = parseFloat($('#faturamento-estoque-atual').text());
+            var saldo = estoqueAtual - pesoFaturado;
+            $('#saldo').text(saldo.toFixed(2));
             if (saldo < 0) {
                 $('#saldo').css('color', 'red');
             } else {
@@ -882,277 +796,138 @@
             }
         });
 
-        $('#faturado-omie').change(function() {
-            var omieStatus = $('#faturado-omie').is(':checked') ? 'Sim' : 'Não';
-            $('#omie-status').text(omieStatus);
+        $('#faturado_omie').change(function() {
+            if ($(this).is(':checked')) {
+                $('#omie-status').text('Sim');
+            } else {
+                $('#omie-status').text('Não');
+            }
         });
 
-        $('#faturarForm').submit(function(e) {
-            e.preventDefault();
+        function atualizarStatusPedido(pedidoId, novoStatus) {
+            $.ajax({
+                type: "POST",
+                url: "/atualizar_status_pedido",
+                data: JSON.stringify({ pedidoId: pedidoId, novoStatus: novoStatus }),
+                contentType: "application/json",
+                success: function(response) {
+                    console.log("Status atualizado com sucesso.", response);
+                },
+                error: function(error) {
+                    console.error("Erro ao atualizar o status do pedido:", error);
+                }
+            });
+        }
 
-            var pedidoId = $('#faturar-pedido-id').val();
-            var faturadoOmie = $('#faturado-omie').is(':checked');
-            var pesoFaturado = parseFloat($('#faturar-peso').val());
-            var saldo = parseFloat($('#saldo').val());
+        function faturarPedido() {
+            var pedidoId = $('#faturamentoModal').data('pedido-id');
+            var pesoFaturado = $('#peso_faturado').val();
+            var faturadoOmie = $('#faturado_omie').is(':checked') ? 'Sim' : 'Não';
+            var obsFaturamento = $('#obs_faturamento').val();
+            var saldo = parseFloat($('#saldo').text());
 
             if (saldo < 0) {
-                alert("Sem saldo em estoque para faturar essa quantidade.");
+                alert('Sem saldo em estoque para faturar essa quantidade.');
                 return;
             }
 
             $.ajax({
-                url: '/faturar_pedido',
-                type: 'POST',
+                type: "POST",
+                url: "/faturar_pedido",
+                data: JSON.stringify({
+                    pedidoId: pedidoId,
+                    pesoFaturado: pesoFaturado,
+                    faturadoOmie: faturadoOmie,
+                    obsFaturamento: obsFaturamento
+                }),
                 contentType: "application/json",
-                data: JSON.stringify({ pedidoId: pedidoId, faturado_omie: faturadoOmie, peso_faturado: pesoFaturado }),
                 success: function(response) {
-                    alert('Pedido faturado com sucesso!');
+                    console.log("Pedido faturado com sucesso.", response);
+                    closeFaturamentoModal();
                     location.reload();
                 },
-                error: function(xhr) {
-                    alert('Erro ao faturar o pedido: ' + xhr.responseText);
+                error: function(error) {
+                    console.error("Erro ao faturar o pedido:", error);
                 }
             });
-        });
-    });
-
-    $(document).ready(function() {
-        // Função para gerar uma cor aleatória
-        function generateRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
         }
 
-        // Objeto para armazenar cores por prefixo de pedido
-        const prefixColors = {};
-
-        $('.card').each(function() {
-            const pedido = $(this).text().trim().split('|')[0].trim();
-            const prefix = pedido.substring(0, 4);
-
-            if (!prefixColors[prefix]) {
-                prefixColors[prefix] = generateRandomColor();
-            }
-
-            $(this).css('border-color', prefixColors[prefix]);
-        });
-
-        // Função para atualizar a barra de status
-        function updateStatusBar(selectedPedido = '') {
-            const statusBar = $('#status-bar');
-            const totalPedidos = $('.card').length;
-
-            let totalPedidosPedidos = 0;
-            let totalPedidosProducao = 0;
-            let totalPedidosQualidade = 0;
-            let totalPedidosExpedicao = 0;
-            let selectedPedidoDetails = '';
-
-            const selectedPrefix = selectedPedido.substring(0, 4);
-
-            $('.card').each(function() {
-                const setor = $(this).closest('.setor').attr('id');
-                const pedido = $(this).text().trim().split('|')[0].trim();
-                const prefix = pedido.substring(0, 4);
-
-                if (prefix === selectedPrefix) {
-                    if (setor === 'pedidos-setor') {
-                        totalPedidosPedidos++;
-                    } else if (setor === 'producao-setor') {
-                        totalPedidosProducao++;
-                    } else if (setor === 'qualidade-setor') {
-                        totalPedidosQualidade++;
-                    } else if (setor === 'expedicao-setor') {
-                        totalPedidosExpedicao++;
-                    }
-                }
-            });
-
-            if (selectedPedido) {
-                selectedPedidoDetails = `Numero do Pedido: ${selectedPrefix} | `;
-            }
-
-            statusBar.text(`${selectedPedidoDetails} Quatidade de Pedidos: Emitidos = ${totalPedidosPedidos}, Produzindo = ${totalPedidosProducao}, Qualidade = ${totalPedidosQualidade}, Expedição = ${totalPedidosExpedicao}`);
+        function closeFaturamentoModal() {
+            $('#faturamentoModal').hide();
         }
 
-        // Atualiza a barra de status quando um card é movido
-        $(".setor").on("drop", function(event, ui) {
-            const selectedPedido = $('.selected-card').text().trim().split('|')[0].trim();
-            updateStatusBar(selectedPedido);
-        });
-
-        // Função para selecionar um card e atualizar a barra de status
-        window.selectCard = function(card) {
-            $('.card').removeClass('selected-card');
-            $(card).addClass('selected-card');
-            const selectedPedido = $(card).text().trim().split('|')[0].trim();
-            updateStatusBar(selectedPedido);
-        };
-
-        // Atualiza a barra de status inicial
-        updateStatusBar();
-    });
-
-// Função para abrir o modal de criação de Packing List
- function openPacklistModal() {
-        // Atualizar e somar os campos dos cards selecionados
-        let totalAmarrados = 0;
-        let totalPeso = 0;
-        let totalPesoBruto = 0;
-        let pedidosSelecionados = [];
-
-        $('.card.selected').each(function() {
-            const amarrados = parseFloat($(this).find('.amarrados').text());
-            const peso = parseFloat($(this).find('.peso').text());
-            const pesoTotal = parseFloat($(this).find('.peso-total').text());
-
-            totalAmarrados += amarrados;
-            totalPeso += peso;
-            totalPesoBruto += pesoTotal;
-
-            const pedidoId = $(this).data('pedido-id');
-            pedidosSelecionados.push(pedidoId);
-        });
-
-        $('#total-amarrados').val(totalAmarrados.toFixed(2));
-        $('#total-peso').val(totalPeso.toFixed(2));
-        $('#total-peso-bruto').val(totalPesoBruto.toFixed(2));
-        $('#packlist-pedido').val(pedidosSelecionados.join(', '));
-
-        $('#packlistModal').show();
-    }
-
-    function closePacklistModal() {
-            document.getElementById("packlistModal").style.display = "none";
+        function closePackingListModal() {
+            $('#packingListModal').hide();
         }
 
-        function criarPackingList() {
-            var selectedCards = $(".card.selected");
-            var ids = [];
+        function selectCard(card) {
+            $(card).toggleClass('selected');
+            updateStatusBar();
+        }
+
+        function updateStatusBar() {
+            var selectedCards = $('.card.selected');
+            if (selectedCards.length === 0) {
+                $('#status-bar').hide();
+                return;
+            }
+
             var totalAmarrados = 0;
             var totalPesoFaturado = 0;
             var totalPesoBruto = 0;
+            var selectedOrders = [];
 
             selectedCards.each(function() {
-                var id = $(this).data("pedidoId");
-                ids.push(id);
-                totalAmarrados += parseFloat($(this).find('[data-field="amarrados"]').val()) || 0;
-                totalPesoFaturado += parseFloat($(this).find('[data-field="peso"]').val()) || 0;
-                totalPesoBruto += parseFloat($(this).find('[data-field="peso_total"]').val()) || 0;
+                var pedidoId = $(this).data('pedido-id');
+                selectedOrders.push(pedidoId);
+
+                var amarrados = parseFloat($(this).find('.edit-input[name="amarrados"]').val());
+                var pesoFaturado = parseFloat($(this).find('.edit-input[name="peso"]').val());
+                var pesoBruto = parseFloat($(this).find('.edit-input[name="peso_total"]').val());
+
+                totalAmarrados += amarrados;
+                totalPesoFaturado += pesoFaturado;
+                totalPesoBruto += pesoBruto;
             });
 
-            var obsEntrega = $("#obsEntrega").val();
-            var obs = $("#obs").val();
+            $('#selected-orders').text(selectedOrders.join(', '));
+            $('#total-amarrados').text(totalAmarrados.toFixed(2));
+            $('#total-peso-faturado').text(totalPesoFaturado.toFixed(2));
+            $('#total-peso-bruto').text(totalPesoBruto.toFixed(2));
+            $('#status-bar').show();
+        }
+
+        function criarPackingList() {
+            var selectedOrders = $('#selected-orders').text().split(', ');
+            var totalAmarrados = $('#total-amarrados').text();
+            var totalPesoFaturado = $('#total-peso-faturado').text();
+            var totalPesoBruto = $('#total-peso-bruto').text();
+            var obsEntrega = $('#obs_entrega').val();
+            var obsPacking = $('#obs_packing').val();
 
             $.ajax({
-                url: '/criar_packlist',
-                type: 'POST',
-                contentType: "application/json",
+                type: "POST",
+                url: "/criar_packlist",
                 data: JSON.stringify({
-                    pedidos: ids,
+                    selectedOrders: selectedOrders,
                     totalAmarrados: totalAmarrados,
                     totalPesoFaturado: totalPesoFaturado,
                     totalPesoBruto: totalPesoBruto,
                     obsEntrega: obsEntrega,
-                    obs: obs
+                    obsPacking: obsPacking
                 }),
+                contentType: "application/json",
                 success: function(response) {
-                    alert('Packing List criado com sucesso!');
+                    console.log("Packing list criada com sucesso.", response);
+                    closePackingListModal();
                     location.reload();
                 },
-                error: function(xhr) {
-                    alert('Erro ao criar o Packing List: ' + xhr.responseText);
+                error: function(error) {
+                    console.error("Erro ao criar a packing list:", error);
                 }
             });
-       
-       
         }
-
-        function closeFaturamentoModal() {
-            document.getElementById("faturamentoModal").style.display = "none";
-        }
-
-
-        $(".packlist-btn").click(function() {
-            var selectedCards = $(".card.selected");
-            if (selectedCards.length === 0) {
-                alert('Selecione pelo menos um pedido para criar o Packing List');
-                return;
-            }
-
-            var totalAmarrados = 0;
-            var totalPesoFaturado = 0;
-            var totalPesoBruto = 0;
-
-            selectedCards.each(function() {
-                totalAmarrados += parseFloat($(this).find('[data-field="amarrados"]').val()) || 0;
-                totalPesoFaturado += parseFloat($(this).find('[data-field="peso"]').val()) || 0;
-                totalPesoBruto += parseFloat($(this).find('[data-field="peso_total"]').val()) || 0;
-            });
-
-            $("#totalAmarrados").val(totalAmarrados);
-            $("#totalPesoFaturado").val(totalPesoFaturado);
-            $("#totalPesoBruto").val(totalPesoBruto);
-
-            $("#packlistModal").show();
-        });
-
-        function selectCard(card) {
-            $(".card").removeClass("selected");
-            $(card).addClass("selected");
-
-            var pedidoId = $(card).data("pedidoId");
-            var quantidade = $(card).data("quantidade");
-            var estoque = $(card).data("estoque");
-
-            var pesoPedido = quantidade; // Assumindo que quantidade é o peso do pedido
-            var pesoFabricado = estoque;
-            var pesoFaturado = estoque;
-            var saldo = estoque - pesoFaturado;
-
-            $("#pesoPedido").val(pesoPedido);
-            $("#pesoFabricado").val(pesoFabricado);
-            $("#estoqueAtual").val(estoque);
-            $("#pesoFaturado").val(pesoFaturado);
-            $("#saldo").val(saldo.toFixed(2));
-
-            $("#faturamentoModal").data("pedidoId", pedidoId);
-        }
-
-        $(".faturar-btn").click(function() {
-            $("#faturamentoModal").show();
-        });
-
-        $(".packlist-btn").click(function() {
-            var selectedCards = $(".card.selected");
-            if (selectedCards.length === 0) {
-                alert('Selecione pelo menos um pedido para criar o Packing List');
-                return;
-            }
-
-            var totalAmarrados = 0;
-            var totalPesoFaturado = 0;
-            var totalPesoBruto = 0;
-
-            selectedCards.each(function() {
-                totalAmarrados += parseFloat($(this).find('[data-field="amarrados"]').val()) || 0;
-                totalPesoFaturado += parseFloat($(this).find('[data-field="peso"]').val()) || 0;
-                totalPesoBruto += parseFloat($(this).find('[data-field="peso_total"]').val()) || 0;
-            });
-
-            $("#totalAmarrados").val(totalAmarrados);
-            $("#totalPesoFaturado").val(totalPesoFaturado);
-            $("#totalPesoBruto").val(totalPesoBruto);
-
-            $("#packlistModal").show();
-        });
-    
-
-
+    });
 </script>
 
 </body>

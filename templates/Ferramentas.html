@@ -1,6 +1,7 @@
 
 
 
+
 {% extends 'base.html' %}
 
 {% include 'header.html' %}
@@ -12,6 +13,11 @@
     table {
         border-collapse: collapse;
         width: 100%;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px;
     }
 
     th, td {
@@ -27,9 +33,10 @@
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
+        <div class="container">
         <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>  
-        <button type="button" class="btn btn-info ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#addFerramentaModal">Adicionar Ferramenta</button>
-
+        
+        </div>
         <h2 class="d-flex justify-content-center mt-2"><strong>Ferramentas</strong></h2>
 
         <div class="input-group d-flex justify-content-end w-100">
@@ -39,6 +46,8 @@
                     <button class="btn btn-info ms-1" type="submit">Buscar por Dimensional</button>
                 </div>
             </form>
+            <button type="button" class="btn btn-info ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#addFerramentaModal">Adicionar Ferramenta</button>
+        <button type="button" class="btn btn-warning ms-1 d-flex justify-content-end" onclick="window.location.href='{{ url_for('exportar_ferramentas') }}'">Exportar para Excel</button>
         </div>
 
         <div class="container w-100">

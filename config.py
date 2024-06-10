@@ -32,5 +32,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = conexao
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # flask db init
-#  flask db migrate -m "teste de migraçãoo"
+# flask db migrate -m "teste de migraçãoo"
+# flask db upgrade
+
+# flask db stamp head
+# flask db migrate
 # flask db upgrade

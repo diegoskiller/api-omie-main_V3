@@ -1,9 +1,9 @@
 import requests
 from sqlalchemy import desc
 from sqlalchemy.orm import aliased
-from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
+from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory, send_file, Response
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Validacao
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -15,7 +15,9 @@ import re
 import os
 import pandas as pd
 import logging
+import io
 from sqlalchemy.sql import func
+
 
 #============variaveis gerais=============# 
 
@@ -650,11 +652,13 @@ def add_lote_mov_op_prod():
     
     if x > 0:
 
-        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
-                
-        db.session.add(novo_lote)
-        db.session.commit()
-        id_lote = novo_lote.id
+        status_omie = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 0)
+
+
+        #novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
+        #db.session.add(novo_lote)
+        #db.session.commit()
+        id_lote = status_omie[7]
         add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = lote_visual, quantidade = qtd_parcial, peso = peso_parcial,
                                         fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
@@ -1198,6 +1202,34 @@ def op_cards():
 
     return render_template('op_cards.html', pedidos=pedidos_com_estoque)
 
+@app.route('/op_cards_teste', methods=['GET', 'POST'])
+def op_cards_teste():
+    LoteVisualAlias = aliased(Lote_visual)
+    
+    # Consulta para somar as quantidades por código
+    subquery = db.session.query(
+        LoteVisualAlias.item,
+        func.sum(LoteVisualAlias.quantidade).label('estoque')
+    ).group_by(LoteVisualAlias.item).subquery()
+
+    # Consulta para juntar os pedidos com as somas das quantidades de estoque
+    pedidos = db.session.query(
+        Pedido,
+        subquery.c.estoque
+    ).outerjoin(
+        subquery, Pedido.codigo == subquery.c.item
+    ).filter(
+        Pedido.status2 == "Emitido"
+    ).all()
+
+    # Convertendo o resultado da consulta para adicionar o campo 'estoque' em cada pedido
+    pedidos_com_estoque = []
+    for pedido, estoque in pedidos:
+        estoque = float(estoque/1000) if estoque is not None else 0.0
+        pedido.estoque = estoque if estoque is not None else 0
+        pedidos_com_estoque.append(pedido)
+
+    return render_template('op_cards_teste.html', pedidos=pedidos_com_estoque)
 
 @app.route('/atualizar_status_pedido', methods=['POST'])
 def atualizar_status_pedido():
@@ -1484,6 +1516,70 @@ def pedidos_faturados():
     tqtd = int(tqtd)
 
     return render_template('pedidos_faturados.html', pedidos=pedidos, tqtd=tqtd)
+
+@app.route('/packlist', methods=['GET', 'POST'])
+@login_required
+def packlist():
+    if request.method == 'POST':
+        data = request.get_json()
+        pedidos_ids = data['pedidos_ids']
+        peso_liquido_total = sum([Pedido.query.get(pid).peso for pid in pedidos_ids])
+        peso_bruto_total = sum([Pedido.query.get(pid).peso_total for pid in pedidos_ids])
+        embalagem_total = sum([Pedido.query.get(pid).amarrados for pid in pedidos_ids])
+
+        novo_packlist = Packlist(
+            peso_liquido=peso_liquido_total,
+            peso_bruto=peso_bruto_total,
+            embalagem=embalagem_total,
+            obs_entrega='',
+            obs='',
+            status='Emitido'
+        )
+        db.session.add(novo_packlist)
+        db.session.commit()
+
+        for pid in pedidos_ids:
+            pedido = Pedido.query.get(pid)
+            pedido.packlist = novo_packlist.packlist_id
+
+        db.session.commit()
+        return jsonify({'status': 'success', 'packlist_id': novo_packlist.packlist_id})
+
+    packlists = Packlist.query.all()
+    return render_template('packlist.html', packlists=packlists)
+
+
+@app.route('/criar_packlist', methods=['POST'])
+@login_required
+def criar_packlist():
+    data = request.json
+    pedidos = data['pedidos']
+    total_amarrados = data['total_amarrados']
+    total_peso = data['total_peso']
+    total_peso_bruto = data['total_peso_bruto']
+    obs_entrega = data.get('obs_entrega')
+    obs = data.get('obs')
+
+    novo_packlist = Packlist(
+        peso_liquido=total_peso,
+        peso_bruto=total_peso_bruto,
+        embalagem=total_amarrados,
+        obs_entrega=obs_entrega,
+        obs=obs
+    )
+
+    db.session.add(novo_packlist)
+    db.session.commit()
+
+    for pedido_id in pedidos:
+        pedido = Pedido.query.get(pedido_id)
+        pedido.packlist = novo_packlist.packlist
+        db.session.commit()
+
+    return jsonify({'message': 'Packing List criado com sucesso!'})
+
+
+
 
 @app.route('/add_ferramentas', methods=['POST'])
 def add_ferramentas():
@@ -1832,6 +1928,27 @@ def imprimir_op():
 
 #===================Todas definições do diego prodx==================#  
 
+
+@app.route('/exportar_ferramentas')
+def exportar_ferramentas():
+    ferramentas = Ferramentas.query.all()
+    
+    data = {
+        "Dimensional": [ferramenta.dimensional for ferramenta in ferramentas],
+        "Quantidade": [ferramenta.quantidade for ferramenta in ferramentas],
+        "Obs": [ferramenta.obs for ferramenta in ferramentas]
+    }
+    
+    df = pd.DataFrame(data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Ferramentas')
+    
+    output.seek(0)
+    
+    return send_file(output, download_name='Ferramentas.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
 def Def_cadastro_prod(item):
    item = item
 
@@ -2087,7 +2204,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
             quantidade = neg(quan)
 
         Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
-        return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote]
+        return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote, id_lote]
 
 #===================definição de transferencia de estoque ==================#
 
