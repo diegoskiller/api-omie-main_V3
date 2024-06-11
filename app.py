@@ -17,6 +17,8 @@ import pandas as pd
 import logging
 import io
 from sqlalchemy.sql import func
+from io import BytesIO
+import xlsxwriter
 
 
 #============variaveis gerais=============# 
@@ -1929,7 +1931,6 @@ def imprimir_op():
 #===================Todas definições do diego prodx==================#  
 
 
-
 @app.route('/exportar_ferramentas')
 def exportar_ferramentas():
     try:
@@ -1946,12 +1947,113 @@ def exportar_ferramentas():
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='Ferramentas')
-        
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Ferramentas']
+            
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+            
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
         output.seek(0)
         
         return send_file(output, download_name='Ferramentas.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     except Exception as e:
+        return f"An error occurred: {str(e)}", 500    
+
+
+
+
+@app.route('/exportar_estoque_excel')
+def exportar_estoque_excel():
+    try:
+        estoque = Lote_visual.query.filter(Lote_visual.tipo == 'Setor_Cobre', Lote_visual.quantidade > 0).all()
+
+        #for lote in estoque.items:
+        #    desc = Def_cadastro_prod(lote.item)
+        #    descricao = desc[5] if len(desc) > 5 else 'N/A'
+        #    lote.descricao = descricao  # Adiciona a descrição ao lote
+
+        data = {
+            #"Referencia": [item.referencia for item in estoque],
+            "Item": [item.item for item in estoque],
+            #"Descrição": [item.descricao for item in estoque],
+            "Lote": [item.numero_lote for item in estoque],
+            "Peso": [item.quantidade / 1000 for item in estoque],
+            "Unid": ['KG' for item in estoque]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Estoque de Cobre')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Estoque de Cobre']
+            
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+            
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Estoque_Cobre.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
         return f"An error occurred: {str(e)}", 500
+
 
 def Def_cadastro_prod(item):
    item = item

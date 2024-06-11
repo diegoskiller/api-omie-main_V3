@@ -29,6 +29,7 @@
     <div class="w-100"> 
         <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addSaldoModal">Adicionar Saldo</button>
+        <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
 
         <h2 class="d-flex justify-content-center mt-2"><strong>Estoque de Cobre</strong></h2>
 
@@ -203,6 +204,12 @@
             alert("Erro ao adicionar saldo.");
         });
     });
+
+
+    document.getElementById('exportExcel').addEventListener('click', function() {
+            window.location.href = "{{ url_for('exportar_estoque_excel') }}";
+        });
+        
 </script>
 
 {% endblock %}
