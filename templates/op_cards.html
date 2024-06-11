@@ -254,6 +254,9 @@
         <p>Bem vindo: {{ current_user.name }} | <a href="/logout" class="text-warning">Sair</a></p>
     </div>
 </nav>
+<button id="exportExcel" class="btn btn-warning ms-1 d-flex justify-content-end">
+<img src="{{url_for('static', filename='images/excel.svg')}}" alt="">
+<img src="{{url_for('static', filename='images/printer.svg')}}" alt=""></button>
 
 <h2>Gerenciador do Setor de Cobre</h2>
 <div class="container">
@@ -1150,6 +1153,24 @@
 
             $("#packlistModal").show();
         });
+
+        
+document.getElementById('exportExcel').addEventListener('click', function() {
+            fetch('/exportar_pedidos_excel')
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'Pedidos.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error exporting to Excel:', error));
+        });
+
     
 
 
