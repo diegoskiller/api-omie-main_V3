@@ -639,10 +639,11 @@ def add_lote_mov_op_prod():
 
     id_prod = Def_id_produto(item)
     fino_uni = Def_Caracter(id_prod)[0]
-    fino_parcial = int(qtd_parcial.replace(",0","")) * float(fino_uni.replace(",","."))
+    fino_parcial = int(qtd_parcial.replace(".0","")) * float(fino_uni.replace(",","."))
     fino = fino_parcial
         
-    
+    qtd_parcial = int(qtd_parcial.replace(".0",""))
+
     if qtd_parcial == None:
         qtd_parcial = 0
         x = 0
@@ -660,7 +661,7 @@ def add_lote_mov_op_prod():
         #novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
         #db.session.add(novo_lote)
         #db.session.commit()
-        id_lote = status_omie[7]
+        id_lote = 0
         add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = lote_visual, quantidade = qtd_parcial, peso = peso_parcial,
                                         fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
@@ -1283,7 +1284,9 @@ def add_pedido():
             canto=canto,
             furo=furo,
             embalagem=embalagem,
-            status2=status_text)
+            status2=status_text,
+            qtd_faturada=0,
+            packlist="")
 
             db.session.add(novo_pedido)
 
@@ -2053,6 +2056,78 @@ def exportar_estoque_excel():
         return send_file(output, download_name='Estoque_Cobre.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
+    
+
+@app.route('/exportar_pedidos_excel')
+def exportar_pedidos_excel():
+    try:
+        pedidos = Pedido.query.all()
+        
+        data = {
+            "Pedido": [pedido.pedido for pedido in pedidos],
+            "Status": [pedido.Status for pedido in pedidos],
+            "Data Emissão": [pedido.emissao for pedido in pedidos],
+            "Cliente": [pedido.cliente for pedido in pedidos],
+            "Código Cliente": ["-" for pedido in pedidos],
+            "Código": [pedido.codigo for pedido in pedidos],
+            "Data Entrega": [pedido.data_entrega for pedido in pedidos],
+            "Obs Entrega": [pedido.obs_entrega for pedido in pedidos],
+            "Liga": ["Cobre" for pedido in pedidos],
+            "Canto": [pedido.canto for pedido in pedidos],
+            "Furo": [pedido.furo for pedido in pedidos],
+            "Embalagem": [pedido.embalagem for pedido in pedidos],
+            "Dimensional": [pedido.dimensional for pedido in pedidos],
+            "Quantidade": [pedido.quantidade for pedido in pedidos],
+            "Um": ["KG" for pedido in pedidos],
+            "Descrição": [pedido.descricao for pedido in pedidos],
+            "Observações": [pedido.obs for pedido in pedidos]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Pedidos')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Pedidos']
+            
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+            
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Pedidos.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
 
 
 def Def_cadastro_prod(item):

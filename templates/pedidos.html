@@ -27,9 +27,11 @@
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
+        <div class="container">
         <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button type="button" class="btn btn-info ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#addPedidoModal">Adicionar Pedido</button>
-
+        <button id="exportExcel" class="btn btn-warning ms-1 d-flex justify-content-end">Exportar para Excel</button>
+        </div>
         <h2 class="d-flex justify-content-center mt-2"><strong>Pedidos</strong></h2>
 
         <div class="input-group d-flex justify-content-end w-100">
@@ -291,6 +293,22 @@ function deletarPedido(id) {
         });
     }
 }
+
+document.getElementById('exportExcel').addEventListener('click', function() {
+            fetch('/exportar_pedidos_excel')
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'Pedidos.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error exporting to Excel:', error));
+        });
 </script>
 
 {% endblock %}
