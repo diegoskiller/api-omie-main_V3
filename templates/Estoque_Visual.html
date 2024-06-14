@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Estoque Visual {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important;
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addSaldoModal">Adicionar Saldo</button>
+        <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
+        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar Saldos</button>
+
+        <h2 class="d-flex justify-content-center mt-2"><strong>Estoque Visual</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('estoque_visual')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control  w-50" placeholder="Pesquisar Código de Produto" name="filtro_cod" aria-label="Pesquisar por Código" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar Código</button>
+                </div>
+            </form>
+            <form method="POST" action="{{url_for('estoque_visual')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control  w-50" placeholder="Pesquisar Descrição" name="filtro_desc" aria-label="Pesquisar por Descrição" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-success ms-1" type="submit">Buscar por Descrição</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+                {%if messages%}
+                    {%for category, message in messages%}
+                        <div class="alert alert-success">
+                            {{message}}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {%endfor%}
+                {%endif%}
+            {%endwith%}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Referencia</th>
+                    <th>Item</th>
+                    <th>Descrição</th>
+                    <th>Lote</th>
+                    <th>Peso</th>
+                    <th>Unid</th>
+                    <th>Ações</th>
+                </tr>
+
+                {% for row in visual %}
+                    <tr class='{{"table-dark" if row.situacao == "Encerrada" else ""}}'>                      
+                        <td>{{row.referencia}}</td>
+                        <td>{{row.item}}</td>
+                        <td>{{row.descricao}}</td>
+                        <td>{{row.numero_lote}}</td>
+                        <td>{{row.quantidade / 1000}}</td>
+                        <td>KG</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{row.id}}')">Excluir</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in visual_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
+        {% if page_num %} 
+            {% if visual_page.page == page_num %}
+                <a class="btn btn-dark mb-4" href="{{ url_for('estoque_visual', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-dark mb-4" href="{{ url_for('estoque_visual', page=page_num) }}">{{ page_num }}</a>
+            {% endif %} 
+        {% else %} 
+            ... 
+        {% endif %} 
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar Saldo -->
+<div class="modal fade" id="addSaldoModal" tabindex="-1" aria-labelledby="addSaldoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSaldoModalLabel">Adicionar Saldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSaldoForm">
+                    <div class="mb-3">
+                        <label for="codigo" class="form-label">Código</label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantidade" class="form-label">Quantidade(GR)</label>
+                        <input type="number" class="form-control" id="quantidade" name="quantidade" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="referencia" class="form-label">Referência</label>
+                        <input type="text" class="form-control" id="referencia" name="referencia" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Importar Saldos -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Importar Saldos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Arquivo Excel</label>
+                        <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx, .xls" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir este item?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var itemIdToDelete;
+
+    function confirmDelete(itemId) {
+        itemIdToDelete = itemId;
+        var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        confirmDeleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+        fetch("/deletar_estoque_cobre", {
+            method: "POST",
+            body: JSON.stringify({ id: itemIdToDelete }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estoque excluído com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao excluir estoque: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao excluir estoque.");
+        });
+    });
+
+    document.getElementById("addSaldoForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        
+        
+        fetch("/add_saldo_cobre", {
+            method: "POST",
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Saldo adicionado com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao adicionar saldo: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao adicionar saldo.");
+        });
+    });
+
+    document.getElementById('exportExcel').addEventListener('click', function() {
+        window.location.href = "{{ url_for('exportar_visual_excel') }}";
+    });
+
+    document.getElementById("importForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/importar_visual", true);
+
+        xhr.upload.addEventListener("progress", function(event) {
+            if (event.lengthComputable) {
+                var percentComplete = (event.loaded / event.total) * 100;
+                console.log(percentComplete + '% uploaded');
+                // Update progress bar here
+            }
+        });
+
+        xhr.addEventListener("load", function() {
+            if (xhr.status == 200) {
+                alert("Importação concluída com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao importar dados: " + xhr.responseText);
+            }
+        });
+
+        xhr.send(formData);
+    });
+</script>
+
+{% endblock %}

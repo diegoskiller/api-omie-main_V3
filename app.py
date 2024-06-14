@@ -1,9 +1,10 @@
 import requests
 from sqlalchemy import desc
 from sqlalchemy.orm import aliased
+from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory, send_file, Response
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist, Cadastro_itens
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -19,6 +20,7 @@ import io
 from sqlalchemy.sql import func
 from io import BytesIO
 import xlsxwriter
+from tqdm import tqdm
 
 
 #============variaveis gerais=============# 
@@ -181,10 +183,325 @@ def itens():
     if not current_user.is_authenticated:
          return redirect( url_for('login'))
     item = request.form.get("item")
-
+    #if item == None:
+    #    item = "CBA-4000"
     dados = Def_cadastro_prod(item)
     
     return  render_template('itens.html',  dados = dados  )
+
+
+
+@app.route('/cadastro_itens', methods=['GET', 'POST'])
+def cadastro_itens():
+    page = request.args.get('page', 1, type=int)
+
+    filtro_cod = request.form.get('filtro_cod', '').upper()
+    filtro_desc = request.form.get('filtro_desc', '').upper()
+
+    if filtro_cod == "":
+        filtro_cod = None
+
+    if filtro_desc == "":
+        filtro_desc = None
+
+    query = Cadastro_itens.query
+
+    if filtro_cod is not None:
+        query = query.filter(Cadastro_itens.item.ilike(f"%{filtro_cod}%"))
+
+    if filtro_desc is not None:
+        query = query.filter(Cadastro_itens.descricao.ilike(f"%{filtro_desc}%"))
+
+    itens = query.order_by(Cadastro_itens.id.desc()).paginate(page=page, per_page=10)
+
+  
+
+    return render_template('Cadastro_Itens.html', itens=itens, itens_page=itens)
+
+
+@app.route('/exportar_itens_excel')
+def exportar_itens_excel():
+    try:
+        itens = Cadastro_itens.query.all()
+        
+        data = {
+            "Item": [item.item for item in itens],
+            "Descrição": [item.descricao for item in itens],
+            "Cliente": [item.cliente for item in itens],
+            "Material": [item.material for item in itens],
+            "Peso": [item.peso for item in itens],
+            "Fino": [item.fino for item in itens],
+            "Unidade": [item.unidade for item in itens],
+            "Uso": [item.uso for item in itens],
+            "Data Alteração": [item.data_alteracao for item in itens],
+            "Observação": [item.obs for item in itens]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Itens')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Itens']
+            
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+            
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Itens.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+@app.route('/importar_itens', methods=['POST'])
+def importar_itens():
+    file = request.files['file']
+    if not file:
+        flash('Nenhum arquivo selecionado', 'danger')
+        return redirect(url_for('cadastro_itens'))
+
+    try:
+        df = pd.read_excel(file)
+    except Exception as e:
+        flash(f'Erro ao ler o arquivo Excel: {str(e)}', 'danger')
+        return redirect(url_for('cadastro_itens'))
+
+    import_errors = []
+
+    for index, row in df.iterrows():
+        try:
+            item = Cadastro_itens.query.filter_by(item=row['Item']).first()
+            if item:
+                item.descricao = row['Descrição']
+                item.cliente = row['Cliente']
+                item.material = row['Material']
+                item.peso = row['Peso']
+                item.fino = row['Fino']
+                item.unidade = row['Unidade']
+                item.uso = row['Uso']
+                item.data_alteracao = row['Data Alteração']
+                item.obs = row['Observação']
+                item.id_produto = row['Id_Produto']
+            else:
+                new_item = Cadastro_itens(
+                    item=row['Item'],
+                    descricao=row['Descrição'],
+                    cliente=row['Cliente'],
+                    material=row['Material'],
+                    peso=row['Peso'],
+                    fino=row['Fino'],
+                    unidade=row['Unidade'],
+                    uso=row['Uso'],
+                    data_alteracao=row['Data Alteração'],
+                    obs=row['Observação'],
+                    id_produto=row['Id_Produto']
+                )
+                db.session.add(new_item)
+        except KeyError as ke:
+            import_errors.append(f"Erro de chave no índice {index}: Coluna {str(ke)} não encontrada.")
+        except SQLAlchemyError as sqle:
+            import_errors.append(f"Erro no banco de dados no índice {index}: {str(sqle)}")
+        except Exception as e:
+            import_errors.append(f"Erro desconhecido no índice {index}: {str(e)}")
+
+    if import_errors:
+        flash(f'Erros ocorreram durante a importação: {", ".join(import_errors)}', 'danger')
+    else:
+        try:
+            db.session.commit()
+            flash('Itens importados com sucesso', 'success')
+        except SQLAlchemyError as sqle:
+            db.session.rollback()
+            flash(f'Erro ao salvar os itens no banco de dados: {str(sqle)}', 'danger')
+
+    return redirect(url_for('cadastro_itens'))
+
+
+@app.route('/estoque_visual', methods=['GET', 'POST'])
+def estoque_visual():
+    page = request.args.get('page', 1, type=int)
+    filtro_cod = request.form.get('filtro_cod', '').upper()
+    filtro_desc = request.form.get('filtro_desc', '').upper()
+
+    if filtro_cod == "":
+        filtro_cod = None
+
+    if filtro_desc == "":
+        filtro_desc = None
+
+    if filtro_cod:
+        visual = Lote_visual.query.filter(Lote_visual.item.ilike(f"%{filtro_cod}%")).paginate(page=page, per_page=10)
+    elif filtro_desc:
+        visual = Lote_visual.query.filter(Lote_visual.descricao.ilike(f"%{filtro_desc}%")).paginate(page=page, per_page=10)
+    else:
+        visual = Lote_visual.query.paginate(page=page, per_page=10)
+
+    visual_items = []
+    for lote in visual.items:
+        desc = Def_cadastro_prod(lote.item)
+        descricao = desc[5] if len(desc) > 5 else 'N/A'
+        lote_dict = lote.__dict__
+        lote_dict['descricao'] = descricao
+        lote_dict.pop('_sa_instance_state', None)
+        visual_items.append(lote_dict)
+
+    return render_template('Estoque_Visual.html', visual=visual_items, visual_page=visual)
+
+@app.route('/exportar_visual_excel')
+def exportar_visual_excel():
+    try:
+        visual = Lote_visual.query.filter_by().all()
+
+        data = {
+            "Referencia": [item.referencia for item in visual],
+            "Item": [item.item for item in visual],
+            "Descrição": [Def_cadastro_prod(item.item)[5] for item in visual],
+            "Lote": [item.numero_lote for item in visual],
+            "Peso": [item.quantidade / 1000 for item in visual],
+            "Unid": ['KG' for item in visual]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Estoque Visual')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Estoque Visual']
+            
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            worksheet.set_column(1, 1, 30)
+            worksheet.set_column(3, 3, 20, cell_format)
+            
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                if col_num == 2:
+                    worksheet.set_column(col_num, col_num, 60)
+                else:
+                    worksheet.set_column(col_num, col_num, 18)
+                
+               
+            
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Estoque_Visual.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+@app.route('/importar_visual', methods=['POST'])
+def importar_visual():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({"success": False, "message": "Nenhum arquivo enviado."})
+
+    try:
+        df = pd.read_excel(file)
+        errors = []
+        updated = 0
+        created = 0
+
+        for index, row in df.iterrows():
+            try:
+                lote_visual = Lote_visual.query.filter_by(item=row['Item'], numero_lote=row['Lote']).first()
+                if lote_visual:
+                    lote_visual.quantidade = row['Peso']
+                    lote_visual.referencia = row['Referencia']
+                    lote_visual.local = row['Unid']
+                    db.session.commit()
+                    updated += 1
+                else:
+                    new_lote = Lote_visual(
+                        item=row['Item'],
+                        numero_lote=row['Lote'],
+                        quantidade=row['Peso'],
+                        referencia=row['Referencia'],
+                        local=row['Unid'],
+                        tipo='Setor_Visual',
+                        peso=0,
+                        fino=0,
+                        obs='',
+                        data_criacao='',
+                        processado_op=0,
+                        quant_inicial=row['Peso']
+                    )
+                    db.session.add(new_lote)
+                    db.session.commit()
+                    created += 1
+            except Exception as e:
+                errors.append(f"Erro no item {row['Item']} na linha {index}: {str(e)}")
+
+        return jsonify({"success": True, "message": f"Importação concluída. {updated} itens atualizados, {created} itens criados. Erros: {'; '.join(errors)}"})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Erro ao processar o arquivo: {str(e)}"})
+
+
+
+@app.route('/item/<item>', methods = ['GET','POST'])
+def item(item):
+    if not current_user.is_authenticated:
+        return redirect( url_for('login'))
+    item = item
+    
+    dados = Def_cadastro_prod(item)
+    
+    return  render_template('item.html',  dados = dados  )
+
+
+
+
+
+
+
 
 
 @app.route('/update', methods=['GET', 'POST'])
@@ -1990,23 +2307,14 @@ def exportar_ferramentas():
     except Exception as e:
         return f"An error occurred: {str(e)}", 500    
 
-
-
-
 @app.route('/exportar_estoque_excel')
 def exportar_estoque_excel():
     try:
         estoque = Lote_visual.query.filter(Lote_visual.tipo == 'Setor_Cobre', Lote_visual.quantidade > 0).all()
 
-        #for lote in estoque.items:
-        #    desc = Def_cadastro_prod(lote.item)
-        #    descricao = desc[5] if len(desc) > 5 else 'N/A'
-        #    lote.descricao = descricao  # Adiciona a descrição ao lote
-
         data = {
-            #"Referencia": [item.referencia for item in estoque],
             "Item": [item.item for item in estoque],
-            #"Descrição": [item.descricao for item in estoque],
+            "Descrição": [Def_cadastro_prod(item.item)[5] for item in estoque],
             "Lote": [item.numero_lote for item in estoque],
             "Peso": [item.quantidade / 1000 for item in estoque],
             "Unid": ['KG' for item in estoque]
@@ -2040,16 +2348,41 @@ def exportar_estoque_excel():
                 'align': 'center'
             })
             
+            # Formatação para a segunda coluna (Descrição)
+            descricao_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'left'
+            })
+            
+            # Formatação para a quarta coluna (Peso) com 3 casas decimais
+            peso_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center',
+                'num_format': '0.000'
+            })
+            
             # Aplica a formatação na primeira linha
             for col_num, value in enumerate(df.columns.values):
                 worksheet.write(0, col_num, value, header_format)
                 # Ajusta a largura das colunas
-                worksheet.set_column(col_num, col_num, 20)
+                if col_num == 1:
+                    worksheet.set_column(col_num, col_num, 60)
+                else:
+                    worksheet.set_column(col_num, col_num, 18)
             
             # Aplica a formatação nas células de dados
             for row_num, row_data in enumerate(df.values, 1):
                 for col_num, cell_data in enumerate(row_data):
-                    worksheet.write(row_num, col_num, cell_data, cell_format)
+                    if col_num == 1:
+                        worksheet.write(row_num, col_num, cell_data, descricao_format)
+                    elif col_num == 3:
+                        worksheet.write(row_num, col_num, cell_data, peso_format)
+                    else:
+                        worksheet.write(row_num, col_num, cell_data, cell_format)
 
         output.seek(0)
         
@@ -2200,9 +2533,43 @@ def exportar_pedidos_faturados_excel():
         return f"An error occurred: {str(e)}", 500
 
 def Def_cadastro_prod(item):
+   
+   item = item
+   if item == None:
+        item = "CBA-4000"
+   cadastros = Cadastro_itens.query.filter_by(item = item)
+   for cadastro in cadastros:
+       
+        tipo = cadastro.uso
+        unidade = cadastro.unidade
+        id_produto = cadastro.id_produto
+        valor_unitario = 0
+        descricao = cadastro.descricao
+        cliente = cadastro.cliente
+        codigo_cliente = "-"
+        liga = cadastro.material
+        
+   if id_produto == None:
+        id_produto = "-"
+   if tipo == None:
+        tipo = "-"
+   if unidade == None:
+       unidade = "-"
+   if descricao == None:
+       descricao = "-"
+   if cliente == None:
+       cliente = "-"
+   if liga == None:
+        liga = "-"
+   imagens = "-"
+   ncm = 'ncm'                    
+   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm]
+
+
+def Def_cadastro_prod2(item):
    item = item
 
-    
+    #item = Lote_visual.query.get(item_id)
    data = {
                 "call":"ConsultarProduto",
                 "app_key": app_key,

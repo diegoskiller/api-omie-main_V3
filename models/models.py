@@ -9,7 +9,7 @@ class Ops_visual(db.Model):
     __tablename__='ops_visual'
 
     id = db.Column(db.Integer, primary_key=True)   
-    numero_op_visual = db.Column(db.String(50))
+    numero_op_visual = db.Column(db.String(50),unique=True)
     piv = db.Column(db.Integer)
     situação = db.Column(db.String(50))
     item = db.Column(db.String(50))
@@ -356,7 +356,7 @@ class Ferramentas(db.Model):
 
 
     def __repr__(self):
-        return 'sequencia: {} - {} - {} - {}' .format(self.id, self.dimensional, self.quantidade, self.obs) 
+        return 'Ferramentas: {} - {} - {} - {}' .format(self.id, self.dimensional, self.quantidade, self.obs) 
 
 class Validacao(db.Model):
     __tablename__='validacao'
@@ -395,7 +395,7 @@ class Validacao(db.Model):
 
 
     def __repr__(self):
-        return 'sequencia: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.usuario, self.telas, self.validacao_1, self.validacao_2, self.validacao_3, self.validacao_4, self.validacao_5, self.validacao_6, self.validacao_7, self.validacao_8, self.validacao_9, self.validacao_10) 
+        return 'Validacao: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.usuario, self.telas, self.validacao_1, self.validacao_2, self.validacao_3, self.validacao_4, self.validacao_5, self.validacao_6, self.validacao_7, self.validacao_8, self.validacao_9, self.validacao_10) 
 
 
 class Packlist(db.Model):
@@ -420,5 +420,46 @@ class Packlist(db.Model):
         self.status2 = status2
     
     def __repr__(self):
-        return 'sequencia: {} - {} - {} - {} - {} - {} - {}' .format(self.packlist_id, self.peso_liquido, self.peso_bruto,
+        return 'Packlist: {} - {} - {} - {} - {} - {} - {}' .format(self.packlist_id, self.peso_liquido, self.peso_bruto,
                                                                 self.embalagem, self.obs_entrega, self.obs, self.status2) 
+
+
+class Cadastro_itens(db.Model):
+    __tablename__='cadastro_itens'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    item = db.Column(db.String(50), nullable=False)
+    descricao = db.Column(db.String(250), nullable=False)
+    cliente = db.Column(db.String(50))
+    material = db.Column(db.String(50))
+    peso = db.Column(db.Float)
+    fino = db.Column(db.Float)
+    unidade = db.Column(db.String(5))
+    uso = db.Column(db.String(50)) #produtivo ou não produtivo
+    data_alteracao = db.Column(db.String(255))
+    obs = db.Column(db.String(255))
+    id_produto = db.Column(db.String(10))
+
+    def __init__(self, item, descricao, cliente, material, peso, fino, unidade, uso, data_alteracao, obs, id_produto):
+
+        self.item = item
+        self.descricao = descricao
+        self.cliente = cliente
+        self.material = material
+        self.peso = peso
+        self.fino = fino
+        self.unidade = unidade
+        self.uso = uso
+        self.data_alteracao = data_alteracao
+        self.obs = obs
+        self.id_produto = id_produto
+
+    def __repr__(self):
+        return 'Cadastro_itens: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.item, self.descricao, self.material,
+                                                                                    self.peso, self.fino, self.unidade, self.uso,
+                                                                                    self.data_alteracao, self.obs, self.id_produto) 
+    
+
+
+
+

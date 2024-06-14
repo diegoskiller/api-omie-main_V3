@@ -28,16 +28,16 @@
         <div class="icon">
             <img src="{{ url_for('static', filename='images/list-check.svg')}}" alt="lista de itens">
         </div>
-        <h3>Lista de itens</h3>
-        <span>Visualizar, acessar e editar itens</span>
-        <a href="{{ url_for('itens')}}"><button>Acessar</button></a>
+        <h3>Lista de Itens</h3>
+        <span>Visualizar, Acessar e Editar Itens</span>
+        <a href="{{ url_for('cadastro_itens')}}"><button>Acessar</button></a>
     </section>
     <section class="card shop">
         <div class="icon">
             <img src="{{ url_for('static', filename='images/pencil-square.svg')}}" alt="Gerenciamento de ops">
         </div>
         <h3>Controle de OPs</h3>
-        <span>Gerenciar ordens de produção</span>
+        <span>Gerenciar Ordens de Produção</span>
         <a href="{{ url_for('ordens_producao_visual')}}"><button>Acessar</button></a>
     </section>
     <section class="card shop">
@@ -45,7 +45,7 @@
             <img src="{{ url_for('static', filename='images/graf.svg')}}" alt="Indicadores">
         </div>
         <h3>Indicadores</h3>
-        <span>Relatórios e Indicadores</span>
+        <span>Gráficos e Indicadores</span>
         <a href="{{ url_for('indicadores')}}"><button>Acessar</button></a>
     </section>
     <section class="card shop">
@@ -54,7 +54,7 @@
         </div>
         <h3>Carregar informações</h3>
         <span>Upload de Planilha de Inventário</span>
-        <a href="{{ url_for('upload_excel')}}"><button>Acessar</button></a>
+        <a href="{{ url_for('estoque_visual')}}"><button>Acessar</button></a>
     </section>
     <section class="card shop">
         <div class="icon">
@@ -70,7 +70,7 @@
             <img src="{{ url_for('static', filename='images/inboxes.svg')}}" alt="gerenciar estoque">
         </div>
         <h3>Gerenciar Estoque</h3>
-        <span>Gerenciamento de estoque</span>
+        <span>Gerenciamento de Estoque</span>
         <a href="{{ url_for('gerenciar_estoque')}}"><button>Acessar</button></a>
     </section>
 </main>

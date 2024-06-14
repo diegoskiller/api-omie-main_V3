@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 {% extends 'base.html' %}
@@ -9,16 +8,6 @@
 
 {% block title %} Cadastro de Itens {% endblock %}
 {% block body %}
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Itens</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/progressbar.js/1.0.1/progressbar.min.js"></script>
-    
-</head>
-
 
 <style>
     table {
@@ -35,21 +24,13 @@
     th {
         border-top: 10px solid #5f74f0 !important;
     }
-    #progress-container {
-            margin-top: 20px;
-        }
-        #progress-bar {
-            width: 100%;
-            height: 30px;
-        }
-
 </style>
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
         <a href="{{url_for('index')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">Importar Itens</button>
+        <button id="importExcel" class="btn btn-primary">Importar Itens</button>
 
         <h2 class="d-flex justify-content-center mt-2"><strong>Cadastro de Itens</strong></h2>
 
@@ -89,6 +70,7 @@
                     <th>Uso</th>
                     <th>Data Alteração</th>
                     <th>Observação</th>
+                    <th>Id_Produto</th>
                     <th>Edições</th>
                 </tr>
 
@@ -104,6 +86,7 @@
                         <td>{{row.uso}}</td>
                         <td>{{row.data_alteracao}}</td>
                         <td>{{row.obs}}</td>
+                        <td>{{row.id_produto}}</td>
                         <td><div>           
                             <form action="item/{{row.item}}" method="post" type="hidden" >
                                         <input type="hidden" name="item" value="{{row.item}}">
@@ -131,77 +114,38 @@
 </div>
 
 <!-- Modal for file upload -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="importExcelModal" tabindex="-1" role="dialog" aria-labelledby="importExcelModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importModalLabel">Importar de Itens</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="importExcelModalLabel">Importar de Itens</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="importForm" action="{{ url_for('importar_itens') }}" method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="file" class="form-label">Arquivo Excel</label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".xls,.xlsx" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Importar</button>
-                </form>
-                <div id="progress-container" style="margin-top: 20px;">
-                    <div id="progress-bar"></div>
-                    <p id="progress-text"></p>
+            <form id="uploadForm" action="{{ url_for('importar_itens') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="file" name="file" class="form-control-file" accept=".xlsx, .xls">
                 </div>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-</div>
-
 
 <script>
     document.getElementById('exportExcel').addEventListener('click', function() {
         window.location.href = "{{ url_for('exportar_itens_excel') }}";
     });
 
-    const form = document.getElementById('importForm');
-        const progressBar = new ProgressBar.Line('#progress-bar', {
-            strokeWidth: 4,
-            easing: 'easeInOut',
-            duration: 1400,
-            color: '#3498db',
-            trailColor: '#eee',
-            trailWidth: 1,
-            svgStyle: {width: '100%', height: '100%'}
-        });
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            const xhr = new XMLHttpRequest();
-
-            xhr.open('POST', form.action, true);
-            xhr.upload.onprogress = function(event) {
-                if (event.lengthComputable) {
-                    const percentComplete = (event.loaded / event.total) * 100;
-                    progressBar.animate(percentComplete / 100);
-                    document.getElementById('progress-text').innerText = `Progresso: ${Math.round(percentComplete)}%`;
-                }
-            };
-
-            xhr.onload = function() {
-                if (xhr.status == 200) {
-                    alert('Importação concluída!');
-                    location.reload();
-                } else {
-                    alert('Erro na importação!');
-                }
-            };
-
-            xhr.send(formData);
-        });
+    document.getElementById('importExcel').addEventListener('click', function() {
+        var modal = new bootstrap.Modal(document.getElementById('importExcelModal'));
+        modal.show();
+    });
 </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-
 
 {% endblock %}
 </html>

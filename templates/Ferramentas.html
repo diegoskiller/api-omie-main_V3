@@ -47,7 +47,7 @@
                 </div>
             </form>
             <button type="button" class="btn btn-info ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#addFerramentaModal">Adicionar Ferramenta</button>
-        <button type="button" class="btn btn-warning ms-1 d-flex justify-content-end" onclick= "window.location.href='{{ url_for('exportar_ferramentas')}}'">Exportar para Excel</button>
+        <button type="button" class="btn btn-warning ms-1 d-flex justify-content-end" onclick= window.location.href="{{ url_for('exportar_ferramentas')}}">Exportar para Excel</button>
         </div>
 
         <div class="container w-100">
