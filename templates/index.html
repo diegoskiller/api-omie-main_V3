@@ -22,6 +22,8 @@
 </style> -->
 
 <body>
+    <div><h2>Sistema Visual - Kels</h2></div>
+    
 
 <main class="cards margin-top">
     <section class="card contact">
@@ -40,7 +42,7 @@
         <span>Gerenciar Ordens de Produção</span>
         <a href="{{ url_for('ordens_producao_visual')}}"><button>Acessar</button></a>
     </section>
-    <section class="card shop">
+    <section class="card red">
         <div class="icon">
             <img src="{{ url_for('static', filename='images/graf.svg')}}" alt="Indicadores">
         </div>
@@ -48,19 +50,19 @@
         <span>Gráficos e Indicadores</span>
         <a href="{{ url_for('indicadores')}}"><button>Acessar</button></a>
     </section>
-    <section class="card shop">
+    <section class="card green">
         <div class="icon">
             <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
         </div>
-        <h3>Carregar informações</h3>
+        <h3>Informações</h3>
         <span>Upload de Planilha de Inventário</span>
         <a href="{{ url_for('estoque_visual')}}"><button>Acessar</button></a>
     </section>
-    <section class="card shop">
+    <section class="card yellow">
         <div class="icon">
             <img src="{{ url_for('static', filename='images/cobre.svg')}}" alt="Gerenciamento de ops">
         </div>
-        <h3>Controle de Cobre</h3>
+        <h3>Cobre</h3>
         <span>Gerenciar Setor de Cobre</span>
         <a href="{{ url_for('op_cards')}}"><button>Acessar</button></a>
     </section>
@@ -69,7 +71,7 @@
         <div class="icon">
             <img src="{{ url_for('static', filename='images/inboxes.svg')}}" alt="gerenciar estoque">
         </div>
-        <h3>Gerenciar Estoque</h3>
+        <h3>Estoque</h3>
         <span>Gerenciamento de Estoque</span>
         <a href="{{ url_for('gerenciar_estoque')}}"><button>Acessar</button></a>
     </section>

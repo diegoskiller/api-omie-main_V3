@@ -139,15 +139,33 @@ main.cards section.card.shop button {
 main.cards section.card.about button {
     background: linear-gradient(to right, #FE5F8F, #FFC7D9);
 }
+main.cards section.card.red button {
+    background: linear-gradient(to right, #ff0000, #f5a9a9);
+}
+main.cards section.card.green button {
+    background: linear-gradient(to right, #0bff03, #b3f8b3);
+}
+main.cards section.card.yellow button {
+    background: linear-gradient(to right, #ff9100, #f7d095);
+}
 
 main.cards section.card.contact {
-    box-shadow: 20px 20px 50px -30px #DBC4FF;
+    box-shadow: 20px 20px 50px -30px #b61cf3;
 }
 main.cards section.card.shop {
-    box-shadow: 20px 20px 50px -30px #AFD6FF;
+    box-shadow: 20px 20px 50px -30px #1b7de6;
 }
 main.cards section.card.about {
-    box-shadow: 20px 20px 50px -30px #FFC1D5;
+    box-shadow: 20px 20px 50px -30px #f178c3;
+}
+main.cards section.card.red {
+    box-shadow: 20px 20px 50px -30px #ff0000;
+}
+main.cards section.card.green {
+    box-shadow: 20px 20px 50px -30px #40f71b;
+}
+main.cards section.card.yellow {
+    box-shadow: 20px 20px 50px -30px #ffc400;
 }
 
 @media screen and (max-width: 720px) {

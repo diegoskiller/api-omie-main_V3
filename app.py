@@ -1125,7 +1125,7 @@ def adicionar_lote_geral():
             id_lote = 0 
             status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote)
             
-            flash (f'Lote: {status_omie[6]} Lançado para o item: {item} = {status_omie[2]}, Quantidade Omie = {status_omie[5]} {um_omie}', category='success')
+           # flash (f'Lote: {status_omie[6]} Lançado para o item: {item} = {status_omie[2]}, Quantidade Omie = {status_omie[5]} {um_omie}', category='success')
     else:
         flash (f'   Código: {item} = vazio / erro: {status}', category='danger')
 
