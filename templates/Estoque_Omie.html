@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Estoque Omie {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <div class="container">
+            <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+            <button type="button" class="btn btn-primary ms-1" data-bs-toggle="modal" data-bs-target="#adicionarConfigModal">Adicionar Configuração</button>
+            <button type="button" class="btn btn-info ms-1" onclick="exportarParaExcel()">Exportar para Excel</button>
+        </div>
+        <h2 class="d-flex justify-content-center mt-2"><strong>Estoque Omie</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('estoque_omie')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar por Configuração" name="filtro_cod" aria-label="Pesquisar por Configuração" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Config</th>
+                    <th>Info</th>
+                    <th>Ações</th>
+                </tr>
+
+                {% for row in configuracoes.items %}
+                <tr>
+                    <td>{{ row.config }}</td>
+                    <td>{{ row.info }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="abrirAlterarModal('{{ row.config }}', '{{ row.info }}')">Alterar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletarConfigOmie('{{ row.config }}')">Deletar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in configuracoes.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if page_num %}
+    {% if configuracoes.page == page_num %}
+    <a class="btn btn-dark mb-4" href="{{ url_for('estoque_omie', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+    <a class="btn btn-outline-dark mb-4" href="{{ url_for('estoque_omie', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+    {% else %}
+    ...
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar Configuração -->
+<div class="modal fade" id="adicionarConfigModal" tabindex="-1" aria-labelledby="adicionarConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_config_omie') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adicionarConfigModalLabel">Adicionar Configuração</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="config" class="form-label">Config</label>
+                        <input type="text" class="form-control" id="config" name="config" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="info" class="form-label">Info</label>
+                        <select class="form-control" id="info" name="info" required>
+                            <option value="Omie">Omie</option>
+                            <option value="Apenas Visual">Apenas Visual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Configuração -->
+<div class="modal fade" id="alterarConfigModal" tabindex="-1" aria-labelledby="alterarConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('atualizar_config_omie') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alterarConfigModalLabel">Alterar Configuração</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="alterar_config" class="form-label">Config</label>
+                        <input type="text" class="form-control" id="alterar_config" name="config" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="alterar_info" class="form-label">Info</label>
+                        <select class="form-control" id="alterar_info" name="info" required>
+                            <option value="Omie">Omie</option>
+                            <option value="Apenas Visual">Apenas Visual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function deletarConfigOmie(config) {
+    if (confirm('Tem certeza de que deseja deletar esta configuração?')) {
+        fetch(`/deletar_config_omie/${config}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Erro ao deletar configuração.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao deletar configuração.');
+        });
+    }
+}
+
+function abrirAlterarModal(config, info) {
+    document.getElementById('alterar_config').value = config;
+    document.getElementById('alterar_info').value = info;
+    var alterarConfigModal = new bootstrap.Modal(document.getElementById('alterarConfigModal'));
+    alterarConfigModal.show();
+}
+
+function exportarParaExcel() {
+    window.location.href = '{{ url_for("exportar_omie_excel") }}';
+}
+</script>
+
+{% endblock %}

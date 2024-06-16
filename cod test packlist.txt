@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos</title>
+</head>
+<body>
+    <h1>Pedidos</h1>
+
+    <!-- Botão para exportar para Excel -->
+    <button id="exportExcel">Exportar para Excel</button>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Pedido</th>
+                <th>Status</th>
+                <th>Data Emiss</th>
+                <th>Cliente</th>
+                <th>Código Cliente</th>
+                <th>Código</th>
+                <th>Data Entrega</th>
+                <th>obs. Entrega</th>
+                <th>Liga</th>
+                <th>Canto</th>
+                <th>Furo</th>
+                <th>Embalagem</th>
+                <th>Dimensional</th>
+                <th>Quantidade</th>
+                <th>Um</th>
+                <th>Descrição</th>
+                <th>Observações</th>      
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in pedidos.items %}
+            <tr class='{{"table-dark" if row.situação == "Encerrada" else ""}}'>
+                <td>{{ row.pedido }}</td>
+                <td>{{ row.Status }}</td>
+                <td>{{ row.emissao }}</td>
+                <td>{{ row.cliente }}</td>
+                <td>-</td>
+                <td>{{ row.codigo }}</td>
+                <td>{{ row.data_entrega }}</td>
+                <td>{{ row.obs_entrega|default('-', true) }}</td>
+                <td>Cobre</td>
+                <td>{{ row.canto|default('-', true) }}</td>
+                <td>{{ row.furo|default('-', true) }}</td>
+                <td><font size="1">{{ row.embalagem|default('-', true) }}</font></td>
+                <td>{{ row.dimensional[0:30] }}</td>
+                <td>{{ row.quantidade|default('', true) }}</td>
+                <td>KG</td>
+                <td><font size="1">{{ row.descricao }}</font></td>
+                <td><font size="1">{{ row.obs }}</font></td>
+                <td>
+                    <button class="btn btn-warning btn-sm" onclick="showAlterarModal('{{ row.id }}')">Alterar</button>
+                    <button class="btn btn-danger btn-sm" onclick="deletarPedido('{{ row.id }}')">Deletar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+08005910943
+    <!-- Script para exportar para Excel -->
+    <script>
+        document.getElementById('exportExcel').addEventListener('click', function() {
+            fetch('/exportar_pedidos_excel')
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'Pedidos.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => console.error('Error exporting to Excel:', error));
+        });
+
+        function showAlterarModal(id) {
+            fetch('/get_pedido/' + id)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('alterarPedidoId').value = data.id;
+                    document.getElementById('alterarPedido').value = data.pedido;
+                    document.getElementById('alterarDescricao').value = data.descricao;
+                    document.getElementById('alterarCliente').value = data.cliente;
+                    document.getElementById('alterarCodigo').value = data.codigo;
+                    document.getElementById('alterarDataEntrega').value = data.data_entrega;
+                    document.getElementById('alterarObsEntrega').value = data.obs_entrega;
+                    document.getElementById('alterarDimensional').value = data.dimensional;
+                    document.getElementById('alterarQuantidade').value = data.quantidade;
+                    document.getElementById('alterarCanto').value = data.canto;
+                    document.getElementById('alterarFuro').value = data.furo;
+                    document.getElementById('alterarEmbalagem').value = data.embalagem;
+
+                    var alterarPedidoModal = new bootstrap.Modal(document.getElementById('alterarPedidoModal'));
+                    alterarPedidoModal.show();
+                });
+        }
+
+        function deletarPedido(id) {
+            if (confirm('Tem certeza de que deseja deletar este pedido?')) {
+                fetch('/deletar_pedido', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Pedido deletado com sucesso!');
+                        location.reload();
+                    } else {
+                        alert('Erro ao deletar pedido.');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -121,7 +121,7 @@
                 <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
             {%else%}
                 <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.peso_retornado / row.peso_enviado)*100)}}%"></div>
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: '{{((row.peso_retornado / row.peso_enviado)*100)}}%'"></div>
                     
             {%endif%}
                 
@@ -134,7 +134,7 @@
                     <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                 {%else%}
                 <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.fino_retornado / row.fino_enviado)*100)}}%"></div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: '{{((row.fino_retornado / row.fino_enviado)*100)}}%'"></div>
                     
             {%endif%}
                 
@@ -315,13 +315,13 @@
                     <form method="POST" action="{{url_for('add_lote_mov_op_prod')}}">
 
                     
-                    <input class="form-control" type="number" placeholder="Quantidade" value={{row.quantidade_item - row.quantidade_real}} name="qtd_parcial">
+                    <input class="form-control" type="number" placeholder="Quantidade" step="1" name="qtd_parcial">
                 </td>
                 <td> 
                     {%if row.quantidade_real == 0%}
-                    <input class="form-control" type="number" placeholder="Peso" value={{row.peso}} name="peso_parcial">
+                    <input class="form-control" type="number" placeholder="Peso" step="1"  name="peso_parcial">
                     {%else%}
-                    <input class="form-control" type="number" placeholder="Peso" value={{(row.peso/row.quantidade_real)*(row.quantidade_item - row.quantidade_real)}} name="peso_parcial">
+                    <input class="form-control" type="number" placeholder="Peso" step="1"  name="peso_parcial">
                     {%endif%}
                 </td>
                 <td>
@@ -376,7 +376,8 @@
                         <input type="hidden" name="local" value="{{row.local}}">
                         <input type="hidden" name="descricao" value="{{row.descricao_item}}">
                         <input type="hidden" name="referencia" value="{{row.op_referencia}}">
-                        <button  type="submit" class="editItem btn btn-info btn-xs " data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">
+                        <button  type="submit" class="editItem btn btn-info btn-xs "  data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">
+                            <!-- data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom" -->
                         <img src="{{url_for('static', filename='images/tras.svg')}}" alt="">
                         <img src="{{url_for('static', filename='images/plus.svg')}}" alt="">
                     

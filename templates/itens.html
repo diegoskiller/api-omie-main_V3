@@ -47,10 +47,10 @@
 
                         <tr>
                             <th>Código</th>
-                            <th>Descrição</th>
+                            <th colspan="2">Descrição</th>
                             <th>Tipo</th>
                             <th>Ncm</th>
-                            <th>Unidade</th>
+                            <th>UM-O/UM-V</th>
                             <th>Edições</th>
                         </tr>
 
@@ -58,10 +58,10 @@
                         
                         <tr class="table-primary">
                             <td>{{dados[6]}}</td>
-                            <td>{{dados[5]}}</td>
+                            <td colspan="2">{{dados[5]}}</td>
                             <td>{{dados[1]}}</td>
-                            <td>{{dados[11]}}</td>
-                            <td>{{dados[3]}}</td>
+                            <td>{{dados[10]}}</td>
+                            <td>{{dados[3]}}/{{dados[12]}}</td>
                             <td><div>
                                 <form action="{{ url_for('estrutura') }}" method="post" type="hidden">
                                     <button name="item"  value="{{dados[6]}}" class="btn btn-info btn-xs" ><img
@@ -79,6 +79,7 @@
                                 <th>Valor Unitário</th>
                                 <th>Nome do Cliente</th>
                                 <th>Código do Cliente</th>
+                                <th>Família</th>
                                 <th>Liga Principal</th>
                                 <th>ID Interno</th>
                                 <th><div>
@@ -95,6 +96,7 @@
                                 <td>{{dados[4]}}</td>
                                 <td>{{dados[7]}}</td>
                                 <td>{{dados[8]}}</td>
+                                <td>{{dados[11]}}</td>
                                 <td>{{dados[9]}}</td>
                                 <td>{{dados[0]}}</td>
                                 <td><div>

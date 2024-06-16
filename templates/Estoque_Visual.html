@@ -24,7 +24,7 @@
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
-        <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <a href="{{url_for('index_config')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addSaldoModal">Adicionar Saldo</button>
         <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
         <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar Saldos</button>
@@ -68,6 +68,7 @@
                     <th>Lote</th>
                     <th>Peso</th>
                     <th>Unid</th>
+                    <th>Operador que Produziu</th>
                     <th>Ações</th>
                 </tr>
 
@@ -79,6 +80,7 @@
                         <td>{{row.numero_lote}}</td>
                         <td>{{row.quantidade / 1000}}</td>
                         <td>KG</td>
+                        <td>{{row.operador}}</td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{row.id}}')">Excluir</button>
                         </td>

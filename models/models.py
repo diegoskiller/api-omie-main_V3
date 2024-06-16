@@ -68,8 +68,10 @@ class Lote_visual(db.Model):
     data_criacao = db.Column(db.String(250), nullable=False)
     processado_op = db.Column(db.Integer)
     quant_inicial = db.Column(db.Integer, nullable=False)
+    operador = db.Column(db.String(50))
+        
     
-    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, local, obs, data_criacao, processado_op, quant_inicial):
+    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, local, obs, data_criacao, processado_op, quant_inicial, operador):
         
         self.referencia = referencia
         self.tipo = tipo
@@ -84,10 +86,11 @@ class Lote_visual(db.Model):
         self.data_criacao = data_criacao
         self.processado_op = processado_op
         self.quant_inicial = quant_inicial
+        self.operador = operador
         
 
     def __repr__(self):
-        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, local = {self.local}, obs = {self.obs}, data_criacao = {self.data_criacao}, processado_op = {self.processado_op}, quant_inicial = {self.quant_inicial})"
+        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, local = {self.local}, obs = {self.obs}, data_criacao = {self.data_criacao}, processado_op = {self.processado_op}, quant_inicial = {self.quant_inicial}, operador = {self.operador})"
 
 class Estrutura_op(db.Model):
     __tablename__='estrutura_op'
@@ -135,8 +138,9 @@ class Lotes_mov_op(db.Model):
     fino = db.Column(db.Integer)
     data_mov = db.Column(db.String(250), nullable=False)
     id_lote = db.Column(db.Integer, nullable=False)
+    operador = db.Column(db.String(50))
     
-    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, data_mov, id_lote):
+    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, data_mov, id_lote, operador):
         
         self.referencia = referencia
         self.tipo = tipo
@@ -148,10 +152,11 @@ class Lotes_mov_op(db.Model):
         self.fino = fino
         self.data_mov = data_mov
         self.id_lote = id_lote
+        self.operador = operador
         
 
     def __repr__(self):
-        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, data_mov = {self.data_mov}, id_lote = {self.id_lote})"
+        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, data_mov = {self.data_mov}, id_lote = {self.id_lote}, operador = {self.operador})"
 
 
 
@@ -428,7 +433,7 @@ class Cadastro_itens(db.Model):
     __tablename__='cadastro_itens'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    item = db.Column(db.String(50), nullable=False)
+    item = db.Column(db.String(50), nullable=False, unique=True)
     descricao = db.Column(db.String(250), nullable=False)
     cliente = db.Column(db.String(50))
     material = db.Column(db.String(50))
@@ -439,8 +444,17 @@ class Cadastro_itens(db.Model):
     data_alteracao = db.Column(db.String(255))
     obs = db.Column(db.String(255))
     id_produto = db.Column(db.String(10))
+    um_visual = db.Column(db.String(2))
+    codigo_cliente = db.Column(db.String(50))
+    ncm = db.Column(db.String(10))
+    familia = db.Column(db.String(50))
+    setor = db.Column(db.String(50))
+    valor_unitario = db.Column(db.Float)
 
-    def __init__(self, item, descricao, cliente, material, peso, fino, unidade, uso, data_alteracao, obs, id_produto):
+
+    def __init__(self, item, descricao, cliente, material, peso, fino, unidade,
+                 uso, data_alteracao, obs, id_produto, um_visual, codigo_cliente,
+                 ncm, familia, setor, valor_unitario):
 
         self.item = item
         self.descricao = descricao
@@ -453,13 +467,83 @@ class Cadastro_itens(db.Model):
         self.data_alteracao = data_alteracao
         self.obs = obs
         self.id_produto = id_produto
+        self.um_visual = um_visual
+        self.codigo_cliente = codigo_cliente
+        self.ncm = ncm
+        self.familia = familia
+        self.setor = setor
+        self.valor_unitario = valor_unitario
 
     def __repr__(self):
-        return 'Cadastro_itens: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.item, self.descricao, self.material,
+        return 'Cadastro_itens: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.item, self.descricao, self.material,
                                                                                     self.peso, self.fino, self.unidade, self.uso,
-                                                                                    self.data_alteracao, self.obs, self.id_produto) 
+                                                                                    self.data_alteracao, self.obs, self.id_produto,
+                                                                                    self.um_visual, self.codigo_cliente, self.ncm,
+                                                                                    self.familia, self.setor, self.valor_unitario) 
     
 
 
+class Setores(db.Model):
+    __tablename__='setores'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    setor = db.Column(db.String(50), unique=True)
+    meta_fino = db.Column(db.Float)
+    meta_retalho = db.Column(db.Float)
+    meta_sucata = db.Column(db.Float)
+    meta_falha = db.Column(db.Float)
+    meta_selecao = db.Column(db.Float)
+    meta_retrabalho = db.Column(db.Float)
+    meta_setup = db.Column(db.Float)
+    
+    def __init__(self, setor, meta_fino, meta_retalho, meta_sucata, meta_falha, meta_selecao, meta_retrabalho, meta_setup):
+
+        
+        self.setor = setor
+        self.meta_fino = meta_fino
+        self.meta_retalho = meta_retalho
+        self.meta_sucata = meta_sucata
+        self.meta_falha = meta_falha
+        self.meta_selecao = meta_selecao
+        self.meta_retrabalho = meta_retrabalho
+        self.meta_setup = meta_setup
+
+    def __repr__(self):
+        return 'Setores: {} - {} - {} - {} - {} - {} - {}  - {} - {}' .format(self.id, self.setor, self.meta_fino, self.meta_retalho, self.meta_sucata, self.meta_falha, self.meta_selecao, self.meta_retrabalho, self.meta_setup) 
 
 
+class Operadores(db.Model):
+    __tablename__='operadores'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    operador = db.Column(db.String(50))
+    setor = db.Column(db.String(50))
+    
+    class Meta:
+        unique_together = ('operador', 'setor',)
+    
+    def __init__(self, operador, setor):
+
+        
+        self.operador = operador
+        self.setor = setor
+
+
+    def __repr__(self):
+        return 'Operadores: {} - {} - {}' .format(self.id, self.operador, self.setor) 
+
+
+class Familia(db.Model):
+    __tablename__='familia'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    familia = db.Column(db.String(50), unique=True)
+    
+    def __init__(self, familia):
+
+        
+        self.familia = familia
+
+
+    def __repr__(self):
+        return 'Familia: {} - {}' .format(self.id, self.familia) 

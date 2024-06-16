@@ -1,0 +1,153 @@
+
+
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Operadores de Produção {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <div class="container">
+            <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+            <button type="button" class="btn btn-info ms-1" data-bs-toggle="modal" data-bs-target="#addOperadorModal">Adicionar Operador</button>
+            <button type="button" class="btn btn-warning ms-1" onclick=window.location.href="{{ url_for('exportar_operadores') }}">Exportar para Excel</button>
+        </div>
+        <h2 class="d-flex justify-content-center mt-2"><strong>Operadores de Produção</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('operadores')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar por Operador" name="filtro_operador" aria-label="Pesquisar por Operador" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar por Operador</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Operador</th>
+                    <th>Setor</th>
+                    <th>Ações</th> <!-- Nova coluna -->
+                </tr>
+
+                {% for row in operadores.items %}
+                <tr>
+                    <td>{{ row.operador }}</td>
+                    <td>{{ row.setor }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="deletarOperador('{{ row.id }}')">Deletar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in operadores.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if page_num %}
+    {% if operadores.page == page_num %}
+    <a class="btn btn-dark mb-4" href="{{ url_for('operadores', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+    <a class="btn btn-outline-dark mb-4" href="{{ url_for('operadores', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+    {% else %}
+    ...
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar Operador -->
+<div class="modal fade" id="addOperadorModal" tabindex="-1" aria-labelledby="addOperadorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('add_operador') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addOperadorModalLabel">Adicionar Operador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="operador" class="form-label">Operador</label>
+                        <input type="text" class="form-control" id="operador" name="operador" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="setor" class="form-label">Setor</label>
+                        <select class="form-control" id="setor" name="setor" required>
+                            {% for setor in setores %}
+                            <option value="{{ setor.setor }}">{{ setor.setor }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function deletarOperador(id) {
+    if (confirm('Tem certeza de que deseja deletar este operador?')) {
+        fetch(`/deletar_operador/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Erro ao deletar operador.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao deletar operador.');
+        });
+    }
+}
+</script>
+
+{% endblock %}

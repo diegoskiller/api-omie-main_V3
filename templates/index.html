@@ -5,7 +5,7 @@
 
 {% block body %}
 
-
+<div>
 
 <!-- <style>
     body {
@@ -20,9 +20,30 @@
 
     /* Adicione estilos adicionais conforme necessário */
 </style> -->
+<style>
+
+.titulo {
+    text-align:center;
+    
+
+
+
+}
+p{
+    color: rgb(0, 37, 105);
+    /* Poderia usar:;
+    color: #ff0000;*/
+    /* Poderia usar:;
+    color: rgb(255, 0, 0);*/
+}
+.background-black {
+    background-color: #02143b; /* Define a cor de fundo como verde */
+}
+</style>
 
 <body>
-    <div><h2>Sistema Visual - Kels</h2></div>
+
+<div class="titulo"><h2><p>Sistema Visual - Kels</h2></div></p>
     
 
 <main class="cards margin-top">
@@ -52,11 +73,11 @@
     </section>
     <section class="card green">
         <div class="icon">
-            <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
+            <img src="{{ url_for('static', filename='images/config.svg')}}" alt="Gerenciamento de ops">
         </div>
-        <h3>Informações</h3>
-        <span>Upload de Planilha de Inventário</span>
-        <a href="{{ url_for('estoque_visual')}}"><button>Acessar</button></a>
+        <h3>Configurações</h3>
+        <span>Configurações do Sistema Visual</span>
+        <a href="{{ url_for('index_config')}}"><button>Acessar</button></a>
     </section>
     <section class="card yellow">
         <div class="icon">
@@ -78,4 +99,5 @@
 </main>
 
 </body>
+</div>
 {% endblock %}

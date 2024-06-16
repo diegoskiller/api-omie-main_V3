@@ -4,7 +4,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory, send_file, Response
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist, Cadastro_itens
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist, Cadastro_itens, Setores, Operadores, Familia
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -139,6 +139,12 @@ def index():
          return redirect( url_for('login'))
     return render_template('index.html')
 
+@app.route('/index_config', methods = ['GET','POST'])
+def index_config():
+    if not current_user.is_authenticated:
+         return redirect( url_for('login'))
+    return render_template('index_config.html')
+
 
 @app.route('/busca', methods = ['GET','POST'])
 def busca():
@@ -227,11 +233,17 @@ def exportar_itens_excel():
         data = {
             "Item": [item.item for item in itens],
             "Descrição": [item.descricao for item in itens],
+            "Ncm": [item.ncm for item in itens],
+            "Família": [item.familia for item in itens],
             "Cliente": [item.cliente for item in itens],
+            "Código do Cliente": [item.codigo_cliente for item in itens],
             "Material": [item.material for item in itens],
-            "Peso": [item.peso for item in itens],
-            "Fino": [item.fino for item in itens],
-            "Unidade": [item.unidade for item in itens],
+            "Setor": [item.setor for item in itens],
+            "Peso Unitário": [item.peso for item in itens],
+            "Fino Unitário": [item.fino for item in itens],
+            "Valor Unitário": [item.valor_unitario for item in itens],
+            "Unidade Omie": [item.unidade for item in itens],
+            "Unidade Visual": [item.um_visual for item in itens],
             "Uso": [item.uso for item in itens],
             "Data Alteração": [item.data_alteracao for item in itens],
             "Observação": [item.obs for item in itens]
@@ -311,6 +323,12 @@ def importar_itens():
                 item.data_alteracao = row['Data Alteração']
                 item.obs = row['Observação']
                 item.id_produto = row['Id_Produto']
+                item.um_visual = row['Um Visual']
+                item.codigo_cliente = row['Código Cliente']
+                item.ncm = row['Ncm']
+                item.familia = row['Família']
+                item.setor = row['Setor']
+                item.valor_unitario = row['Valor Unitário']
             else:
                 new_item = Cadastro_itens(
                     item=row['Item'],
@@ -323,7 +341,13 @@ def importar_itens():
                     uso=row['Uso'],
                     data_alteracao=row['Data Alteração'],
                     obs=row['Observação'],
-                    id_produto=row['Id_Produto']
+                    id_produto=row['Id_Produto'],
+                    um_visual=row['Um Visual'],
+                    codigo_cliente=row['Código Cliente'],
+                    ncm=row['Ncm'],
+                    familia=row['Família'],
+                    setor=row['Setor'],
+                    valor_unitario=row['Valor Família']
                 )
                 db.session.add(new_item)
         except KeyError as ke:
@@ -387,7 +411,8 @@ def exportar_visual_excel():
             "Descrição": [Def_cadastro_prod(item.item)[5] for item in visual],
             "Lote": [item.numero_lote for item in visual],
             "Peso": [item.quantidade / 1000 for item in visual],
-            "Unid": ['KG' for item in visual]
+            "Unid": ['KG' for item in visual],
+            "Operador que Produziu": [item.operador for item in visual],
         }
         
         df = pd.DataFrame(data)
@@ -472,7 +497,8 @@ def importar_visual():
                         obs='',
                         data_criacao='',
                         processado_op=0,
-                        quant_inicial=row['Peso']
+                        quant_inicial=row['Peso'],
+                        operador=row['Operador']
                     )
                     db.session.add(new_lote)
                     db.session.commit()
@@ -501,6 +527,448 @@ def item(item):
 
 
 
+@app.route('/setores', methods=['GET', 'POST'])
+def setores():
+    filtro_setor = request.form.get('filtro_setor', '').upper()
+    
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    if filtro_setor:
+        setores = Setores.query.filter(Setores.setor.contains(filtro_setor)).paginate(page=page, per_page=10)
+    else:
+        setores = Setores.query.paginate(page=page, per_page=10)
+    
+    return render_template('Setores.html', setores=setores)
+
+@app.route('/add_setor', methods=['POST'])
+def add_setor():
+    setor = request.form.get('setor')
+    meta_fino = request.form.get('meta_fino')
+    meta_retalho = request.form.get('meta_retalho')
+    meta_sucata = request.form.get('meta_sucata')
+    meta_falha = request.form.get('meta_falha')
+    meta_selecao = request.form.get('meta_selecao')
+    meta_retrabalho = request.form.get('meta_retrabalho')
+    meta_setup = request.form.get('meta_setup')
+    
+    novo_setor = Setores(setor=setor, meta_fino=meta_fino, meta_retalho=meta_retalho, meta_sucata=meta_sucata, 
+                         meta_falha=meta_falha, meta_selecao=meta_selecao, meta_retrabalho=meta_retrabalho, meta_setup=meta_setup)
+    
+    db.session.add(novo_setor)
+    db.session.commit()
+    
+    flash('Setor adicionado com sucesso!', 'success')
+    return redirect(url_for('setores'))
+
+@app.route('/deletar_setor/<int:id>', methods=['POST'])
+def deletar_setor(id):
+    setor = Setores.query.get_or_404(id)
+    db.session.delete(setor)
+    db.session.commit()
+    flash('Setor deletado com sucesso!', 'success')
+    return redirect(url_for('setores'))
+
+@app.route('/exportar_setores')
+def exportar_setores():
+    setores = Setores.query.all()
+    
+    data = {
+        "Setor": [setor.setor for setor in setores],
+        "Meta Fino": [setor.meta_fino for setor in setores],
+        "Meta Retalho": [setor.meta_retalho for setor in setores],
+        "Meta Sucata": [setor.meta_sucata for setor in setores],
+        "Meta Falha": [setor.meta_falha for setor in setores],
+        "Meta Selecao": [setor.meta_selecao for setor in setores],
+        "Meta Retrabalho": [setor.meta_retrabalho for setor in setores],
+        "Meta Setup": [setor.meta_setup for setor in setores],
+    }
+    
+    df = pd.DataFrame(data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Setores')
+        
+        workbook  = writer.book
+        worksheet = writer.sheets['Setores']
+        
+        # Formatação para a primeira linha (header)
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'fg_color': '#4472C4',
+            'font_color': 'white',
+            'border': 1,
+            'align': 'center'
+        })
+        
+        # Formatação para as células de dados
+        cell_format = workbook.add_format({
+            'text_wrap': True,
+            'valign': 'top',
+            'border': 1,
+            'align': 'center'
+        })
+        
+        # Aplica a formatação na primeira linha
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            # Ajusta a largura das colunas
+            worksheet.set_column(col_num, col_num, 20)
+        
+        # Aplica a formatação nas células de dados
+        for row_num, row_data in enumerate(df.values, 1):
+            for col_num, cell_data in enumerate(row_data):
+                worksheet.write(row_num, col_num, cell_data, cell_format)
+
+    output.seek(0)
+    
+    return send_file(output, download_name='Setores.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+
+@app.route('/operadores', methods=['GET', 'POST'])
+def operadores():
+    filtro_operador = request.form.get('filtro_operador', '').upper()
+    setores = Setores.query.all()
+    
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    page = request.args.get('page', 1, type=int)
+    
+    if filtro_operador:
+        operadores = Operadores.query.filter(Operadores.operador.contains(filtro_operador)).paginate(page=page, per_page=10)
+    else:
+        operadores = Operadores.query.paginate(page=page, per_page=10)
+    
+    return render_template('Operadores.html', operadores=operadores, setores=setores)
+
+@app.route('/add_operador', methods=['POST'])
+def add_operador():
+    operador = request.form.get('operador')
+    setor = request.form.get('setor')
+    
+    novo_operador = Operadores(operador=operador, setor=setor)
+    
+    db.session.add(novo_operador)
+    db.session.commit()
+    
+    flash('Operador adicionado com sucesso!', 'success')
+    return redirect(url_for('operadores'))
+
+@app.route('/deletar_operador/<int:id>', methods=['POST'])
+def deletar_operador(id):
+    operador = Operadores.query.get_or_404(id)
+    db.session.delete(operador)
+    db.session.commit()
+    flash('Operador deletado com sucesso!', 'success')
+    return redirect(url_for('operadores'))
+
+@app.route('/exportar_operadores')
+def exportar_operadores():
+    operadores = Operadores.query.all()
+    
+    data = {
+        "Operador": [operador.operador for operador in operadores],
+        "Setor": [operador.setor for operador in operadores],
+    }
+    
+    df = pd.DataFrame(data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Operadores')
+        
+        workbook  = writer.book
+        worksheet = writer.sheets['Operadores']
+        
+        # Formatação para a primeira linha (header)
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'fg_color': '#4472C4',
+            'font_color': 'white',
+            'border': 1,
+            'align': 'center'
+        })
+        
+        # Formatação para as células de dados
+        cell_format = workbook.add_format({
+            'text_wrap': True,
+            'valign': 'top',
+            'border': 1,
+            'align': 'center'
+        })
+        
+        # Aplica a formatação na primeira linha
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            # Ajusta a largura das colunas
+            worksheet.set_column(col_num, col_num, 20)
+        
+        # Aplica a formatação nas células de dados
+        for row_num, row_data in enumerate(df.values, 1):
+            for col_num, cell_data in enumerate(row_data):
+                worksheet.write(row_num, col_num, cell_data, cell_format)
+
+    output.seek(0)
+    
+    return send_file(output, download_name='Operadores.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+
+@app.route('/familia', methods=['GET', 'POST'])
+def familia():
+    filtro_familia = request.form.get('filtro_familia', '').upper()
+
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    page = request.args.get('page', 1, type=int)
+
+    if filtro_familia:
+        familias = Familia.query.filter(Familia.familia.contains(filtro_familia)).paginate(page=page, per_page=10)
+    else:
+        familias = Familia.query.paginate(page=page, per_page=10)
+
+    return render_template('Familia.html', familias=familias)
+
+@app.route('/add_familia', methods=['POST'])
+def add_familia():
+    familia = request.form.get('familia')
+
+    nova_familia = Familia(familia=familia)
+
+    db.session.add(nova_familia)
+    db.session.commit()
+
+    flash('Família adicionada com sucesso!', 'success')
+    return redirect(url_for('familia'))
+
+@app.route('/deletar_familia/<int:id>', methods=['POST'])
+def deletar_familia(id):
+    familia = Familia.query.get_or_404(id)
+    db.session.delete(familia)
+    db.session.commit()
+    flash('Família deletada com sucesso!', 'success')
+    return redirect(url_for('familia'))
+
+@app.route('/exportar_familia')
+def exportar_familia():
+    familias = Familia.query.all()
+
+    data = {
+        "Família": [familia.familia for familia in familias],
+    }
+
+    df = pd.DataFrame(data)
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Família')
+
+        workbook  = writer.book
+        worksheet = writer.sheets['Família']
+
+        # Formatação para a primeira linha (header)
+        header_format = workbook.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'top',
+            'fg_color': '#4472C4',
+            'font_color': 'white',
+            'border': 1,
+            'align': 'center'
+        })
+
+        # Formatação para as células de dados
+        cell_format = workbook.add_format({
+            'text_wrap': True,
+            'valign': 'top',
+            'border': 1,
+            'align': 'center'
+        })
+
+        # Aplica a formatação na primeira linha
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+            # Ajusta a largura das colunas
+            worksheet.set_column(col_num, col_num, 20)
+
+        # Aplica a formatação nas células de dados
+        for row_num, row_data in enumerate(df.values, 1):
+            for col_num, cell_data in enumerate(row_data):
+                worksheet.write(row_num, col_num, cell_data, cell_format)
+
+    output.seek(0)
+
+    return send_file(output, download_name='Familia.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+
+
+@app.route('/sequencias', methods=['GET', 'POST'])
+def sequencias():
+    filtro_op = request.form.get('filtro_op', '').upper()
+
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    page = request.args.get('page', 1, type=int)
+
+    if filtro_op:
+        sequencias = Sequencia_lote.query.filter(Sequencia_lote.op_visual.contains(filtro_op)).paginate(page=page, per_page=10)
+    else:
+        sequencias = Sequencia_lote.query.paginate(page=page, per_page=10)
+
+    sequencia_op = Sequencia_op.query.filter_by(tabela_campo='ops_numero').first()
+
+    return render_template('Sequencia_Lote.html', sequencias=sequencias, sequencia_op=sequencia_op)
+
+@app.route('/alterar_sequencia_op', methods=['POST'])
+def alterar_sequencia_op():
+    tabela_campo = request.form.get('tabela_campo')
+    valor = request.form.get('valor')
+    valor_anterior = request.form.get('valor_anterior')
+
+    sequencia = Sequencia_op.query.filter_by(tabela_campo=tabela_campo).first()
+
+    if sequencia:
+        sequencia.valor = valor
+        sequencia.valor_anterior = valor_anterior
+        db.session.commit()
+        flash('Sequência OP alterada com sucesso!', 'success')
+    else:
+        flash('Erro ao alterar sequência OP.', 'danger')
+
+    return redirect(url_for('sequencias'))
+
+@app.route('/deletar_sequencia_lote/<string:op_visual>', methods=['POST'])
+def deletar_sequencia_lote(op_visual):
+    sequencia = Sequencia_lote.query.get_or_404(op_visual)
+    db.session.delete(sequencia)
+    db.session.commit()
+    flash('Sequência de lote deletada com sucesso!', 'success')
+    return redirect(url_for('sequencias'))
+
+
+
+@app.route('/estoque_omie', methods=['GET', 'POST'])
+def estoque_omie():
+    filtro_cod = request.form.get('filtro_cod', '').upper()
+
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+
+    page = request.args.get('page', 1, type=int)
+
+    if filtro_cod:
+        configuracoes = Config_Visual.query.filter(Config_Visual.config.contains(filtro_cod)).paginate(page=page, per_page=10)
+    else:
+        configuracoes = Config_Visual.query.paginate(page=page, per_page=10)
+
+    return render_template('Estoque_Omie.html', configuracoes=configuracoes)
+
+@app.route('/add_config_omie', methods=['POST'])
+def add_config_omie():
+    config = request.form.get('config')
+    info = request.form.get('info')
+
+    nova_config = Config_Visual(config=config, info=info)
+    db.session.add(nova_config)
+    db.session.commit()
+
+    flash('Configuração adicionada com sucesso!', 'success')
+    return redirect(url_for('estoque_omie'))
+
+@app.route('/deletar_config_omie/<config>', methods=['POST'])
+def deletar_config_omie(config):
+    configuracao = Config_Visual.query.get(config)
+    if configuracao:
+        db.session.delete(configuracao)
+        db.session.commit()
+        flash('Configuração deletada com sucesso!', 'success')
+    else:
+        flash('Configuração não encontrada.', 'danger')
+    return redirect(url_for('estoque_omie'))
+
+
+@app.route('/exportar_omie_excel')
+def exportar_omie_excel():
+    try:
+        configuracoes = Config_Visual.query.all()
+
+        data = {
+            "Config": [config.config for config in configuracoes],
+            "Info": [config.info for config in configuracoes]
+        }
+
+        df = pd.DataFrame(data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Estoque Omie')
+
+            workbook  = writer.book
+            worksheet = writer.sheets['Estoque Omie']
+
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+
+        return send_file(output, download_name='Estoque_Omie.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+
+@app.route('/atualizar_config_omie', methods=['POST'])
+def atualizar_config_omie():
+    config = request.form.get('config')
+    info = request.form.get('info')
+
+    configuracao = Config_Visual.query.get(config)
+    if configuracao:
+        configuracao.info = info
+        db.session.commit()
+        flash('Configuração atualizada com sucesso!', 'success')
+    else:
+        flash('Configuração não encontrada.', 'danger')
+    
+    return redirect(url_for('estoque_omie'))
 
 
 
@@ -2546,8 +3014,11 @@ def Def_cadastro_prod(item):
         valor_unitario = 0
         descricao = cadastro.descricao
         cliente = cadastro.cliente
-        codigo_cliente = "-"
+        codigo_cliente = cadastro.codigo_cliente
         liga = cadastro.material
+        familia = cadastro.familia
+        um_visual = cadastro.um_visual
+        ncm = cadastro.ncm
         
    if id_produto == None:
         id_produto = "-"
@@ -2562,8 +3033,8 @@ def Def_cadastro_prod(item):
    if liga == None:
         liga = "-"
    imagens = "-"
-   ncm = 'ncm'                    
-   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm]
+           #id_produto=0, tipo=1, imagens=2, unidade=3, valor_unitario=4, descricao=5, item=6, cliente=7, codigo_cliente=8, liga=9, ncm=10, familia=11, um_visual=12  
+   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm, familia, um_visual]
 
 
 def Def_cadastro_prod2(item):

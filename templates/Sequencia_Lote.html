@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Sequências de Lote e OP {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 0px;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important; /* Borda superior mais larga para as células de cabeçalho */
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <div class="container">
+            <a href="{{url_for('op_cards')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+            <button type="button" class="btn btn-info ms-1" data-bs-toggle="modal" data-bs-target="#alterarSequenciaOpModal" data-tabela_campo="{{ sequencia_op.tabela_campo }}" data-valor="{{ sequencia_op.valor }}" data-valor_anterior="{{ sequencia_op.valor_anterior }}">Sequência da Ops</button>
+        </div>
+        <h2 class="d-flex justify-content-center mt-2"><strong>Sequências de Lote e OP</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('sequencias')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar por OP Visual" name="filtro_op" aria-label="Pesquisar por OP Visual" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar por OP Visual</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-success">
+                    {{ message }}
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>OP Visual</th>
+                    <th>Valor</th>
+                    <th>Valor Anterior</th>
+                    <th>Ações</th> <!-- Nova coluna -->
+                </tr>
+
+                {% for row in sequencias.items %}
+                <tr>
+                    <td>{{ row.op_visual }}</td>
+                    <td>{{ row.valor }}</td>
+                    <td>{{ row.valor_anterior }}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#alterarSequenciaLoteModal" data-id="{{ row.op_visual }}" data-valor="{{ row.valor }}" data-valor_anterior="{{ row.valor_anterior }}">Alterar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deletarSequenciaLote('{{ row.op_visual }}')">Deletar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in sequencias.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+    {% if page_num %}
+    {% if sequencias.page == page_num %}
+    <a class="btn btn-dark mb-4" href="{{ url_for('sequencias', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+    <a class="btn btn-outline-dark mb-4" href="{{ url_for('sequencias', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+    {% else %}
+    ...
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Modal Alterar Sequência OP -->
+<div class="modal fade" id="alterarSequenciaOpModal" tabindex="-1" aria-labelledby="alterarSequenciaOpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('alterar_sequencia_op') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alterarSequenciaOpModalLabel">Alterar Sequência OP</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="tabela_campo" class="form-label">Tabela Campo</label>
+                        <input type="text" class="form-control" id="tabela_campo" name="tabela_campo" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <input type="number" class="form-control" id="valor" name="valor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valor_anterior" class="form-label">Valor Anterior</label>
+                        <input type="number" class="form-control" id="valor_anterior" name="valor_anterior" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Sequência Lote -->
+<div class="modal fade" id="alterarSequenciaLoteModal" tabindex="-1" aria-labelledby="alterarSequenciaLoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('alterar_sequencia_op') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alterarSequenciaLoteModalLabel">Alterar Sequência de Lote</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="op_visual" class="form-label">OP Visual</label>
+                        <input type="text" class="form-control" id="op_visual" name="op_visual" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valor" class="form-label">Valor</label>
+                        <input type="number" class="form-control" id="valor" name="valor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="valor_anterior" class="form-label">Valor Anterior</label>
+                        <input type="number" class="form-control" id="valor_anterior" name="valor_anterior" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function deletarSequenciaLote(op_visual) {
+    if (confirm('Tem certeza de que deseja deletar esta sequência de lote?')) {
+        fetch(`/deletar_sequencia_lote/${op_visual}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Erro ao deletar sequência de lote.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao deletar sequência de lote.');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var alterarModal = document.getElementById('alterarSequenciaLoteModal');
+    alterarModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var op_visual = button.getAttribute('data-id');
+        var valor = button.getAttribute('data-valor');
+        var valor_anterior = button.getAttribute('data-valor_anterior');
+
+        var modalTitle = alterarModal.querySelector('.modal-title');
+        var opVisualInput = alterarModal.querySelector('#op_visual');
+        var valorInput = alterarModal.querySelector('#valor');
+        var valorAnteriorInput = alterarModal.querySelector('#valor_anterior');
+
+        modalTitle.textContent = 'Alterar Sequência de Lote';
+        opVisualInput.value = op_visual;
+        valorInput.value = valor;
+        valorAnteriorInput.value = valor_anterior;
+    });
+
+    var alterarOpModal = document.getElementById('alterarSequenciaOpModal');
+    alterarOpModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var tabela_campo = button.getAttribute('data-tabela_campo');
+        var valor = button.getAttribute('data-valor');
+        var valor_anterior = button.getAttribute('data-valor_anterior');
+
+        var modalTitle = alterarOpModal.querySelector('.modal-title');
+        var tabelaCampoInput = alterarOpModal.querySelector('#tabela_campo');
+        var valorInput = alterarOpModal.querySelector('#valor');
+        var valorAnteriorInput = alterarOpModal.querySelector('#valor_anterior');
+
+        modalTitle.textContent = 'Alterar Sequência OP';
+        tabelaCampoInput.value = tabela_campo;
+        valorInput.value = valor;
+        valorAnteriorInput.value = valor_anterior;
+    });
+});
+</script>
+
+{% endblock %}
