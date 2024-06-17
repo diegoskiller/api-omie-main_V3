@@ -3304,6 +3304,8 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
     
         else:
             quantidade = neg(quan)
+            lote = Def_numero_lote(referencia)
+            numero_lote =  "".join([str(lote), "/", str(referencia) ])
 
         Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
         return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote, id_lote]

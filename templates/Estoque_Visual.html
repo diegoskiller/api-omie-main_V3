@@ -66,8 +66,8 @@
                     <th>Item</th>
                     <th>Descrição</th>
                     <th>Lote</th>
+                    <TH>Quantidade</TH>
                     <th>Peso</th>
-                    <th>Unid</th>
                     <th>Operador que Produziu</th>
                     <th>Ações</th>
                 </tr>
@@ -78,8 +78,8 @@
                         <td>{{row.item}}</td>
                         <td>{{row.descricao}}</td>
                         <td>{{row.numero_lote}}</td>
-                        <td>{{row.quantidade / 1000}}</td>
-                        <td>KG</td>
+                        <td>{{row.quantidade}}</td>
+                        <td>{{row.peso}}</td>
                         <td>{{row.operador}}</td>
                         <td>
                             <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{row.id}}')">Excluir</button>
