@@ -137,7 +137,7 @@ class Lotes_mov_op(db.Model):
     peso = db.Column(db.Integer, nullable=False)
     fino = db.Column(db.Integer)
     data_mov = db.Column(db.String(250), nullable=False)
-    id_lote = db.Column(db.Integer, nullable=False)
+    id_lote = db.Column(db.Integer)
     operador = db.Column(db.String(50))
     
     def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, data_mov, id_lote, operador):

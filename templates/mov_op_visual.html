@@ -286,12 +286,12 @@
                 
                 <td>Tipo</td>
                 <td>Item</td>
-                <td>Qtd. Estima</td>
-                <td>Qtd. Enviada</td>
-                <td>Peso</td>
+                <td>Qtd.Estim.</td>
+                <td>Qtd.Prod</td>
+                <td>Peso.Prod</td>
                 <td>Peso Fino</td>
-                <td>Qtd. Produzida</td>
-                <td>Peso Do Lote</td>
+                <td>Q_A_Prod</td>
+                <td>Peso</td>
                 <td>OP Origem</td>
                 <td>Local</td>
                 <td>Operador</td>
@@ -316,17 +316,17 @@
                     <form method="POST" action="{{url_for('add_lote_mov_op_prod')}}">
 
                     
-                    <input class="form-control" type="number" placeholder="Quantidade" step="1" name="qtd_parcial">
+                    <input class="form-control" type="number" autocomplete="off" placeholder="Quantidade" step="1" name="qtd_parcial">
                 </td>
                 <td> 
                     {%if row.quantidade_real == 0%}
-                    <input class="form-control" type="number" placeholder="Peso" step="1"  name="peso_parcial">
+                    <input class="form-control" type="number" autocomplete="off" placeholder="Peso" step="1"  name="peso_parcial">
                     {%else%}
-                    <input class="form-control" type="number" placeholder="Peso" step="1"  name="peso_parcial">
+                    <input class="form-control" type="number" autocomplete="off" placeholder="Peso" step="1"  name="peso_parcial">
                     {%endif%}
                 </td>
                 <td>
-                <input class="form-control" type="number" placeholder="" value=1 name="OP_Origem">
+                <input class="form-control" type="number" autocomplete="off" placeholder="" value=1 name="OP_Origem">
                 </td>
                 <td>
                 <select class="form-select" aria-label="Default select example" readonly="readonly" aria-disabled="true" name="local_dest">

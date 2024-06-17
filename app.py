@@ -1433,10 +1433,20 @@ def add_lote_mov_op_prod():
     data_mov = datahora("data")
     OP_Origem = request.form.get("OP_Origem")
     operador = request.form.get("operador")
-
+    um_visual = Def_cadastro_prod(item)[12]
+    if um_visual == "GR":
+        qtd_parcial = peso_parcial
     id_prod = Def_id_produto(item)
     fino_uni = Def_Caracter(id_prod)[0]
-    fino_parcial = int(qtd_parcial.replace(".0","")) * float(fino_uni.replace(",","."))
+
+    if fino_uni == None:
+        fino_uni = 0
+        fino_parcial = 0
+    else:
+        fino_parcial = int(qtd_parcial.replace(".0","")) * float(fino_uni.replace(",","."))
+
+
+    
     fino = fino_parcial
         
     qtd_parcial = int(qtd_parcial.replace(".0",""))
@@ -1452,7 +1462,7 @@ def add_lote_mov_op_prod():
     
     if x > 0:
 
-        status_omie = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 0,"Não")
+        status_omie = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 1,"Não", operador)
 
 
         #novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
@@ -1602,10 +1612,11 @@ def adicionar_lote_geral():
             peso = request.form.get("peso")
             local = request.form.get("local")
             
+            operador = "Kels"
             obs = request.form.get("obs")
             um_omie = Def_unidade(item)[1]
             id_lote = 0 
-            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote,"Não")
+            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote,"Não", operador)
             
            # flash (f'Lote: {status_omie[6]} Lançado para o item: {item} = {status_omie[2]}, Quantidade Omie = {status_omie[5]} {um_omie}', category='success')
     else:
@@ -1637,10 +1648,11 @@ def deleta_lote():
         obs = request.form.get("obs")
         tipo = "Visual"
         local = request.form.get("local")
+        operador = "Kels"
         db.session.delete(id_delete)
         db.session.commit()
 
-        omie = Def_ajuste_estoque(item, quantidade,"SAI", local, referencia, tipo, peso, obs, id,"Não")
+        omie = Def_ajuste_estoque(item, quantidade,"SAI", local, referencia, tipo, peso, obs, id,"Não", operador)
         status = omie[2]
         
         flash (f'Lote : {lote}/{referencia}, do item: {item} visual excluido com sucesso/ omie status: {status}', category='success')
@@ -2181,7 +2193,7 @@ def deletar_estoque_cobre():
         db.session.delete(item)
         db.session.commit()
         
-        Status_mov = Def_ajuste_estoque(item.item, item.quantidade,"SAI", "4084861665", item.referencia, "Visual", item.peso, "Cobre", 0,"Não")
+        Status_mov = Def_ajuste_estoque(item.item, item.quantidade,"SAI", "4084861665", item.referencia, "Visual", item.peso, "Cobre", 0,"Não","Kels")
         
 
 
@@ -2437,13 +2449,15 @@ def faturar_pedido():
     qtd_visual = peso_faturado
     qtd_visual = int(qtd_visual)
     qtd_visual = qtd_visual * 1000
-    pedido = Pedido.query.get(pedido_id)    
+    operador = "Valdemir"
+    pedido = Pedido.query.get(pedido_id)
+
 
 
     
     if faturado_omie == True:
         print("faturado Omie")
-        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não")
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não", operador)
         
         id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
         
@@ -2458,7 +2472,7 @@ def faturar_pedido():
 
     else:
         print("Faturado Direto")
-        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não")
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não", operador)
         
         id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
         
@@ -2492,11 +2506,12 @@ def add_saldo_cobre():
     codigo = data.get('codigo')
     quantidade = data.get('quantidade')
     referencia = data.get('referencia')
+    Operador = "Valdemir"
     #date = datahora("data") 
 
 
     try:
-        Def_ajuste_estoque(codigo, quantidade,"ENT", "4084861665", referencia, "Setor_Cobre", quantidade, "Cobre", 0,"Não")
+        Def_ajuste_estoque(codigo, quantidade,"ENT", "4084861665", referencia, "Setor_Cobre", quantidade, "Cobre", 0,"Não", operador)
 
 
 
@@ -2517,6 +2532,7 @@ def update_pedido():
     data = request.get_json()  # Obter dados como JSON
     pedido_id = data['pedidoId']
     edit_item = Pedido.query.get(pedido_id)
+    operador = "Valdemir"
  
     if edit_item:
         print("teste2")
@@ -2526,7 +2542,7 @@ def update_pedido():
         if edit_item.peso == "" or edit_item.peso == None:
             Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0,"Não")
             print(Status_mov, qtd_visual)
-            Status_mov2 = Def_ajuste_estoque(data['data']['material'], data['data']['peso_material'],"SAI", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso_material'], "Cobre", 0,"Não")
+            Status_mov2 = Def_ajuste_estoque(data['data']['material'], data['data']['peso_material'],"SAI", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso_material'], "Cobre", 0,"Não", operador)
             print(Status_mov2, data['data']['peso_material'])
         print(edit_item.peso)
 
@@ -3138,7 +3154,7 @@ def Def_consulta_estoque(id_produto, local):
    return saldoFisico   
 #===================definição de ajuste de estoque ==================#
 
-def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote, lote_peso):
+def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote, lote_peso, operador):
         
 
         
@@ -3197,7 +3213,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                                     "id_prod": id_produto,
                                     "data": datahora("data"),
                                     "quan": quan_omie,
-                                    "obs": "Ajuste feito pelo Vipro.AI",
+                                    "obs": "Ajuste feito pelo Sistema Visual",
                                     "origem": "AJU",
                                     "tipo": tipomov,
                                     "motivo": mot,
@@ -3270,7 +3286,8 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                     obs=obs, 
                     data_criacao=data_criacao, 
                     processado_op=0, 
-                    quant_inicial=quan
+                    quant_inicial=quan,
+                    operador=operador
                     )
                 
                     db.session.add(novo_lote)
