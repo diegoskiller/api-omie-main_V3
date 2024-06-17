@@ -1129,15 +1129,14 @@ def delete(id):
 
 
 # ===============================Ordem de produção Visual================================================
-@app.route('/ordens_producao_visual', methods = ['GET','POST'])
+
+@app.route('/ordens_producao_visual', methods=['GET', 'POST'])
 def ordens_producao_visual():
-
-
     filtro_op = request.form.get("filtro_op")
     filtro_cod = request.form.get("filtro_cod")
     
     if not current_user.is_authenticated:
-     return redirect( url_for('login'))
+        return redirect(url_for('login'))
     
     page = request.args.get('page', 1, type=int)
     
@@ -1147,17 +1146,28 @@ def ordens_producao_visual():
     if filtro_cod == "":
         filtro_cod = None
 
-
-    if filtro_op != None:
-        dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(numero_op_visual = filtro_op).paginate(page=page,per_page=10)
+    if filtro_op is not None:
+        dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(numero_op_visual=filtro_op).paginate(page=page, per_page=10)
     else:
-        if filtro_cod != None:
-            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(item = filtro_cod).paginate(page=page,per_page=10)
+        if filtro_cod is not None:
+            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(item=filtro_cod).paginate(page=page, per_page=10)
         else:
-            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).paginate(page=page,per_page=10)    
+            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).paginate(page=page, per_page=10)    
     
+    setores = Setores.query.all()
+    operadores = Operadores.query.all()
+    cadastro_itens = Cadastro_itens.query.all()
+
+    setores_dict = [setor.__dict__ for setor in setores]
+    operadores_dict = [operador.__dict__ for operador in operadores]
+    cadastro_itens_dict = [item.__dict__ for item in cadastro_itens]
     
-    return render_template('ordens_producao_visual.html', itens = dados)
+    for d in setores_dict + operadores_dict + cadastro_itens_dict:
+        d.pop('_sa_instance_state', None)
+
+    return render_template('ordens_producao_visual.html', itens=dados, setores=setores_dict, operadores=operadores_dict, cadastro_itens=cadastro_itens_dict)
+
+
 
 @app.route('/insert_op_Visual', methods=['POST'])
 def insert_op_visual():     
@@ -1280,12 +1290,12 @@ def op(numero_op_visual):
     descricao = request.form.get("descricao")
     op_qtd = request.form.get("op_qtd")
     ref = [op, item, descricao, op_qtd, setor, operador]
-    mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()
-    #lotes = Lote_visual.query.filter_by(referencia = op).all()   
+    mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()  
     op_info = Ops_visual.query.filter_by(numero_op_visual = op).all()
     estrutura_op = Def_consulta_estrutura(item)
+    operadores = Operadores.query.filter_by(setor = setor).all()
     
-    return render_template("mov_op_visual.html", ref=ref, op_info=op_info, op=op, estrutura_op= estrutura_op, mov_op = mov_op)
+    return render_template("mov_op_visual.html", ref=ref, op_info=op_info, op=op, estrutura_op= estrutura_op, mov_op = mov_op, operadores = operadores, ope_pd = operador)
 
 
 
@@ -1421,6 +1431,7 @@ def add_lote_mov_op_prod():
     local = request.form.get("local_dest")
     data_mov = datahora("data")
     OP_Origem = request.form.get("OP_Origem")
+    operador = request.form.get("operador")
 
     id_prod = Def_id_produto(item)
     fino_uni = Def_Caracter(id_prod)[0]
@@ -1440,7 +1451,7 @@ def add_lote_mov_op_prod():
     
     if x > 0:
 
-        status_omie = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 0)
+        status_omie = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 0,"Não")
 
 
         #novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
@@ -1449,7 +1460,7 @@ def add_lote_mov_op_prod():
         id_lote = 0
         add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = lote_visual, quantidade = qtd_parcial, peso = peso_parcial,
-                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote, operador = operador) 
 
         db.session.add(add_lote_mov_op)
         db.session.commit()
@@ -1591,7 +1602,7 @@ def adicionar_lote_geral():
             obs = request.form.get("obs")
             um_omie = Def_unidade(item)[1]
             id_lote = 0 
-            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote)
+            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote,"Não")
             
            # flash (f'Lote: {status_omie[6]} Lançado para o item: {item} = {status_omie[2]}, Quantidade Omie = {status_omie[5]} {um_omie}', category='success')
     else:
@@ -1626,7 +1637,7 @@ def deleta_lote():
         db.session.delete(id_delete)
         db.session.commit()
 
-        omie = Def_ajuste_estoque(item, quantidade,"SAI", local, referencia, tipo, peso, obs, id)
+        omie = Def_ajuste_estoque(item, quantidade,"SAI", local, referencia, tipo, peso, obs, id,"Não")
         status = omie[2]
         
         flash (f'Lote : {lote}/{referencia}, do item: {item} visual excluido com sucesso/ omie status: {status}', category='success')
@@ -1670,8 +1681,6 @@ def lotes_mov_op(op_referencia, item_estrutura):
                            peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov, id_mov = id_mov)
 
 @app.route('/lotes_prod/<op_referencia>/<item_estrutura>', methods = ['GET','POST'])
-
-
 def lotes_mov_op_prod(op_referencia, item_estrutura):
     if request.form.get("descricao_item") == None:
 
@@ -1782,9 +1791,8 @@ def deleta_lotes_mov_op():
     
     
     env_lote = Lote_visual.query.get(id_lote)
-    env_lote.quantidade = env_lote.quantidade + int(quant)
-    
-    
+    db.session.delete(env_lote)
+    #env_lote.quantidade = env_lote.quantidade + int(quant)
     db.session.commit()
        
 
@@ -2170,7 +2178,7 @@ def deletar_estoque_cobre():
         db.session.delete(item)
         db.session.commit()
         
-        Status_mov = Def_ajuste_estoque(item.item, item.quantidade,"SAI", "4084861665", item.referencia, "Visual", item.peso, "Cobre", 0)
+        Status_mov = Def_ajuste_estoque(item.item, item.quantidade,"SAI", "4084861665", item.referencia, "Visual", item.peso, "Cobre", 0,"Não")
         
 
 
@@ -2432,7 +2440,7 @@ def faturar_pedido():
     
     if faturado_omie == True:
         print("faturado Omie")
-        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não")
         
         id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
         
@@ -2447,7 +2455,7 @@ def faturar_pedido():
 
     else:
         print("Faturado Direto")
-        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0)
+        Status_mov = Def_ajuste_estoque(pedido.codigo, qtd_visual,"SAI", "4084861665", pedido.pedido, "Visual", pedido.peso, "Cobre", 0,"Não")
         
         id_lote = Lote_visual.query.filter_by(item = pedido.codigo, tipo = "Setor_Cobre").all()
         
@@ -2485,7 +2493,7 @@ def add_saldo_cobre():
 
 
     try:
-        Def_ajuste_estoque(codigo, quantidade,"ENT", "4084861665", referencia, "Setor_Cobre", quantidade, "Cobre", 0)
+        Def_ajuste_estoque(codigo, quantidade,"ENT", "4084861665", referencia, "Setor_Cobre", quantidade, "Cobre", 0,"Não")
 
 
 
@@ -2513,9 +2521,9 @@ def update_pedido():
         qtd_visual = int(qtd_visual)
         qtd_visual = qtd_visual * 1000
         if edit_item.peso == "" or edit_item.peso == None:
-            Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0)
+            Status_mov = Def_ajuste_estoque(edit_item.codigo, qtd_visual,"ENT", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso'], "Cobre", 0,"Não")
             print(Status_mov, qtd_visual)
-            Status_mov2 = Def_ajuste_estoque(data['data']['material'], data['data']['peso_material'],"SAI", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso_material'], "Cobre", 0)
+            Status_mov2 = Def_ajuste_estoque(data['data']['material'], data['data']['peso_material'],"SAI", "4084861665", edit_item.pedido, "Setor_Cobre", data['data']['peso_material'], "Cobre", 0,"Não")
             print(Status_mov2, data['data']['peso_material'])
         print(edit_item.peso)
 
@@ -3011,7 +3019,7 @@ def Def_cadastro_prod(item):
         tipo = cadastro.uso
         unidade = cadastro.unidade
         id_produto = cadastro.id_produto
-        valor_unitario = 0
+        valor_unitario = cadastro.valor_unitario
         descricao = cadastro.descricao
         cliente = cadastro.cliente
         codigo_cliente = cadastro.codigo_cliente
@@ -3019,6 +3027,8 @@ def Def_cadastro_prod(item):
         familia = cadastro.familia
         um_visual = cadastro.um_visual
         ncm = cadastro.ncm
+        setor = cadastro.setor
+
         
    if id_produto == None:
         id_produto = "-"
@@ -3033,8 +3043,8 @@ def Def_cadastro_prod(item):
    if liga == None:
         liga = "-"
    imagens = "-"
-           #id_produto=0, tipo=1, imagens=2, unidade=3, valor_unitario=4, descricao=5, item=6, cliente=7, codigo_cliente=8, liga=9, ncm=10, familia=11, um_visual=12  
-   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm, familia, um_visual]
+           #id_produto=0, tipo=1, imagens=2, unidade=3, valor_unitario=4, descricao=5, item=6, cliente=7, codigo_cliente=8, liga=9, ncm=10, familia=11, um_visual=12, setor=13  
+   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm, familia, um_visual, setor]
 
 
 def Def_cadastro_prod2(item):
@@ -3125,7 +3135,7 @@ def Def_consulta_estoque(id_produto, local):
    return saldoFisico   
 #===================definição de ajuste de estoque ==================#
 
-def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote):
+def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote, lote_peso):
         
 
         
@@ -3217,9 +3227,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
 
 
         quantidade = int(quan)
-        lote = Def_numero_lote(referencia)
         data_criacao = datahora("data")
-        numero_lote =  "".join([str(lote), "/", str(referencia) ])
         tempfino = Def_Caracter(id_produto)
         
         if tempfino[0] == None:
@@ -3232,50 +3240,56 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
 
         print("point 1")
         if tipomov == "ENT":
+            if lote_peso == "Não":
+                lote = Def_numero_lote(referencia)
+                numero_lote =  "".join([str(lote), "/", str(referencia) ])
             
+        
             
-            # Configuração do logging
-            logging.basicConfig(level=logging.INFO)
-            logger = logging.getLogger(__name__)
+                # Configuração do logging
+                logging.basicConfig(level=logging.INFO)
+                logger = logging.getLogger(__name__)
 
 
 
 
-            try:
-                novo_lote = Lote_visual(
-                referencia=referencia, 
-                tipo=tipo, 
-                item=item, 
-                lote_visual=lote, 
-                numero_lote=numero_lote, 
-                quantidade=quan, 
-                peso=peso, 
-                fino=fino, 
-                local=local, 
-                obs=obs, 
-                data_criacao=data_criacao, 
-                processado_op=0, 
-                quant_inicial=quan
-                )
-            
-                db.session.add(novo_lote)
-                db.session.commit()
+                try:
+                    novo_lote = Lote_visual(
+                    referencia=referencia, 
+                    tipo=tipo, 
+                    item=item, 
+                    lote_visual=lote, 
+                    numero_lote=numero_lote, 
+                    quantidade=quan, 
+                    peso=peso, 
+                    fino=fino, 
+                    local=local, 
+                    obs=obs, 
+                    data_criacao=data_criacao, 
+                    processado_op=0, 
+                    quant_inicial=quan
+                    )
                 
-                id_lote = novo_lote.id
-                if id_lote == None:
-                    id_lote = 0
-                quantidade = int(quan)
-                logger.info("Dados salvos com sucesso no Lote_visual.")
-                print("Dados salvos com sucesso no Lote_visual.")
-                return {"status": "success", "message": "Dados salvos com sucesso."}
-                
+                    db.session.add(novo_lote)
+                    db.session.commit()
+                    
+                    id_lote = novo_lote.id
+                    if id_lote == None:
+                        id_lote = 0
+                    quantidade = int(quan)
+                    logger.info("Dados salvos com sucesso no Lote_visual.")
+                    print("Dados salvos com sucesso no Lote_visual.")
+                    return {"status": "success", "message": "Dados salvos com sucesso."}
+                    
 
-            except Exception as e:
-                db.session.rollback()
-                logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
-                print("Erro ao salvar os dados no Lote_visual: %s", e)
-                return {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
-                
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
+                    print("Erro ao salvar os dados no Lote_visual: %s", e)
+                    return {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
+            else:
+                lote = 1    
+                numero_lote =  "".join([str(lote), "/", str(referencia) ])        
 
 
         

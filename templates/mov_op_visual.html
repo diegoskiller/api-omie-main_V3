@@ -294,6 +294,7 @@
                 <td>Peso Do Lote</td>
                 <td>OP Origem</td>
                 <td>Local</td>
+                <td>Operador</td>
                 <td colspan="2">Edições</td>
                 
                 
@@ -325,10 +326,10 @@
                     {%endif%}
                 </td>
                 <td>
-                <input class="form-control" type="number" placeholder="" value="" name="OP_Origem">
+                <input class="form-control" type="number" placeholder="" value=1 name="OP_Origem">
                 </td>
                 <td>
-                <select class="form-select" aria-label="Default select example" name="local_dest">
+                <select class="form-select" aria-label="Default select example" readonly="readonly" aria-disabled="true" name="local_dest">
                     <option selected disabled>Selecione o Setor destino</option>
                     {%if row.local == "2436985075"%}
                     {% else %}            
@@ -364,7 +365,18 @@
 
 
             </td>
-
+            <td>
+                <!-- <input class="form-control" type="text" placeholder="Operador" value="{{ref[5]}}" name="operador"> -->
+                
+              
+                    <select class="form-control" id="operador" readonly="readonly" aria-disabled="true" name="operador" value="{{ope_pd}}" required>
+                        {% for operad in operadores %}
+                        <option value="{{ operad.operador }}">{{ operad.operador }}</option>
+                        {% endfor %}
+                    </select>
+                         
+                </td>
+               
                 <td>
                     <div class = "input-group-append">
                 <div>

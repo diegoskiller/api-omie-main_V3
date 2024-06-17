@@ -50,12 +50,17 @@
                     {%for category, message in messages%}
                         <div class="alert alert-success">
                             {{message}}
-                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                            
                         </div>
                     {%endfor%}
                 {%endif%}
             {%endwith%}
         </div>
+
+
+      
+
+
 
         <div class="w-100 margin-top p-2">
             <table class="table table-hover table-info">
@@ -137,7 +142,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Importar</button>
+                    <button type="submit" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Importar</button>
                 </div>
             </form>
         </div>
@@ -153,7 +158,54 @@
         var modal = new bootstrap.Modal(document.getElementById('importExcelModal'));
         modal.show();
     });
+    document.getElementById("backBtn").addEventListener("click", function(){
+      history.back();
+    });
 </script>
+
+
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+    <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...
+    <div class="spinner-grow text-info" role="status">
+    <span class="visually-hidden">Loading...</span>
+    </div>
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body small">
+    <div id="pb1" class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+    </div>
+    </div>
+    </div>
+    <script>
+      let barra=document.getElementById("pb1");
+      let carga=0;
+      let intBarra=setInterval(()=>{
+          barra.style.width=carga+"%";
+          carga++;
+          if(carga>=100){
+              carga=0;
+          }
+      },80);
+
+
+      const toastTrigger = document.getElementById('liveToastBtn')
+        const toastLiveExample = document.getElementById('liveToast')
+
+if (toastTrigger) {
+  const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+  toastTrigger.addEventListener('click', () => {
+    toastBootstrap.show()
+  })
+}
+    </script> 
+
+
+
+
+
 
 {% endblock %}
 </html>

@@ -1,59 +1,104 @@
-
 {% block body %}
-
-<!-- Adcionar Item Modal -->
-
-<div class="modal fade" id="add_op_modal_visual"  role="dialog" data-bs-backdrop="static">
+<div class="modal fade" id="add_op_modal_visual" role="dialog" data-bs-backdrop="static">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Adcionar Ordem Produção Visual</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                </button>
+                <h5 class="modal-title">Adicionar Ordem Produção Visual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form action="insert_op_Visual" method="POST" class="submit">
-
                     <div class="form-group">
-                        <label for="recipient-name" class="col-form-label">Produto a ser Fabriado:</label>
-                        <input type="text" autocomplete ="off" name="item" class="form-control" required style="text-transform: uppercase;">
+                        <label for="item" class="col-form-label">Produto a ser Fabricado:</label>
+                        <input type="text" autocomplete="off" name="item" class="form-control" id="item" required style="text-transform: uppercase;">
                     </div>
 
                     <div class="form-group">
-                        <input type="hidden" name="descricao" class="form-control" value="{{itens.descricao}}">
+                        <input type="hidden" name="descricao" class="form-control" id="descricao" value="{{ itens.descricao }}">
                     </div>
 
                     <div class="form-group">
-                        <label for="recipient-name" class="col-form-label">Pedido de Vendas(Piv)</label>
-                        <input type="number"  autocomplete ="off" name="piv" class="form-control" required>
+                        <label for="piv" class="col-form-label">Pedido de Vendas (Piv):</label>
+                        <input type="number" autocomplete="off" name="piv" class="form-control" id="piv" required>
                     </div>
-                  
-                    <div class="form-group">
-                        <label for="recipient-name" class="col-form-label">Setor de Produção</label>
-                        <input type="text"  autocomplete ="off" name="setor" class="form-control" required>
-                    </div>
-                  
-                    <div class="form-group">
-                        <label for="recipient-name" class="col-form-label">Operador Responsável</label>
-                        <input type="text"  autocomplete ="off" name="operador" class="form-control" required>
-                    </div>
-                  
 
                     <div class="form-group">
-                        <label for="recipient-name" class="col-form-label">Quantidade</label>
-                        <input type="number"  autocomplete ="off" name="quantidade" class="form-control" required>
+                        <label for="setor" class="col-form-label">Setor de Produção:</label>
+                        <select name="setor" readonly="readonly" aria-disabled="true" id="setor" class="form-control" required>
+                            {% for setor in setores %}
+                            <option value="{{ setor['setor'] }}">{{ setor['setor'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="operador" class="col-form-label">Operador Responsável:</label>
+                        <select name="operador" readonly="readonly" aria-disabled="true" id="operador" class="form-control" required>
+                            <option value="">Selecione um setor primeiro</option>
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="quantidade" class="col-form-label">Quantidade:</label>
+                        <input type="number" autocomplete="off" name="quantidade" class="form-control" id="quantidade" required>
                     </div>
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" onclick="this.disabled=true;this.value='Submitting...'; this.form.submit();">Abrir Ordem de produção</button>
+                        <button type="submit" class="btn btn-primary">Abrir Ordem de produção</button>
                     </div>
                 </form>
-
+                
             </div>
-            
+
+
         </div>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    var setores = {{ setores | tojson }};
+    var operadores = {{ operadores | tojson }};
+    var cadastroItens = {{ cadastro_itens | tojson }};
+
+    document.getElementById('item').addEventListener('change', function() {
+        var itemValue = this.value.toUpperCase();
+        var setorDefault = "";
+
+        for (var i = 0; i < cadastroItens.length; i++) {
+            if (cadastroItens[i].item === itemValue) {
+                setorDefault = cadastroItens[i].setor;
+                break;
+            }
+        }
+
+        if (setorDefault !== "") {
+            document.getElementById('setor').value = setorDefault;
+            updateOperadores(setorDefault);
+        }
+    });
+
+    document.getElementById('setor').addEventListener('change', function() {
+        var setor = this.value;
+        updateOperadores(setor);
+    });
+
+    function updateOperadores(setor) {
+        var operadorSelect = document.getElementById('operador');
+        operadorSelect.innerHTML = "";
+
+        for (var i = 0; i < operadores.length; i++) {
+            if (operadores[i].setor === setor) {
+                var option = document.createElement("option");
+                option.value = operadores[i].operador;
+                option.text = operadores[i].operador;
+                operadorSelect.add(option);
+            }
+        }
+    }
+});
+</script>
 {% endblock %}

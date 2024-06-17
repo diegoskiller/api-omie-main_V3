@@ -56,10 +56,6 @@
     </table>
 
 
-
-
-
-
     <div class="container w-100">
 
         {% with messages=get_flashed_messages(with_categories=true) %}
@@ -107,6 +103,7 @@
                 <td>Quantidade</td>
                 <td>Peso</td>
                 <td>Peso Fino</td>
+                <td>Operador Responsável</td>
                 <td>Data</td>
                 <td>Edições</td>
                 
@@ -118,7 +115,8 @@
                 <td>{{ row.numero_lote}}</td>         
                 <td>{{ row.quantidade }}</td>                       
                 <td>{{ row.peso }}</td>
-                <td>{{ row.fino }}</td> 
+                <td>{{ row.fino }}</td>
+                <td>{{ row.operador }}</td>
                 <td>{{ row.data_mov }}</td>
                  
                 <td>
@@ -135,7 +133,7 @@
                             </form>
                          </div>
                         
-                         <div>
+                         <!-- <div>
                             <form action="/lotes_prod/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
                                         <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
                                         <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
@@ -143,7 +141,7 @@
                                         <button type="submit" class="btn btn-info btn-xs"><img
                                 src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
                             </form>
-                         </div>  
+                         </div>   -->
                         </div>
                     
                 </td>
