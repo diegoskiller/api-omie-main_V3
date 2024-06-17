@@ -232,8 +232,10 @@
                         <input type="hidden" name="lote_visual" value="{{row.lote_visual}}">
                         <input type="hidden" name="numero_lote" value="{{row.numero_lote}}">
                         <input type="hidden" name="fino" value="{{row.fino}}">
-                        <button  type="submit" class="editItem btn btn-info btn-xs "><img
-                    src="{{url_for('static', filename='images/box-arrow-up.svg')}}" alt="">
+                        <input type="hidden" name="operador" value="{{row.operador}}">
+                        <button  type="submit" class="editItem btn btn-info btn-xs " 
+                        data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">
+                        <img src="{{url_for('static', filename='images/box-arrow-up.svg')}}" alt="">
                     Lançar</button>
                     </form>
 
@@ -257,7 +259,7 @@
     
 
        
-          <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Toggle bottom offcanvas</button>
+          
           <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
           <div class="offcanvas-header">
           <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...

@@ -369,7 +369,7 @@
                 <!-- <input class="form-control" type="text" placeholder="Operador" value="{{ref[5]}}" name="operador"> -->
                 
               
-                    <select class="form-control" id="operador" readonly="readonly" aria-disabled="true" name="operador" value="{{ope_pd}}" required>
+                    <select class="form-control" id="operador" readonly="readonly" aria-disabled="true" name="operador" value="{{ ref[5] }}" required>
                         {% for operad in operadores %}
                         <option value="{{ operad.operador }}">{{ operad.operador }}</option>
                         {% endfor %}
@@ -388,6 +388,7 @@
                         <input type="hidden" name="local" value="{{row.local}}">
                         <input type="hidden" name="descricao" value="{{row.descricao_item}}">
                         <input type="hidden" name="referencia" value="{{row.op_referencia}}">
+                        <input type="hidden" name="operador_op" value="{{i.operador}}">
                         <button  type="submit" class="editItem btn btn-info btn-xs "  data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">
                             <!-- data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom" -->
                         <img src="{{url_for('static', filename='images/tras.svg')}}" alt="">

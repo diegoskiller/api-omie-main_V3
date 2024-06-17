@@ -1319,6 +1319,7 @@ def add_lote_mov_op():
     peso_parcial = request.form.get("peso_parcial")
     fino = request.form.get("fino")
     data_mov = datahora("data")
+    operador = datahora("operador")
     
     if qtd_parcial == None:
         qtd_parcial = 0
@@ -1342,7 +1343,7 @@ def add_lote_mov_op():
         
         add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = numero_lote, quantidade = qtd_parcial, peso = peso_parcial,
-                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote, operador = operador) 
 
         db.session.add(add_lote_mov_op)
         db.session.commit()
@@ -1488,6 +1489,8 @@ def add_lote_mov_op_prod():
 
         op_dados = Ops_visual.query.filter_by(numero_op_visual = referencia).all()
         for dados_op in op_dados:
+            if operador == None:
+                operador = dados_op.operador
             id_op = dados_op.id
         ajuste_op = Ops_visual.query.get(id_op)
         if tipo == "Enviar Insumo" or tipo == "Enviar Retalho" or tipo == "Enviar Retalho" or tipo == "Enviar item Substituto":
