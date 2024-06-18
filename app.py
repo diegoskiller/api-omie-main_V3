@@ -1433,6 +1433,11 @@ def add_lote_mov_op_prod():
     data_mov = datahora("data")
     OP_Origem = request.form.get("OP_Origem")
     operador = request.form.get("operador")
+    op_dados = Ops_visual.query.filter_by(numero_op_visual = referencia).all()
+    for dados_op in op_dados:
+        if operador == None:
+            operador = dados_op.operador
+        id_op = dados_op.id
     um_visual = Def_cadastro_prod(item)[12]
     if um_visual == "GR":
         qtd_parcial = peso_parcial
@@ -1468,6 +1473,7 @@ def add_lote_mov_op_prod():
         #novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
         #db.session.add(novo_lote)
         #db.session.commit()
+
         id_lote = 0
         add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = lote_visual, quantidade = qtd_parcial, peso = peso_parcial,
@@ -3155,180 +3161,170 @@ def Def_consulta_estoque(id_produto, local):
 #===================definição de ajuste de estoque ==================#
 
 def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote, lote_peso, operador):
-        
-
-        
-        #tipomov = "ENT"
-        #tipo = Visual / Temporario   = Normal / Adiantado ou Setor_Cobre
-
-        item = item
-        estoque_movs = Config_Visual.query.get('Atualizar_omie')
-        status_mov = estoque_movs.info
-        cadastro = Def_cadastro_prod(item)
-        
-        tipo_produto = cadastro[1]
-        if tipo_produto == None:
-            tipo_produto = "-"
-                    
-        unidade = cadastro[3]
-        if unidade == None:
-            unidade = "-"
-
-        id_produto = cadastro[0]
-        if id_produto == None:
-            id_produto = 0
-        
-        if tipomov == "SAI":
-            tipom = "Saida"
-            mot = "OPS"
-            
-        else:
-            tipom = "Entrada"
-            mot = "OPE"
-
-        convert = Def_Convert_Unidade(tipom, unidade)
-        
-        valor_unitario = cadastro[4]
-        print(quan)
-        quan_omie = int(quan) * convert[1]
-        
-        if valor_unitario == None:
-            valor_unitario = 0.0001
-        else:
-            valor_unitario * quan_omie
-
-        if valor_unitario == 0:
-            valor_unitario = 0.0001 
-        
-        
-        
-        if tipo_produto == "Produtivo":
-            if status_mov == "Omie":
-                data2 = {
-                        "call":"IncluirAjusteEstoque",
-                        "app_key": app_key,
-                        "app_secret": app_secret,
-                        "param":[{
-                                    "codigo_local_estoque": local,
-                                    "id_prod": id_produto,
-                                    "data": datahora("data"),
-                                    "quan": quan_omie,
-                                    "obs": "Ajuste feito pelo Sistema Visual",
-                                    "origem": "AJU",
-                                    "tipo": tipomov,
-                                    "motivo": mot,
-                                    "valor": valor_unitario
-                                }
-                        ]}
-                response = requests.post(url=url_ajuste_estoque, json=data2)
-                ajuste = response.json()
-
-                status = ajuste.get('codigo_status')
-                id_movest = ajuste.get('id_movest')
-                id_ajuste = ajuste.get('id_ajuste')
-            else:
-                status = "Estoque Desabilitado"
-                id_movest = 0
-                id_ajuste = 0  
-        else:
-            status = "Não Produtivo"
-            id_movest = 0
-            id_ajuste = 0 
-        
-        if status == None:
-            status = "erro"
-            id_movest = 0
-            id_ajuste = 0 
-        elif status == "0":
-            status = "ok"
-            id_movest = 0
-            id_ajuste = 0 
-
-
-        quantidade = int(quan)
-        data_criacao = datahora("data")
-        tempfino = Def_Caracter(id_produto)
-        
-        if tempfino[0] == None:
-                fino = 0
-                quantidade = int(quan)
-                print("point 2")
-        else:
-            fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
-            fino = int(fino)
-
-        print("point 1")
-        if tipomov == "ENT":
-            if lote_peso == "Não":
-                lote = Def_numero_lote(referencia)
-                numero_lote =  "".join([str(lote), "/", str(referencia) ])
-            
-        
-            
-                # Configuração do logging
-                logging.basicConfig(level=logging.INFO)
-                logger = logging.getLogger(__name__)
-
-
-
-
-                try:
-                    novo_lote = Lote_visual(
-                    referencia=referencia, 
-                    tipo=tipo, 
-                    item=item, 
-                    lote_visual=lote, 
-                    numero_lote=numero_lote, 
-                    quantidade=quan, 
-                    peso=peso, 
-                    fino=fino, 
-                    local=local, 
-                    obs=obs, 
-                    data_criacao=data_criacao, 
-                    processado_op=0, 
-                    quant_inicial=quan,
-                    operador=operador
-                    )
-                
-                    db.session.add(novo_lote)
-                    db.session.commit()
-                    
-                    id_lote = novo_lote.id
-                    if id_lote == None:
-                        id_lote = 0
-                    quantidade = int(quan)
-                    logger.info("Dados salvos com sucesso no Lote_visual.")
-                    print("Dados salvos com sucesso no Lote_visual.")
-                    return {"status": "success", "message": "Dados salvos com sucesso."}
-                    
-
-                except Exception as e:
-                    db.session.rollback()
-                    logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
-                    print("Erro ao salvar os dados no Lote_visual: %s", e)
-                    return {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
-            else:
-                lote = 1    
-                numero_lote =  "".join([str(lote), "/", str(referencia) ])        
-
-
-        
-
-
-
-
-
-
-
-                
     
+    #tipomov = "ENT"
+    #tipo = Visual / Temporario   = Normal / Adiantado ou Setor_Cobre
+
+    item = item
+    estoque_movs = Config_Visual.query.get('Atualizar_omie')
+    status_mov = estoque_movs.info
+    cadastro = Def_cadastro_prod(item)
+    
+    tipo_produto = cadastro[1]
+    if tipo_produto == None:
+        tipo_produto = "-"
+                
+    unidade = cadastro[3]
+    if unidade == None:
+        unidade = "-"
+
+    id_produto = cadastro[0]
+    if id_produto == None:
+        id_produto = 0
+    
+    if tipomov == "SAI":
+        tipom = "Saida"
+        mot = "OPS"
+        
+    else:
+        tipom = "Entrada"
+        mot = "OPE"
+
+    convert = Def_Convert_Unidade(tipom, unidade)
+    
+    valor_unitario = cadastro[4]
+    print(quan)
+    quan_omie = int(quan) * convert[1]
+    
+    if valor_unitario == None:
+        valor_unitario = 0.0001
+    else:
+        valor_unitario * quan_omie
+
+    if valor_unitario == 0:
+        valor_unitario = 0.0001 
+    
+    
+    
+    if tipo_produto == "Produtivo":
+        if status_mov == "Omie":
+            data2 = {
+                    "call":"IncluirAjusteEstoque",
+                    "app_key": app_key,
+                    "app_secret": app_secret,
+                    "param":[{
+                                "codigo_local_estoque": local,
+                                "id_prod": id_produto,
+                                "data": datahora("data"),
+                                "quan": quan_omie,
+                                "obs": "Ajuste feito pelo Sistema Visual",
+                                "origem": "AJU",
+                                "tipo": tipomov,
+                                "motivo": mot,
+                                "valor": valor_unitario
+                            }
+                    ]}
+            response = requests.post(url=url_ajuste_estoque, json=data2)
+            ajuste = response.json()
+
+            status = ajuste.get('codigo_status')
+            id_movest = ajuste.get('id_movest')
+            id_ajuste = ajuste.get('id_ajuste')
         else:
-            quantidade = neg(quan)
+            status = "Estoque Desabilitado"
+            id_movest = 0
+            id_ajuste = 0  
+    else:
+        status = "Não Produtivo"
+        id_movest = 0
+        id_ajuste = 0 
+    
+    if status == None:
+        status = "erro"
+        id_movest = 0
+        id_ajuste = 0 
+    elif status == "0":
+        status = "ok"
+        id_movest = 0
+        id_ajuste = 0 
+
+
+    quantidade = int(quan)
+    data_criacao = datahora("data")
+    tempfino = Def_Caracter(id_produto)
+    
+    if tempfino[0] == None:
+            fino = 0
+            quantidade = int(quan)
+            print("point 2")
+    else:
+        fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
+        fino = int(fino)
+
+    print("point 1")
+    if tipomov == "ENT":
+        if lote_peso == "Não":
             lote = Def_numero_lote(referencia)
             numero_lote =  "".join([str(lote), "/", str(referencia) ])
+        
+    
+        
+            # Configuração do logging
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
 
-        Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
-        return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote, id_lote]
+
+
+
+            try:
+                novo_lote = Lote_visual(
+                referencia=referencia, 
+                tipo=tipo, 
+                item=item, 
+                lote_visual=lote, 
+                numero_lote=numero_lote, 
+                quantidade=quan, 
+                peso=peso, 
+                fino=fino, 
+                local=local, 
+                obs=obs, 
+                data_criacao=data_criacao, 
+                processado_op=0, 
+                quant_inicial=quan,
+                operador=operador
+                )
+            
+                db.session.add(novo_lote)
+                db.session.commit()
+                
+                id_lote = novo_lote.id
+                if id_lote == None:
+                    id_lote = 0
+                quantidade = int(quan)
+                logger.info("Dados salvos com sucesso no Lote_visual.")
+                print("Dados salvos com sucesso no Lote_visual.")
+                return {"status": "success", "message": "Dados salvos com sucesso."}
+                
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
+                print("Erro ao salvar os dados no Lote_visual: %s", e)
+                return {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
+        else:
+            lote = 1    
+            numero_lote =  "".join([str(lote), "/", str(referencia) ])        
+
+
+    else:
+        quantidade = neg(quan)
+        lote = Def_numero_lote(referencia)
+        numero_lote =  "".join([str(lote), "/", str(referencia) ])
+
+    Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
+
+    return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote, id_lote]
+
 
 #===================definição de transferencia de estoque ==================#
 
@@ -3790,11 +3786,7 @@ def status_upload(num_linhas):
 @app.route('/processar')
 def processar():
     Def_salva_dados_excel()
-    return redirect(url_for('upload_excel'))
-
-
-
-
+ 
 # abaixo a logica para salvar no banco de dados
 
 
