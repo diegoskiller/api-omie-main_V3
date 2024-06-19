@@ -1441,6 +1441,13 @@ def add_lote_mov_op_prod():
     um_visual = Def_cadastro_prod(item)[12]
     if um_visual == "GR":
         qtd_parcial = peso_parcial
+        if Def_locais(local) == "Estoque":
+            lote_peso ="Sim"
+        else:
+            lote_peso = "Não"    
+    else:
+        lote_peso = "Não"
+
     id_prod = Def_id_produto(item)
     fino_uni = Def_Caracter(id_prod)[0]
 
@@ -1467,7 +1474,7 @@ def add_lote_mov_op_prod():
     
     if x > 0:
         
-        status_ajustes = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 1,"Não", operador)
+        status_ajustes = Def_ajuste_estoque(item, qtd_parcial,"ENT", local, referencia, tipo, peso_parcial, "-", 1, lote_peso, operador)
         print("id_lote do add")
         print(status_ajustes) 
         id_lote = status_ajustes[7]
@@ -1618,9 +1625,9 @@ def adicionar_lote_geral():
             
             operador = "Kels"
             obs = request.form.get("obs")
-            um_omie = Def_unidade(item)[1]
-            id_lote = 0 
-            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, id_lote,"Não", operador)
+            if obs == None or obs == "":
+                obs = "-"
+            status_omie = Def_ajuste_estoque(item, quantidade,"ENT", local, referencia, tipo, peso, obs, 0,"Não", operador)
             
            # flash (f'Lote: {status_omie[6]} Lançado para o item: {item} = {status_omie[2]}, Quantidade Omie = {status_omie[5]} {um_omie}', category='success')
     else:
@@ -2533,7 +2540,7 @@ def add_saldo_cobre():
     codigo = data.get('codigo')
     quantidade = data.get('quantidade')
     referencia = data.get('referencia')
-    Operador = "Valdemir"
+    operador = "Valdemir"
     #date = datahora("data") 
 
 
@@ -3333,9 +3340,75 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                 print("Erro ao salvar os dados no Lote_visual: %s", e)
                 returnt = {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
                 print(returnt)
-        else:
+        elif lote_peso == "Sim":
             lote = 1    
-            numero_lote =  "".join([str(lote), "/", str(referencia) ])        
+            numero_lote =  "".join([str(lote), "/", str(referencia) ])
+            
+            # Configuração do logging
+            logging.basicConfig(level=logging.INFO)
+            logger = logging.getLogger(__name__)
+
+
+
+
+            try:
+                
+                 lote_visual = Lote_visual.query.filter_by(item=item, lote_visual=lote, referencia = referencia).first()
+                 if lote_visual:
+
+                    lote_visual.quantidade = lote_visual.quantidade + quan
+                    lote_visual.peso = lote_visual.peso + peso
+                    lote_visual.fino = lote_visual.fino + fino
+                     
+                    db.session.commit()
+                 else:
+                     novo_lote = Lote_visual(
+                     referencia=referencia, 
+                     tipo=tipo, 
+                     item=item, 
+                     lote_visual=lote, 
+                     numero_lote=numero_lote, 
+                     quantidade=quan, 
+                     peso=peso, 
+                     fino=fino, 
+                     local=local, 
+                     obs=obs, 
+                     data_criacao=data_criacao, 
+                     processado_op=0, 
+                     quant_inicial=quan,
+                     operador=operador
+                     )
+                
+                     db.session.add(novo_lote)
+                     db.session.commit()
+                    
+                     id_lote = novo_lote.id
+                     if id_lote == None:
+                        id_lote = 0
+                     quantidade = int(quan)
+                     logger.info("Dados salvos com sucesso no Lote_visual.")
+                     print("Dados salvos com sucesso no Lote_visual.")
+                     #return {"status": "success", "message": "Dados salvos com sucesso."}
+                    
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error("Erro ao salvar os dados no Lote_visual: %s", e)
+                print("Erro ao salvar os dados no Lote_visual: %s", e)
+                returnt = {"status": "error", "message": "Erro ao salvar os dados.", "details": str(e)}
+                print(returnt)
+        else:
+                
+                lote_visual = Lote_visual.query.filter_by(item=item, lote_visual=lote, referencia = referencia).first()
+                if lote_visual:
+                    lote_visual.quantidade = lote_visual.quantidade - quan
+                    lote_visual.peso = lote_visual.peso - peso
+                    lote_visual.fino = lote_visual.fino - fino
+                     
+                    db.session.commit()
+ 
+
+
 
 
     else:
