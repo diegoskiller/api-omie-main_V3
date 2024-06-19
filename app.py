@@ -1815,6 +1815,7 @@ def deleta_lotes_mov_op():
     qtd_parcial = request.form.get("quantidade")
     peso_parcial = request.form.get("peso")
     fino_parcial = request.form.get("fino")
+    item = request.form.get("item")
 
     db.session.delete(lotes_mov_op)
     db.session.commit()
@@ -1827,7 +1828,10 @@ def deleta_lotes_mov_op():
        
 
 
-    ajust_mov = Estrutura_op.query.get(id)
+    ajust_mov_temp = Estrutura_op.query.filter_by(op_referencia = referencia, item_estrutura = item).all()
+    for estru in ajust_mov_temp:
+        id_estru = estru.id
+    ajust_mov = Estrutura_op.query.get(id_estru)
 
     ajust_mov.quantidade_real = int(ajust_mov.quantidade_real) - int(qtd_parcial)
     ajust_mov.peso = int(ajust_mov.peso) - int(peso_parcial)
