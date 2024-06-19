@@ -21,6 +21,8 @@ from sqlalchemy.sql import func
 from io import BytesIO
 import xlsxwriter
 from tqdm import tqdm
+import subprocess
+
 
 
 #============variaveis gerais=============# 
@@ -1023,7 +1025,7 @@ def estoque():
     consulta = Lote_visual.query.filter_by(item = item).all()
     
     # consulta = Lote_visual.query.get(item).all()
-    unidade = Def_unidade(item)[0]
+    unidade = Def_cadastro_prod(item)[12]
     
     setor_all = 0
     peso_all = 0
