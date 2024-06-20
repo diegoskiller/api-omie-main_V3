@@ -3100,7 +3100,7 @@ def modify_sql_content(sql_content):
 
 def format_value(value):
     if isinstance(value, str):
-        return f"'{value.replace(';', ' ').replace("'", " ")}'"
+        return f"{value.replace(';', ' ').replace("'", " ")}"
     elif value is None:
         return 'NULL'
     elif isinstance(value, float):
@@ -3110,7 +3110,7 @@ def format_value(value):
 @app.route('/backup_banco', methods=['GET'])
 def backup_banco():
     try:
-        db_url = app.config['URL_MYSQL']
+        db_url = os.getenv('URL_MYSQL')
         url = make_url(db_url)
         db_name = url.database
         user = url.username
