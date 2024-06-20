@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Lotes de Ops</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Admin Lotes de Ops</h2>
+        <div>
+            <a href="{{ url_for('index_uploads') }}" class="btn btn-success">Voltar</a>
+            <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">Importar Lotes</button>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('admin_lotes_ops') }}" class="input-group mb-3">
+        <input type="search" class="form-control" placeholder="Pesquisar Referência" name="filtro_ref" aria-label="Pesquisar por Referência">
+        <div class="input-group-append">
+            <button class="btn btn-info" type="submit">Buscar</button>
+        </div>
+    </form>
+
+    <table class="table table-hover table-success">
+        <thead>
+            <tr class="table-primary">
+                <th>Referência</th>
+                <th>Tipo</th>
+                <th>Item</th>
+                <th>Lote</th>
+                <th>Quantidade</th>
+                <th>Peso</th>
+                <th>Fino</th>
+                <th>Data Mov</th>
+                <th>Operador</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in lotes %}
+                <tr>
+                    <td>{{ row.referencia }}</td>
+                    <td>{{ row.tipo }}</td>
+                    <td>{{ row.item }}</td>
+                    <td>{{ row.lote_visual }}</td>
+                    <td>{{ row.quantidade }}</td>
+                    <td>{{ row.peso }}</td>
+                    <td>{{ row.fino }}</td>
+                    <td>{{ row.data_mov }}</td>
+                    <td>{{ row.operador }}</td>
+                    <td><div class="input-group-append">
+                        <button class="btn btn-primary btn-sm" onclick="editLote('{{ row.id }}')">Alterar</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ row.id }}')">Deletar</button>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% for page_num in lotes_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
+        {% if page_num %} 
+            {% if lotes_page.page == page_num %}
+                <a class="btn btn-dark mb-4" href="{{ url_for('admin_lotes_ops', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-dark mb-4" href="{{ url_for('admin_lotes_ops', page=page_num) }}">{{ page_num }}</a>
+            {% endif %} 
+        {% else %} 
+            ... 
+        {% endif %} 
+    {% endfor %}
+
+    <!-- Modal Importar Lotes -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Importar Lotes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="importForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Arquivo Excel</label>
+                            <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx, .xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Importar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Exclusão -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir este lote?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Deletar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var loteIdToDelete;
+
+        function confirmDelete(loteId) {
+            loteIdToDelete = loteId;
+            var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            confirmDeleteModal.show();
+        }
+
+        document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+            fetch("/deletar_lote", {
+                method: "POST",
+                body: JSON.stringify({ id: loteIdToDelete }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Lote excluído com sucesso!");
+                    location.reload();
+                } else {
+                    alert("Erro ao excluir lote: " + data.message);
+                }
+            }).catch(error => {
+                console.error("Erro:", error);
+                alert("Erro ao excluir lote.");
+            });
+        });
+
+        document.getElementById("importForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/importar_lotes", true);
+
+            xhr.upload.addEventListener("progress", function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 100;
+                    console.log(percentComplete + '% uploaded');
+                }
+            });
+
+            xhr.addEventListener("load", function() {
+                if (xhr.status == 200) {
+                    alert("Importação concluída com sucesso!");
+                    location.reload();
+                } else {
+                    alert("Erro ao importar dados: " + xhr.responseText);
+                }
+            });
+
+            xhr.send(formData);
+        });
+
+        document.getElementById('exportExcel').addEventListener('click', function() {
+            window.location.href = "{{ url_for('exportar_lotes_excel') }}";
+        });
+
+        function editLote(loteId) {
+            // Função para abrir o modal de edição de lote com os dados carregados
+            // Você pode adicionar a lógica aqui conforme necessário
+        }
+    </script>
+</div>
+</body>
+</html>

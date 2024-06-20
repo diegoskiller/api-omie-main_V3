@@ -367,7 +367,7 @@ class Validacao(db.Model):
     __tablename__='validacao'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    usuario = db.Column(db.String(250), unique=True)
+    usuario = db.Column(db.String(100), unique=True)
     telas = db.Column(db.String(250))
     validacao_1 = db.Column(db.String(250))
     validacao_2 = db.Column(db.String(250))

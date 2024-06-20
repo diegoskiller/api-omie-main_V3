@@ -1,0 +1,232 @@
+
+
+
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Ordem de Produção {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important;
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
+        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar do Excel</button>
+
+        <h2 class="d-flex justify-content-center mt-2"><strong>Ordem de Produção</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('ordem_producao')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar Código de Produto" name="filtro_cod" aria-label="Pesquisar por Código" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar Código</button>
+                </div>
+            </form>
+            <form method="POST" action="{{url_for('ordem_producao')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar Descrição" name="filtro_desc" aria-label="Pesquisar por Descrição" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-success ms-1" type="submit">Buscar por Descrição</button>
+                </div>
+            </form>
+        </div>
+        <div class="input-group d-flex justify-content-end w-100">
+        <form method="POST" action="{{url_for('ordem_producao')}}" class="input-group w-50 input-group d-flex justify-content-end ms-4"> 
+            
+            <input class="form-check-input" type="hidden" value="1" id="filtro_encerrada" name="filtro_encerrada">
+            <button class="btn btn-dark ms-1" type="submit">Não Mostrar OPs Encerradas</button> 
+            </div>
+        </form>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-success">
+                            {{ message }}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Numero OP Visual</th>
+                    <th>PIV</th>
+                    <th>Situação</th>
+                    <th>Item</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Peso Enviado</th>
+                    <th>Peso Retornado</th>
+                    <th>Fino Enviado</th>
+                    <th>Fino Retornado</th>
+                    <th>Data Abertura</th>
+                    <th>Hora Abertura</th>
+                    <th>Setor</th>
+                    <th>Operador</th>
+                    <th>Quantidade Real</th>
+                    <th>Ações</th>
+                </tr>
+
+                {% for row in ops_visual %}
+                    <tr class='{{"table-dark" if row.situação == "Encerrada" else ""}}'>                      
+                        <td>{{ row.numero_op_visual }}</td>
+                        <td>{{ row.piv }}</td>
+                        <td>{{ row.situação }}</td>
+                        <td>{{ row.item }}</td>
+                        <td>{{ row.descrição }}</td>
+                        <td>{{ row.quantidade }}</td>
+                        <td>{{ row.peso_enviado }}</td>
+                        <td>{{ row.peso_retornado }}</td>
+                        <td>{{ row.fino_enviado }}</td>
+                        <td>{{ row.fino_retornado }}</td>
+                        <td>{{ row.data_abertura }}</td>
+                        <td>{{ row.hora_abertura }}</td>
+                        <td>{{ row.setor }}</td>
+                        <td>{{ row.operador }}</td>
+                        <td>{{ row.quantidade_real }}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editOP('{{ row.id }}')">Alterar</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ row.id }}')">Excluir</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in ops_visual_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
+        {% if page_num %} 
+            {% if ops_visual_page.page == page_num %}
+                <a class="btn btn-dark mb-4" href="{{ url_for('ordem_producao', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-dark mb-4" href="{{ url_for('ordem_producao', page=page_num) }}">{{ page_num }}</a>
+            {% endif %} 
+        {% else %} 
+            ... 
+        {% endif %} 
+    {% endfor %}
+</div>
+
+<!-- Modal Importar do Excel -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Importar do Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Arquivo Excel</label>
+                        <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx, .xls" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir este item?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var itemIdToDelete;
+
+    function confirmDelete(itemId) {
+        itemIdToDelete = itemId;
+        var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        confirmDeleteModal.show();
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+        fetch("/deletar_ordem_producao", {
+            method: "POST",
+            body: JSON.stringify({ id: itemIdToDelete }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Ordem de Produção excluída com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao excluir ordem de produção: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao excluir ordem de produção.");
+        });
+    });
+
+    document.getElementById('exportExcel').addEventListener('click', function() {
+        window.location.href = "{{ url_for('exportar_ordem_producao_excel') }}";
+    });
+
+    document.getElementById('importForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/importar_ordem_producao", true);
+
+        xhr.upload.addEventListener("progress", function(event) {
+            if (event.lengthComputable) {
+                var percentComplete = (event.loaded / event.total) * 100;
+                console.log(percentComplete + '% uploaded');
+            }
+        });
+
+        xhr.addEventListener("load", function() {
+            if (xhr.status == 200) {
+                alert("Importação concluída com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao importar dados: " + xhr.responseText);
+            }
+        });
+
+        xhr.send(formData);
+    });
+</script>
+
+{% endblock %}

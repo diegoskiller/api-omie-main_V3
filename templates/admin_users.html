@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Users</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Admin Users</h2>
+        <div>
+            <a href="{{ url_for('index_uploads') }}" class="btn btn-success">Voltar</a>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addUserModal">Adicionar Usuário</button>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_users') }}" class="input-group mb-3">
+        <input type="search" class="form-control" placeholder="Pesquisar Usuário" name="filtro_user" aria-label="Pesquisar por Usuário">
+        <div class="input-group-append">
+            <button class="btn btn-info" type="submit">Buscar</button>
+        </div>
+    </form>
+
+    <table class="table table-hover table-info">
+        <thead>
+            <tr class="table-primary">
+                <th>ID</th>
+                <th>Email</th>
+                <th>Nome</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editUser('{{ user.id }}')">Alterar</button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ user.id }}')">Deletar</button>
+                        <button class="btn btn-warning btn-sm" onclick="editValidacao('{{ user.id }}')">Validação</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% for page_num in users_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
+        {% if page_num %} 
+            {% if users_page.page == page_num %}
+                <a class="btn btn-dark mb-4" href="{{ url_for('admin_users', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-dark mb-4" href="{{ url_for('admin_users', page=page_num) }}">{{ page_num }}</a>
+            {% endif %} 
+        {% else %} 
+            ... 
+        {% endif %} 
+    {% endfor %}
+
+    <!-- Modal Adicionar Usuário -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Adicionar Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="mb-3">
+                            <label for="addEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="addEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addName" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="addName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addPassword" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="addPassword" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Exclusão -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir este usuário?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Deletar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Validação -->
+    <div class="modal fade" id="editValidacaoModal" tabindex="-1" aria-labelledby="editValidacaoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editValidacaoModalLabel">Editar Validação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editValidacaoForm">
+                        <input type="hidden" id="editValidacaoId" name="id">
+                        <div class="mb-3">
+                            <label for="editUsuario" class="form-label">Usuário</label>
+                            <input type="text" class="form-control" id="editUsuario" name="usuario" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTelas" class="form-label">Telas</label>
+                            <input type="text" class="form-control" id="editTelas" name="telas">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao1" class="form-label">Validação 1</label>
+                            <input type="text" class="form-control" id="editValidacao1" name="validacao_1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao2" class="form-label">Validação 2</label>
+                            <input type="text" class="form-control" id="editValidacao2" name="validacao_2">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao3" class="form-label">Validação 3</label>
+                            <input type="text" class="form-control" id="editValidacao3" name="validacao_3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao4" class="form-label">Validação 4</label>
+                            <input type="text" class="form-control" id="editValidacao4" name="validacao_4">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao5" class="form-label">Validação 5</label>
+                            <input type="text" class="form-control" id="editValidacao5" name="validacao_5">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao6" class="form-label">Validação 6</label>
+                            <input type="text" class="form-control" id="editValidacao6" name="validacao_6">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao7" class="form-label">Validação 7</label>
+                            <input type="text" class="form-control" id="editValidacao7" name="validacao_7">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao8" class="form-label">Validação 8</label>
+                            <input type="text" class="form-control" id="editValidacao8" name="validacao_8">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao9" class="form-label">Validação 9</label>
+                            <input type="text" class="form-control" id="editValidacao9" name="validacao_9">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidacao10" class="form-label">Validação 10</label>
+                            <input type="text" class="form-control" id="editValidacao10" name="validacao_10">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+  function editUser(userId) {
+    // Implementar função para editar usuário
+}
+
+function confirmDelete(userId) {
+    $('#confirmDeleteModal').modal('show');
+    $('#confirmDeleteBtn').attr('onclick', `deleteUser(${userId})`);
+}
+
+function deleteUser(userId) {
+    $.ajax({
+        url: `/delete_user/${userId}`,
+        type: 'POST',
+        success: function (response) {
+            window.location.reload();
+        },
+        error: function (response) {
+            alert('Erro ao excluir usuário.');
+        }
+    });
+}
+
+function editValidacao(userId) {
+    $.ajax({
+        url: `/get_validacao/${userId}`,
+        type: 'GET',
+        success: function (response) {
+            $('#editValidacaoId').val(response.id);
+            $('#editUsuario').val(userId);
+            $('#editTelas').val(response.telas);
+            $('#editValidacao1').val(response.validacao_1);
+            $('#editValidacao2').val(response.validacao_2);
+            $('#editValidacao3').val(response.validacao_3);
+            $('#editValidacao4').val(response.validacao_4);
+            $('#editValidacao5').val(response.validacao_5);
+            $('#editValidacao6').val(response.validacao_6);
+            $('#editValidacao7').val(response.validacao_7);
+            $('#editValidacao8').val(response.validacao_8);
+            $('#editValidacao9').val(response.validacao_9);
+            $('#editValidacao10').val(response.validacao_10);
+            $('#editValidacaoModal').modal('show');
+        },
+        error: function (response) {
+            alert('Erro ao carregar validação.');
+        }
+    });
+}
+
+$('#addUserForm').on('submit', function (e) {
+    e.preventDefault();
+    $.ajax({
+        url: '/add_user',
+        type: 'POST',
+        data: $(this).serialize(),
+        success: function (response) {
+            window.location.reload();
+        },
+        error: function (response) {
+            alert('Erro ao adicionar usuário.');
+        }
+    });
+});
+
+$('#editValidacaoForm').on('submit', function (e) {
+    e.preventDefault();
+    $.ajax({
+        url: '/edit_validacao',
+        type: 'POST',
+        data: $(this).serialize(),
+        success: function (response) {
+            window.location.reload();
+        },
+        error: function (response) {
+            alert('Erro ao salvar validação.');
+        }
+    });
+});
+
+</script>
+</body>
+</html>

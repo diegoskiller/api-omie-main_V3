@@ -1,0 +1,372 @@
+
+
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Admin Estruturas de Ops {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important;
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addEstruturaModal">Adicionar Estrutura</button>
+        <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
+        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar Estruturas</button>
+
+        <h2 class="d-flex justify-content-center mt-2"><strong>Admin Estruturas de Ops</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('admin_estrutura_ops')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control  w-50" placeholder="Pesquisar OP Referência" name="filtro_op_ref" aria-label="Pesquisar por OP Referência" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar OP</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+                {%if messages%}
+                    {%for category, message in messages%}
+                        <div class="alert alert-success">
+                            {{message}}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {%endfor%}
+                {%endif%}
+            {%endwith%}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>OP Referência</th>
+                    <th>Tipo Mov.</th>
+                    <th>Item Estrutura</th>
+                    <th>Descrição Item</th>
+                    <th>Quantidade Item</th>
+                    <th>Quantidade Real</th>
+                    <th>Peso</th>
+                    <th>Fino</th>
+                    <th>Ações</th>
+                </tr>
+
+                {% for row in estruturas %}
+                    <tr>                      
+                        <td>{{row.op_referencia}}</td>
+                        <td>{{row.tipo_mov}}</td>
+                        <td>{{row.item_estrutura}}</td>
+                        <td>{{row.descricao_item}}</td>
+                        <td>{{row.quantidade_item}}</td>
+                        <td>{{row.quantidade_real}}</td>
+                        <td>{{row.peso}}</td>
+                        <td>{{row.fino}}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editEstrutura('{{row.id}}')">Alterar</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{row.id}}')">Excluir</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% for page_num in estrutura_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
+        {% if page_num %} 
+            {% if estrutura_page.page == page_num %}
+                <a class="btn btn-dark mb-4" href="{{ url_for('admin_estrutura_ops', page=page_num) }}">{{ page_num }}</a>
+            {% else %}
+                <a class="btn btn-outline-dark mb-4" href="{{ url_for('admin_estrutura_ops', page=page_num) }}">{{ page_num }}</a>
+            {% endif %} 
+        {% else %} 
+            ... 
+        {% endif %} 
+    {% endfor %}
+</div>
+
+<!-- Modal Adicionar Estrutura -->
+<div class="modal fade" id="addEstruturaModal" tabindex="-1" aria-labelledby="addEstruturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEstruturaModalLabel">Adicionar Estrutura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEstruturaForm">
+                    <div class="mb-3">
+                        <label for="op_referencia" class="form-label">OP Referência</label>
+                        <input type="number" class="form-control" id="op_referencia" name="op_referencia" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tipo_mov" class="form-label">Tipo Mov.</label>
+                        <input type="text" class="form-control" id="tipo_mov" name="tipo_mov" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="item_estrutura" class="form-label">Item Estrutura</label>
+                        <input type="text" class="form-control" id="item_estrutura" name="item_estrutura" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao_item" class="form-label">Descrição Item</label>
+                        <input type="text" class="form-control" id="descricao_item" name="descricao_item" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantidade_item" class="form-label">Quantidade Item</label>
+                        <input type="number" class="form-control" id="quantidade_item" name="quantidade_item" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantidade_real" class="form-label">Quantidade Real</label>
+                        <input type="number" class="form-control" id="quantidade_real" name="quantidade_real" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="peso" class="form-label">Peso</label>
+                        <input type="number" step="0.001" class="form-control" id="peso" name="peso" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fino" class="form-label">Fino</label>
+                        <input type="number" step="0.001" class="form-control" id="fino" name="fino" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Estrutura -->
+<div class="modal fade" id="editEstruturaModal" tabindex="-1" aria-labelledby="editEstruturaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editEstruturaModalLabel">Alterar Estrutura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEstruturaForm">
+                    <input type="hidden" id="edit_estrutura_id" name="id">
+                    <div class="mb-3">
+                        <label for="edit_op_referencia" class="form-label">OP Referência</label>
+                        <input type="number" class="form-control" id="edit_op_referencia" name="op_referencia" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_tipo_mov" class="form-label">Tipo Mov.</label>
+                        <input type="text" class="form-control" id="edit_tipo_mov" name="tipo_mov" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_item_estrutura" class="form-label">Item Estrutura</label>
+                        <input type="text" class="form-control" id="edit_item_estrutura" name="item_estrutura" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_descricao_item" class="form-label">Descrição Item</label>
+                        <input type="text" class="form-control" id="edit_descricao_item" name="descricao_item" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_quantidade_item" class="form-label">Quantidade Item</label>
+                        <input type="number" class="form-control" id="edit_quantidade_item" name="quantidade_item" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_quantidade_real" class="form-label">Quantidade Real</label>
+                        <input type="number" class="form-control" id="edit_quantidade_real" name="quantidade_real" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_peso" class="form-label">Peso</label>
+                        <input type="number" step="0.001" class="form-control" id="edit_peso" name="peso" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fino" class="form-label">Fino</label>
+                        <input type="number" step="0.001" class="form-control" id="edit_fino" name="fino" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Importar Estruturas -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Importar Estruturas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="importForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Arquivo Excel</label>
+                        <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx, .xls" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Exclusão -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza de que deseja excluir esta estrutura?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var estruturaIdToDelete;
+    var estruturaIdToEdit;
+
+    function confirmDelete(estruturaId) {
+        estruturaIdToDelete = estruturaId;
+        var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        confirmDeleteModal.show();
+    }
+
+    function editEstrutura(estruturaId) {
+        estruturaIdToEdit = estruturaId;
+        fetch(`/get_estrutura/${estruturaId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('edit_estrutura_id').value = data.id;
+                document.getElementById('edit_op_referencia').value = data.op_referencia;
+                document.getElementById('edit_tipo_mov').value = data.tipo_mov;
+                document.getElementById('edit_item_estrutura').value = data.item_estrutura;
+                document.getElementById('edit_descricao_item').value = data.descricao_item;
+                document.getElementById('edit_quantidade_item').value = data.quantidade_item;
+                document.getElementById('edit_quantidade_real').value = data.quantidade_real;
+                document.getElementById('edit_peso').value = data.peso;
+                document.getElementById('edit_fino').value = data.fino;
+                var editEstruturaModal = new bootstrap.Modal(document.getElementById('editEstruturaModal'));
+                editEstruturaModal.show();
+            });
+    }
+
+    document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+        fetch("/deletar_estrutura", {
+            method: "POST",
+            body: JSON.stringify({ id: estruturaIdToDelete }),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estrutura excluída com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao excluir estrutura: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao excluir estrutura.");
+        });
+    });
+
+    document.getElementById("addEstruturaForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        fetch("/add_estrutura", {
+            method: "POST",
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estrutura adicionada com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao adicionar estrutura: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao adicionar estrutura.");
+        });
+    });
+
+    document.getElementById("editEstruturaForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+        fetch("/editar_estrutura", {
+            method: "POST",
+            body: JSON.stringify(Object.fromEntries(formData)),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Estrutura alterada com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao alterar estrutura: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao alterar estrutura.");
+        });
+    });
+
+    document.getElementById('exportExcel').addEventListener('click', function() {
+        window.location.href = "{{ url_for('exportar_estruturas_excel') }}";
+    });
+
+    document.getElementById("importForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/importar_estruturas", true);
+
+        xhr.upload.addEventListener("progress", function(event) {
+            if (event.lengthComputable) {
+                var percentComplete = (event.loaded / event.total) * 100;
+                console.log(percentComplete + '% uploaded');
+                // Update progress bar here
+            }
+        });
+
+        xhr.addEventListener("load", function() {
+            if (xhr.status == 200) {
+                alert("Importação concluída com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao importar dados: " + xhr.responseText);
+            }
+        });
+
+        xhr.send(formData);
+    });
+</script>
+
+{% endblock %}

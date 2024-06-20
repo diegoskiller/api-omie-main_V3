@@ -4,7 +4,7 @@ from sqlalchemy.orm import aliased
 from sqlalchemy.exc import SQLAlchemyError
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory, send_file, Response
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist, Cadastro_itens, Setores, Operadores, Familia
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido, Ferramentas, Packlist, Cadastro_itens, Setores, Operadores, Familia, Validacao
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
@@ -3169,7 +3169,7 @@ def restaurar_banco():
             flash('Arquivo inválido! Por favor, envie um arquivo .sql.', 'danger')
             return redirect(url_for('backup_restore'))
 
-        db_url = os.getenv(caminhobanco)
+        db_url = os.getenv('URL_MYSQL_novo')
         if not db_url:
             raise ValueError("URL_MYSQL não está configurada.")
         
@@ -3199,6 +3199,576 @@ def restaurar_banco():
         return f"Erro ao restaurar o banco de dados: MySQL Error: {str(e)}", 500
     except Exception as e:
         return f"Erro ao restaurar o banco de dados: {str(e)}", 500
+
+
+
+
+@app.route('/ordem_producao', methods=['GET', 'POST'])
+def ordem_producao():
+    page = request.args.get('page', 1, type=int)
+    filtro_cod = request.form.get('filtro_cod', '').upper()
+    filtro_desc = request.form.get('filtro_desc', '').upper()
+    filtro_encerrada = request.form.get('filtro_encerrada')
+
+    if filtro_cod == "":
+        filtro_cod = None
+
+    if filtro_desc == "":
+        filtro_desc = None
+
+    query = Ops_visual.query
+    if filtro_cod:
+        query = query.filter_by(item=filtro_cod)
+    elif filtro_desc:
+        query = query.filter(Ops_visual.descrição.contains(filtro_desc))
+
+    if filtro_encerrada:
+        query = query.filter(Ops_visual.situação != 'Encerrada')
+
+    ops_visual = query.paginate(page=page, per_page=10)
+
+    ops_visual_items = [item.__dict__ for item in ops_visual.items]
+    for item in ops_visual_items:
+        item.pop('_sa_instance_state', None)
+
+    return render_template('ordem_producao.html', ops_visual=ops_visual_items, ops_visual_page=ops_visual)
+
+@app.route('/deletar_ordem_producao', methods=['POST'])
+def deletar_ordem_producao():
+    data = request.get_json()
+    id = data.get('id')
+    try:
+        ordem_producao = Ops_visual.query.get(id)
+        if ordem_producao:
+            db.session.delete(ordem_producao)
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Ordem de Produção não encontrada.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/exportar_ordem_producao_excel')
+def exportar_ordem_producao_excel():
+    try:
+        ops = Ops_visual.query.all()
+
+        data = {
+            "Numero OP Visual": [op.numero_op_visual for op in ops],
+            "PIV": [op.piv for op in ops],
+            "Situação": [op.situação for op in ops],
+            "Item": [op.item for op in ops],
+            "Descrição": [op.descrição for op in ops],
+            "Quantidade": [op.quantidade for op in ops],
+            "Peso Enviado": [op.peso_enviado for op in ops],
+            "Peso Retornado": [op.peso_retornado for op in ops],
+            "Fino Enviado": [op.fino_enviado for op in ops],
+            "Fino Retornado": [op.fino_retornado for op in ops],
+            "Data Abertura": [op.data_abertura for op in ops],
+            "Hora Abertura": [op.hora_abertura for op in ops],
+            "Setor": [op.setor for op in ops],
+            "Operador": [op.operador for op in ops],
+            "Quantidade Real": [op.quantidade_real for op in ops]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Ordem de Produção')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Ordem de Produção']
+            
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                worksheet.set_column(col_num, col_num, 20)
+            
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Ordem_Producao.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"Erro ao exportar para Excel: {str(e)}", 500
+
+@app.route('/importar_ordem_producao', methods=['POST'])
+def importar_ordem_producao():
+    try:
+        file = request.files['file']
+        if not file or not file.filename.endswith('.xlsx'):
+            return "Arquivo inválido! Por favor, envie um arquivo .xlsx.", 400
+
+        df = pd.read_excel(file)
+        for index, row in df.iterrows():
+            numero_op_visual = row.get("Numero OP Visual")
+            ordem_producao = Ops_visual.query.filter_by(numero_op_visual=numero_op_visual).first()
+            if not ordem_producao:
+                ordem_producao = Ops_visual(
+                    numero_op_visual=row["Numero OP Visual"],
+                    piv=row["PIV"],
+                    situação=row["Situação"],
+                    item=row["Item"],
+                    descrição=row["Descrição"],
+                    quantidade=row["Quantidade"],
+                    peso_enviado=row["Peso Enviado"],
+                    peso_retornado=row["Peso Retornado"],
+                    fino_enviado=row["Fino Enviado"],
+                    fino_retornado=row["Fino Retornado"],
+                    data_abertura=row["Data Abertura"],
+                    hora_abertura=row["Hora Abertura"],
+                    setor=row["Setor"],
+                    operador=row["Operador"],
+                    quantidade_real=row["Quantidade Real"]
+                )
+                db.session.add(ordem_producao)
+            else:
+                ordem_producao.piv = row["PIV"]
+                ordem_producao.situação = row["Situação"]
+                ordem_producao.item = row["Item"]
+                ordem_producao.descrição = row["Descrição"]
+                ordem_producao.quantidade = row["Quantidade"]
+                ordem_producao.peso_enviado = row["Peso Enviado"]
+                ordem_producao.peso_retornado = row["Peso Retornado"]
+                ordem_producao.fino_enviado = row["Fino Enviado"]
+                ordem_producao.fino_retornado = row["Fino Retornado"]
+                ordem_producao.data_abertura = row["Data Abertura"]
+                ordem_producao.hora_abertura = row["Hora Abertura"]
+                ordem_producao.setor = row["Setor"]
+                ordem_producao.operador = row["Operador"]
+                ordem_producao.quantidade_real = row["Quantidade Real"]
+
+        db.session.commit()
+        return "Importação concluída com sucesso!", 200
+    except Exception as e:
+        return f"Erro ao importar dados: {str(e)}", 500
+
+
+
+
+@app.route('/admin_estrutura_ops', methods=['GET', 'POST'])
+def admin_estrutura_ops():
+    page = request.args.get('page', 1, type=int)
+    filtro_op_ref = request.form.get('filtro_op_ref', '').upper()
+
+    if filtro_op_ref:
+        estruturas = Estrutura_op.query.filter(Estrutura_op.op_referencia.contains(filtro_op_ref)).paginate(page=page, per_page=10)
+    else:
+        estruturas = Estrutura_op.query.paginate(page=page, per_page=10)
+
+    return render_template('Admin_Estruturas_Ops.html', estruturas=estruturas.items, estrutura_page=estruturas)
+
+
+@app.route('/add_estrutura', methods=['POST'])
+def add_estrutura():
+    data = request.get_json()
+    try:
+        nova_estrutura = Estrutura_op(
+            op_referencia=data['op_referencia'],
+            tipo_mov=data['tipo_mov'],
+            item_estrutura=data['item_estrutura'],
+            descricao_item=data['descricao_item'],
+            quantidade_item=data['quantidade_item'],
+            quantidade_real=data['quantidade_real'],
+            peso=data['peso'],
+            fino=data['fino']
+        )
+        db.session.add(nova_estrutura)
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=str(e))
+
+
+@app.route('/editar_estrutura', methods=['POST'])
+def editar_estrutura():
+    data = request.get_json()
+    try:
+        estrutura = Estrutura_op.query.get(data['id'])
+        estrutura.op_referencia = data['op_referencia']
+        estrutura.tipo_mov = data['tipo_mov']
+        estrutura.item_estrutura = data['item_estrutura']
+        estrutura.descricao_item = data['descricao_item']
+        estrutura.quantidade_item = data['quantidade_item']
+        estrutura.quantidade_real = data['quantidade_real']
+        estrutura.peso = data['peso']
+        estrutura.fino = data['fino']
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=str(e))
+
+
+@app.route('/deletar_estrutura', methods=['POST'])
+def deletar_estrutura():
+    data = request.get_json()
+    try:
+        estrutura = Estrutura_op.query.get(data['id'])
+        db.session.delete(estrutura)
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=str(e))
+
+
+@app.route('/get_estrutura/<int:id>', methods=['GET'])
+def get_estrutura(id):
+    estrutura = Estrutura_op.query.get(id)
+    return jsonify(
+        id=estrutura.id,
+        op_referencia=estrutura.op_referencia,
+        tipo_mov=estrutura.tipo_mov,
+        item_estrutura=estrutura.item_estrutura,
+        descricao_item=estrutura.descricao_item,
+        quantidade_item=estrutura.quantidade_item,
+        quantidade_real=estrutura.quantidade_real,
+        peso=estrutura.peso,
+        fino=estrutura.fino
+    )
+
+
+@app.route('/exportar_estruturas_excel')
+def exportar_estruturas_excel():
+    try:
+        estruturas = Estrutura_op.query.all()
+
+        data = {
+            "OP Referência": [estrutura.op_referencia for estrutura in estruturas],
+            "Tipo Mov.": [estrutura.tipo_mov for estrutura in estruturas],
+            "Item Estrutura": [estrutura.item_estrutura for estrutura in estruturas],
+            "Descrição Item": [estrutura.descricao_item for estrutura in estruturas],
+            "Quantidade Item": [estrutura.quantidade_item for estrutura in estruturas],
+            "Quantidade Real": [estrutura.quantidade_real for estrutura in estruturas],
+            "Peso": [estrutura.peso for estrutura in estruturas],
+            "Fino": [estrutura.fino for estrutura in estruturas]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Estruturas de Ops')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Estruturas de Ops']
+            
+            # Formatação para a primeira linha (header)
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Formatação para as células de dados
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            # Aplica a formatação na primeira linha
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                # Ajusta a largura das colunas
+                worksheet.set_column(col_num, col_num, 20)
+            
+            # Aplica a formatação nas células de dados
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Estruturas_de_Ops.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+
+@app.route('/importar_estruturas', methods=['POST'])
+def importar_estruturas():
+    file = request.files['file']
+    if not file or not file.filename.endswith(('.xls', '.xlsx')):
+        return "Invalid file format. Please upload an Excel file.", 400
+
+    try:
+        df = pd.read_excel(file)
+        for index, row in df.iterrows():
+            estrutura = Estrutura_op(
+                op_referencia=row['OP Referência'],
+                tipo_mov=row['Tipo Mov.'],
+                item_estrutura=row['Item Estrutura'],
+                descricao_item=row['Descrição Item'],
+                quantidade_item=row['Quantidade Item'],
+                quantidade_real=row['Quantidade Real'],
+                peso=row['Peso'],
+                fino=row['Fino']
+            )
+            db.session.add(estrutura)
+        db.session.commit()
+        return jsonify(success=True)
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(success=False, message=str(e))
+
+
+
+
+
+@app.route('/admin_lotes_ops', methods=['GET', 'POST'])
+@login_required
+def admin_lotes_ops():
+    page = request.args.get('page', 1, type=int)
+    filtro_ref = request.form.get('filtro_ref', '').upper()
+
+    if filtro_ref:
+        lotes = Lotes_mov_op.query.filter(Lotes_mov_op.referencia.contains(filtro_ref)).paginate(page=page, per_page=10)
+    else:
+        lotes = Lotes_mov_op.query.paginate(page=page, per_page=10)
+
+    lotes_items = lotes.items
+
+    return render_template('admin_lotes_ops.html', lotes=lotes_items, lotes_page=lotes)
+
+@app.route('/deletar_lote', methods=['POST'])
+@login_required
+def deletar_lote():
+    try:
+        data = request.get_json()
+        lote_id = data['id']
+        lote = Lotes_mov_op.query.get(lote_id)
+        if lote:
+            db.session.delete(lote)
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Lote não encontrado.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/exportar_lotes_excel')
+@login_required
+def exportar_lotes_excel():
+    try:
+        lotes = Lotes_mov_op.query.all()
+
+        data = {
+            "Referência": [lote.referencia for lote in lotes],
+            "Tipo": [lote.tipo for lote in lotes],
+            "Item": [lote.item for lote in lotes],
+            "Lote": [lote.lote_visual for lote in lotes],
+            "Número Lote": [lote.numero_lote for lote in lotes],
+            "Quantidade": [lote.quantidade for lote in lotes],
+            "Peso": [lote.peso for lote in lotes],
+            "Fino": [lote.fino for lote in lotes],
+            "Data Mov": [lote.data_mov for lote in lotes],
+            "Operador": [lote.operador for lote in lotes]
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Lotes de Ops')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Lotes de Ops']
+            
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                worksheet.set_column(col_num, col_num, 20)
+            
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Lotes_de_Ops.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+@app.route('/importar_lotes', methods=['POST'])
+@login_required
+def importar_lotes():
+    try:
+        file = request.files['file']
+        if not file or not file.filename.endswith('.xlsx'):
+            return jsonify({'success': False, 'message': 'Arquivo inválido! Por favor, envie um arquivo .xlsx.'})
+
+        df = pd.read_excel(file)
+
+        for _, row in df.iterrows():
+            lote = Lotes_mov_op(
+                referencia=row['Referência'],
+                tipo=row['Tipo'],
+                item=row['Item'],
+                lote_visual=row['Lote'],
+                numero_lote=row['Número Lote'],
+                quantidade=row['Quantidade'],
+                peso=row['Peso'],
+                fino=row['Fino'],
+                data_mov=row['Data Mov'],
+                operador=row['Operador']
+            )
+            db.session.add(lote)
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+
+
+
+
+
+
+@app.route('/admin_users', methods=['GET', 'POST'])
+@login_required
+def admin_users():
+    page = request.args.get('page', 1, type=int)
+    filtro_user = request.form.get('filtro_user', '').upper()
+
+    if filtro_user:
+        users = User.query.filter(User.name.ilike(f"%{filtro_user}%")).paginate(page=page, per_page=10)
+    else:
+        users = User.query.paginate(page=page, per_page=10)
+    
+    return render_template('admin_users.html', users=users.items, users_page=users)
+
+@app.route('/add_user', methods=['POST'])
+@login_required
+def add_user():
+    data = request.form
+    new_user = User(
+        email=data['email'],
+        password=data['password'],
+        name=data['name']
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    flash('Usuário adicionado com sucesso!', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash('Usuário excluído com sucesso!', 'success')
+    return redirect(url_for('admin_users'))
+
+@app.route('/edit_validacao', methods=['POST'])
+@login_required
+def edit_validacao():
+    data = request.form
+    user_id = data['id']
+    validacao = Validacao.query.filter_by(usuario=user_id).first()
+
+    if not validacao:
+        validacao = Validacao(usuario=user_id)
+        db.session.add(validacao)
+
+    validacao.telas = data['telas']
+    validacao.validacao_1 = data['validacao_1']
+    validacao.validacao_2 = data['validacao_2']
+    validacao.validacao_3 = data['validacao_3']
+    validacao.validacao_4 = data['validacao_4']
+    validacao.validacao_5 = data['validacao_5']
+    validacao.validacao_6 = data['validacao_6']
+    validacao.validacao_7 = data['validacao_7']
+    validacao.validacao_8 = data['validacao_8']
+    validacao.validacao_9 = data['validacao_9']
+    validacao.validacao_10 = data['validacao_10']
+
+    db.session.commit()
+    flash('Validação salva com sucesso!', 'success')
+    return redirect(url_for('admin_users'))
+
+# Adicionar rota para buscar informações de validação para preencher o modal
+@app.route('/get_validacao/<int:user_id>', methods=['GET'])
+@login_required
+def get_validacao(user_id):
+    validacao = Validacao.query.filter_by(usuario=user_id).first()
+    if validacao:
+        return jsonify({
+            'id': validacao.id,
+            'telas': validacao.telas,
+            'validacao_1': validacao.validacao_1,
+            'validacao_2': validacao.validacao_2,
+            'validacao_3': validacao.validacao_3,
+            'validacao_4': validacao.validacao_4,
+            'validacao_5': validacao.validacao_5,
+            'validacao_6': validacao.validacao_6,
+            'validacao_7': validacao.validacao_7,
+            'validacao_8': validacao.validacao_8,
+            'validacao_9': validacao.validacao_9,
+            'validacao_10': validacao.validacao_10
+        })
+    else:
+        return jsonify({
+            'id': user_id,
+            'telas': '',
+            'validacao_1': '',
+            'validacao_2': '',
+            'validacao_3': '',
+            'validacao_4': '',
+            'validacao_5': '',
+            'validacao_6': '',
+            'validacao_7': '',
+            'validacao_8': '',
+            'validacao_9': '',
+            'validacao_10': ''
+        })
+
+
+
+
 
 
 
