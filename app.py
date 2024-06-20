@@ -3109,7 +3109,7 @@ def modify_sql_content(sql_content):
 
 def format_value(value):
     if isinstance(value, str):
-        value = value #return f"'{value.replace('\'', '\'\'').replace('\\', '\\\\')}'"
+        return f"'{value.replace(';', ' ').replace("'", " ")}'"
     elif value is None:
         return 'NULL'
     elif isinstance(value, float):
@@ -3160,13 +3160,19 @@ def backup_banco():
 
 @app.route('/restaurar_banco', methods=['POST'])
 def restaurar_banco():
+    banco = request.form.get("banco")
+    if banco == "Banco Backup":
+        caminhobanco = 'URL_MYSQL_novo'
+    else:
+        caminhobanco = 'URL_MYSQL'
+
     try:
         file = request.files['file']
         if not file or not file.filename.endswith('.sql'):
             flash('Arquivo inválido! Por favor, envie um arquivo .sql.', 'danger')
             return redirect(url_for('backup_restore'))
 
-        db_url = os.getenv('URL_MYSQL_novo')
+        db_url = os.getenv(caminhobanco)
         url = make_url(db_url)
         db_name = url.database
         user = url.username

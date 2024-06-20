@@ -30,10 +30,18 @@
         
         <div class="input-group mb-3 d-flex justify-content-center">  
 
-            <form action="{{ url_for('restaurar_banco') }}" method="post" enctype="multipart/form-data">
+            <form action="{{ url_for('restaurar_banco') }}" method="POST" enctype="multipart/form-data">
+
                 <label for="file">Escolha o arquivo de backup (.sql):</label>
                 <input type="file" name="file" id="file" required>
+                <p>
+                <div class="input-group-append">
+                <select class="form-control" id="banco" readonly="readonly" aria-disabled="true" name="banco" value="Banco Backup" required>
+                    <option value="Banco Backup">Banco Backup</option>
+                    <option value="Banco Atual">Banco Atual</option>
+                </select>
                 <button type="submit" class="btn btn-secondary"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Restaurar Banco de Dados</button>
+                </div>
             </form>
 
         </div>
