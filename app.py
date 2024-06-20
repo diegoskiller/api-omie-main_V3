@@ -3079,19 +3079,10 @@ def exportar_pedidos_faturados_excel():
 
 
 
-
-def table_exists(cursor, table_name):
-    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
-    result = cursor.fetchone()
-    return result is not None
-
 @app.route('/backup_restore')
 @login_required
 def backup_restore():
     return render_template('backup_restore.html')
-
-
-
 
 
 
@@ -3119,7 +3110,7 @@ def format_value(value):
 @app.route('/backup_banco', methods=['GET'])
 def backup_banco():
     try:
-        db_url = os.getenv('URL_MYSQL')
+        db_url = app.config['URL_MYSQL']
         url = make_url(db_url)
         db_name = url.database
         user = url.username
@@ -3130,7 +3121,7 @@ def backup_banco():
         connection = pymysql.connect(host=host, user=user, password=password, database=db_name, port=port)
         backup_file = io.BytesIO()
         cursor = connection.cursor()
-        cursor.execute(f"SHOW TABLES")
+        cursor.execute("SHOW TABLES")
         tables = cursor.fetchall()
 
         for table in tables:
@@ -3173,6 +3164,9 @@ def restaurar_banco():
             return redirect(url_for('backup_restore'))
 
         db_url = os.getenv(caminhobanco)
+        if not db_url:
+            raise ValueError("URL_MYSQL não está configurada.")
+        
         url = make_url(db_url)
         db_name = url.database
         user = url.username
@@ -3199,7 +3193,6 @@ def restaurar_banco():
         return f"Erro ao restaurar o banco de dados: MySQL Error: {str(e)}", 500
     except Exception as e:
         return f"Erro ao restaurar o banco de dados: {str(e)}", 500
-
 
 
 
