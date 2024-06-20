@@ -3109,7 +3109,7 @@ def modify_sql_content(sql_content):
 
 def format_value(value):
     if isinstance(value, str):
-        return f"'{value.replace('\'', '\'\'').replace('\\', '\\\\')}'"
+        value = value #return f"'{value.replace('\'', '\'\'').replace('\\', '\\\\')}'"
     elif value is None:
         return 'NULL'
     elif isinstance(value, float):
