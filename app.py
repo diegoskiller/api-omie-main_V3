@@ -22,6 +22,9 @@ from io import BytesIO
 import xlsxwriter
 from tqdm import tqdm
 import subprocess
+from urllib.parse import urlparse
+import pymysql
+from sqlalchemy.engine.url import make_url
 
 
 
@@ -147,6 +150,11 @@ def index_config():
          return redirect( url_for('login'))
     return render_template('index_config.html')
 
+@app.route('/index_uploads', methods = ['GET','POST'])
+def index_uploads():
+    if not current_user.is_authenticated:
+         return redirect( url_for('login'))
+    return render_template('index_uploads.html')
 
 @app.route('/busca', methods = ['GET','POST'])
 def busca():
@@ -3066,6 +3074,129 @@ def exportar_pedidos_faturados_excel():
         return send_file(output, download_name='PedidosFaturados.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
+
+
+
+
+
+
+def table_exists(cursor, table_name):
+    cursor.execute(f"SHOW TABLES LIKE '{table_name}'")
+    result = cursor.fetchone()
+    return result is not None
+
+@app.route('/backup_restore')
+@login_required
+def backup_restore():
+    return render_template('backup_restore.html')
+
+
+
+
+
+
+
+def modify_sql_content(sql_content):
+    lines = sql_content.splitlines()
+    modified_lines = []
+    for line in lines:
+        if line.startswith("CREATE TABLE"):
+            line = line.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+        if line.startswith("INSERT INTO"):
+            line = line.replace("INSERT INTO", "INSERT IGNORE INTO")
+        modified_lines.append(line)
+    return "\n".join(modified_lines)
+
+def format_value(value):
+    if isinstance(value, str):
+        return f"'{value.replace('\'', '\'\'').replace('\\', '\\\\')}'"
+    elif value is None:
+        return 'NULL'
+    elif isinstance(value, float):
+        return f"{value:.3f}"
+    return str(value)
+
+@app.route('/backup_banco', methods=['GET'])
+def backup_banco():
+    try:
+        db_url = os.getenv('URL_MYSQL')
+        url = make_url(db_url)
+        db_name = url.database
+        user = url.username
+        password = url.password
+        host = url.host
+        port = url.port or 3306
+
+        connection = pymysql.connect(host=host, user=user, password=password, database=db_name, port=port)
+        backup_file = io.BytesIO()
+        cursor = connection.cursor()
+        cursor.execute(f"SHOW TABLES")
+        tables = cursor.fetchall()
+
+        for table in tables:
+            table_name = table[0]
+            cursor.execute(f"SHOW CREATE TABLE {table_name}")
+            create_table_statement = cursor.fetchone()[1] + ";\n"
+            backup_file.write(create_table_statement.encode('utf-8'))
+
+            cursor.execute(f"SELECT * FROM {table_name}")
+            rows = cursor.fetchall()
+            for row in rows:
+                formatted_values = ", ".join(format_value(value) for value in row)
+                insert_statement = f"INSERT IGNORE INTO {table_name} VALUES ({formatted_values});\n"
+                backup_file.write(insert_statement.encode('utf-8'))
+
+        connection.close()
+        backup_file.seek(0)
+        modified_content = modify_sql_content(backup_file.getvalue().decode('utf-8'))
+
+        backup_file = io.BytesIO()
+        backup_file.write(modified_content.encode('utf-8'))
+        backup_file.seek(0)
+
+        return send_file(backup_file, as_attachment=True, download_name='backup.sql', mimetype='application/sql')
+    except Exception as e:
+        return f"Erro ao fazer o backup do banco de dados: {str(e)}", 500
+
+@app.route('/restaurar_banco', methods=['POST'])
+def restaurar_banco():
+    try:
+        file = request.files['file']
+        if not file or not file.filename.endswith('.sql'):
+            flash('Arquivo inválido! Por favor, envie um arquivo .sql.', 'danger')
+            return redirect(url_for('backup_restore'))
+
+        db_url = os.getenv('URL_MYSQL_novo')
+        url = make_url(db_url)
+        db_name = url.database
+        user = url.username
+        password = url.password
+        host = url.host
+        port = url.port or 3306
+
+        connection = pymysql.connect(host=host, user=user, password=password, database=db_name, port=port)
+        cursor = connection.cursor()
+
+        sql_content = file.read().decode('utf-8')
+        sql_statements = sql_content.split(';')
+
+        for statement in sql_statements:
+            if statement.strip():
+                cursor.execute(statement)
+
+        connection.commit()
+        connection.close()
+
+        flash('Banco de dados restaurado com sucesso!', 'success')
+        return redirect(url_for('backup_restore'))
+    except pymysql.MySQLError as e:
+        return f"Erro ao restaurar o banco de dados: MySQL Error: {str(e)}", 500
+    except Exception as e:
+        return f"Erro ao restaurar o banco de dados: {str(e)}", 500
+
+
+
+
 
 def Def_cadastro_prod(item):
    

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% include 'header.html' %}
+
+{% block title %} Configuração {% endblock %}
+
+{% block body %}    
+<div class="background-black">
+
+
+<style>
+    body {
+        background-color: #00795ec4; /* Substitua pela cor desejada */
+        /* background-image: url('{{ url_for("static", filename="imagens/fundo.jpg") }}');
+        background-size: cover;
+        background-position: center center;
+        background-attachment: fixed; */
+        margin: 0;
+        padding: 100;
+    }
+    
+    /* Adicione estilos adicionais conforme necessário */
+    .titulo {
+        text-align:center;
+        
+
+
+
+    }
+    p{
+		color: rgb(255, 255, 255);
+		/* Poderia usar:;
+		color: #ff0000;*/
+		/* Poderia usar:;
+		color: rgb(255, 0, 0);*/
+	}
+    .background-black {
+        background-color: #006475; /* Define a cor de fundo como verde */
+  }
+</style>
+
+<body>
+    <a href="{{url_for('index_config')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+    <div class="titulo"><h2><p>Gerar e Restaurar Dados do Sistema Visual - Kels</h2></div></p>
+    
+
+<main class="cards margin-top">
+    <section class="card contact">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/op.svg')}}" alt="lista de itens">
+        </div>
+        <h3>OP Visual</h3>
+        <span>Visualizar e Gerenciar Ops</span>
+        <a href="{{ url_for('operadores')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/Estrutura.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Estrutura de OP</h3>
+        <span>Gerenciar Estruturas de Ordens de Pordução</span>
+        <a href="{{ url_for('familia')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card red">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/lotes.svg')}}" alt="Indicadores">
+        </div>
+        <h3>Lotes das Ops</h3>
+        <span>Gerenciar Lotes das Ordens de Pordução</span>
+        <a href="{{ url_for('sequencias')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card green">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/arquivos.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Estoque Visual</h3>
+        <span>Upload de Arquivos para Inventário</span>
+        <a href="{{ url_for('estoque_visual')}}"><button>Acessar</button></a>
+    </section>
+    <section class="card yellow">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/restauração.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Backup</h3>
+        <span>Backup e Restauração de Banco de Dados</span>
+        <a href="{{ url_for('backup_restore')}}"><button>Acessar</button></a>
+    </section>
+    
+    <section class="card about">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/operador.svg')}}" alt="gerenciar estoque">
+        </div>
+        <h3>Usuários</h3>
+        <span>Controle Acesso de Usuários</span>
+        <a href="{{ url_for('estoque_omie')}}"><button>Acessar</button></a>
+    </section>
+</main>
+
+</body>
+</div>
+{% endblock %}

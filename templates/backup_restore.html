@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Lotes produzidos na Ordem de Produção {% endblock %}
+{% block body %}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<div class=" p-2 w-100 table-responsive margin-top">
+        <div class="input-group-append">
+            <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+
+            <div class="input-group mb-3 d-flex justify-content-end">
+                <form action="{{ url_for('backup_banco') }}" method="get">
+                    <button type="submit" class="btn btn-info" >Fazer Backup</button>
+                </form>
+            </div>
+        </div>
+
+       
+
+        <div class="input-group mb-3 d-flex justify-content-center">    
+        <h2>Backup e Restauração do Banco de Dados</h2>
+        </div>
+
+        
+        
+        <div class="input-group mb-3 d-flex justify-content-center">  
+
+            <form action="{{ url_for('restaurar_banco') }}" method="post" enctype="multipart/form-data">
+                <label for="file">Escolha o arquivo de backup (.sql):</label>
+                <input type="file" name="file" id="file" required>
+                <button type="submit" class="btn btn-secondary"  data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Restaurar Banco de Dados</button>
+            </form>
+
+        </div>
+ <!-- Mensagens de Feedback -->
+ {% with messages = get_flashed_messages(with_categories=true) %}
+ {% if messages %}
+     <ul>
+         {% for category, message in messages %}
+             <li class="{{ category }}">{{ message }}</li>
+         {% endfor %}
+     </ul>
+ {% endif %}
+{% endwith %}
+
+</div>
+<script>
+    document.getElementById('backupBtn').addEventListener('click', function() {
+        window.location.href = "{{ url_for('backup_banco') }}";
+    });
+    
+    document.getElementById('restoreForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var formData = new FormData(this);
+    
+        fetch('{{ url_for("restaurar_banco") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert(data);
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao restaurar o banco de dados.');
+        });
+    });
+    </script>
+        
+
+
+
+
+
+        <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+            <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...
+            <div class="spinner-grow text-info" role="status">
+            <span class="visually-hidden">Loading...</span>
+            </div>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body small">
+            <div id="pb1" class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+            </div>
+            </div>
+            </div>
+  
+            <script>
+              let barra=document.getElementById("pb1");
+              let carga=0;
+              let intBarra=setInterval(()=>{
+                  barra.style.width=carga+"%";
+                  carga++;
+                  if(carga>=100){
+                      carga=0;
+                  }
+              },80);
+            </script>        
+       
+
+
+
+
+
+{% endblock %}
