@@ -25,6 +25,7 @@ import subprocess
 from urllib.parse import urlparse
 import pymysql
 from sqlalchemy.engine.url import make_url
+from dotenv import load_dotenv
 
 
 
@@ -53,7 +54,7 @@ MKM = "4085566344"
 locaisOmie = [A1, AC, A3, CQ, SE, AS]
 itemgeral = ""
 text_botoes = ""
-
+load_dotenv()
 
 
 @login_manager.user_loader
@@ -3103,6 +3104,7 @@ def format_value(value):
     if isinstance(value, str):
         value = value.replace(';', ' ')
         value = value.replace("'", " ")
+        value = value.replace("´", " ")
 
         return f"'{value}'"
     elif value is None:
