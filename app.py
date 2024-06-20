@@ -3099,8 +3099,12 @@ def modify_sql_content(sql_content):
     return "\n".join(modified_lines)
 
 def format_value(value):
+    
     if isinstance(value, str):
-        return f"{value.replace(';', ' ').replace("'", " ")}"
+        value = value.replace(';', ' ')
+        value = value.replace("'", " ")
+
+        return f"'{value}'"
     elif value is None:
         return 'NULL'
     elif isinstance(value, float):
