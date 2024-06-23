@@ -1,0 +1,353 @@
+
+
+
+{% extends 'base.html' %}
+
+{% include 'header.html' %}
+
+{% block title %} Ordem de Produção {% endblock %}
+{% block body %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        line-height: 6px;
+    }
+
+    th {
+        border-top: 10px solid #5f74f0 !important;
+    }
+
+    .nested {
+        display: none;
+    }
+
+    .active {
+        display: table-row;
+    }
+
+    .caret {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .caret::before {
+        content: "\25B6";
+        color: black;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    .caret-down::before {
+        transform: rotate(90deg);
+    }
+</style>
+
+<div class="w-100" style="padding-top: 0px !important;">
+    <div class="w-100"> 
+        <div class="input-group d-flex justify-content-start">
+        <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <button id="exportExcelTree" class="btn btn-warning">Exportar para Excel Tree</button>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">Importar do Excel</button>
+        <form method="POST" action="{{url_for('ordem_producao_tree')}}">
+            <input type="hidden" name="filtro_encerrada" value="{{ '0' if filtro_encerrada == '1' else '1' }}">
+            <button class="btn btn-dark ms-0" type="submit">{{ 'Mostrar OPs Encerradas ' if filtro_encerrada == '1' else 'Não Mostrar OPs Encerradas' }}</button>
+        </form>
+        </div>
+
+        <h2 class="d-flex justify-content-center mt-2"><strong>Estrutura de Ordem de Produção</strong></h2>
+
+        <div class="input-group d-flex justify-content-end w-100">
+            <form method="POST" action="{{url_for('ordem_producao_tree')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar Código de Produto" name="filtro_cod" aria-label="Pesquisar por Código" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;" value="{{ request.form.get('filtro_cod') or request.args.get('filtro_cod', '') }}">
+                <div class="input-group-append">
+                    <button class="btn btn-info ms-1" type="submit">Buscar Código</button>
+                </div>
+            </form>
+            <form method="POST" action="{{url_for('ordem_producao_tree')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
+                <input type="search" class="form-control w-50" placeholder="Pesquisar Descrição" name="filtro_desc" aria-label="Pesquisar por Descrição" aria-describedby="basic-addon2" autocomplete="off" style="text-transform: uppercase;" value="{{ request.form.get('filtro_desc') or request.args.get('filtro_desc', '') }}">
+                <div class="input-group-append">
+                    <button class="btn btn-success ms-1" type="submit">Buscar por Descrição</button>
+                </div>
+            </form>
+        </div>
+        
+
+        <div class="container w-100">
+            {% with messages=get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-success">
+                            {{ message }}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="w-100 margin-top p-2">
+            <table class="table table-hover table-info">
+                <tr class="table-primary">                        
+                    <th>Numero OP Visual</th>
+                    <th>PIV</th>
+                    <th>Situação</th>
+                    <th>Item</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Peso Enviado</th>
+                    <th>Peso Retornado</th>
+                    <th>Fino Enviado</th>
+                    <th>Fino Retornado</th>
+                    <th>Data Abertura</th>
+                    <th>Hora Abertura</th>
+                    <th>Setor</th>
+                    <th>Operador</th>
+                    <th>Quantidade Real</th>
+                    <th>Ações</th>
+                </tr>
+
+                {% for op in ops_visual %}
+                    <tr class='{{"table-dark" if op.situação == "Encerrada" else ""}}'>                      
+                        <td><span class="caret" onclick="toggleNested(this)">{{ op.numero_op_visual }}</span></td>
+                        <td>{{ op.piv }}</td>
+                        <td>{{ op.situação }}</td>
+                        <td>{{ op.item }}</td>
+                        <td>{{ op.descrição }}</td>
+                        <td>{{ op.quantidade }}</td>
+                        <td>{{ op.peso_enviado }}</td>
+                        <td>{{ op.peso_retornado }}</td>
+                        <td>{{ op.fino_enviado }}</td>
+                        <td>{{ op.fino_retornado }}</td>
+                        <td>{{ op.data_abertura }}</td>
+                        <td>{{ op.hora_abertura }}</td>
+                        <td>{{ op.setor }}</td>
+                        <td>{{ op.operador }}</td>
+                        <td>{{ op.quantidade_real }}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editOP('{{ op.id }}')">Alterar</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ op.id }}')">Excluir</button>
+                        </td>
+                    </tr>
+                    <tr class="nested">                      
+                        <td colspan="16">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>OP Referência</th>
+                                    <th>Tipo Mov</th>
+                                    <th>Item Estrutura</th>
+                                    <th>Descrição Item</th>
+                                    <th>Quantidade Item</th>
+                                    <th>Quantidade Real</th>
+                                    <th>Peso</th>
+                                    <th>Fino</th>
+                                    <th>Ações</th>
+                                </tr>
+                                {% for estrutura in op.estruturas %}
+                                    <tr>
+                                        <td><span class="caret" onclick="toggleNested(this)">{{ estrutura.id }}</span></td>
+                                        <td>{{ estrutura.op_referencia }}</td>
+                                        <td>{{ estrutura.tipo_mov }}</td>
+                                        <td>{{ estrutura.item_estrutura }}</td>
+                                        <td>{{ estrutura.descricao_item }}</td>
+                                        <td>{{ estrutura.quantidade_item }}</td>
+                                        <td>{{ estrutura.quantidade_real }}</td>
+                                        <td>{{ estrutura.peso }}</td>
+                                        <td>{{ estrutura.fino }}</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm" onclick="editEstrutura('{{ estrutura.id }}')">Alterar</button>
+                                            <button class="btn btn-danger btn-sm" onclick="confirmDeleteEstrutura('{{ estrutura.id }}')">Excluir</button>
+                                        </td>
+                                    </tr>
+                                    <tr class="nested">
+                                        <td colspan="10">
+                                            <table class="table table-bordered">
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Referência</th>
+                                                    <th>Tipo</th>
+                                                    <th>Item</th>
+                                                    <th>Lote Visual</th>
+                                                    <th>Número Lote</th>
+                                                    <th>Quantidade</th>
+                                                    <th>Peso</th>
+                                                    <th>Fino</th>
+                                                    <th>Data Mov</th>
+                                                    <th>ID do Lote</th>
+                                                    <th>Operador</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                                {% for lote in estrutura.lotes %}
+                                                    <tr>
+                                                        <td>{{ lote.id }}</td>
+                                                        <td>{{ lote.referencia }}</td>
+                                                        <td>{{ lote.tipo }}</td>
+                                                        <td>{{ lote.item }}</td>
+                                                        <td>{{ lote.lote_visual }}</td>
+                                                        <td>{{ lote.numero_lote }}</td>
+                                                        <td>{{ lote.quantidade }}</td>
+                                                        <td>{{ lote.peso }}</td>
+                                                        <td>{{ lote.fino }}</td>
+                                                        <td>{{ lote.data_mov }}</td>
+                                                        <td>{{ lote.id_lote }}</td>
+                                                        <td>{{ lote.operador }}</td>
+                                                        <td>
+                                                            <button class="btn btn-warning btn-sm" onclick="editLote('{{ lote.id }}')">Alterar</button>
+                                                            <button class="btn btn-danger btn-sm" onclick="confirmDeleteLote('{{ lote.id }}')">Excluir</button>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        {% for page_num in ops_visual_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+                {% if ops_visual_page.page == page_num %}
+                    <a class="btn btn-dark mb-4" href="{{ url_for('ordem_producao_tree', page=page_num, filtro_cod=request.args.get('filtro_cod'), filtro_desc=request.args.get('filtro_desc'), filtro_encerrada=filtro_encerrada) }}">{{ page_num }}</a>
+                {% else %}
+                    <a class="btn btn-outline-dark mb-4" href="{{ url_for('ordem_producao_tree', page=page_num, filtro_cod=request.args.get('filtro_cod'), filtro_desc=request.args.get('filtro_desc'), filtro_encerrada=filtro_encerrada) }}">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                ...
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Modal Importar do Excel -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Importar do Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="importForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Arquivo Excel</label>
+                            <input type="file" class="form-control" id="importFile" name="file" accept=".xlsx, .xls" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Importar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Exclusão -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir este item?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var itemIdToDelete;
+
+        function confirmDelete(itemId) {
+            itemIdToDelete = itemId;
+            var confirmDeleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+            confirmDeleteModal.show();
+        }
+
+        function toggleNested(element) {
+            var parentRow = element.parentElement.parentElement;
+            var nestedRow = parentRow.nextElementSibling;
+
+            while (nestedRow && nestedRow.classList.contains('nested')) {
+                nestedRow.classList.toggle('active');
+                nestedRow = nestedRow.nextElementSibling;
+            }
+
+            element.classList.toggle("caret-down");
+        }
+
+        document.getElementById("confirmDeleteBtn").addEventListener("click", function() {
+            fetch("/deletar_ordem_producao", {
+                method: "POST",
+                body: JSON.stringify({ id: itemIdToDelete }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Ordem de Produção excluída com sucesso!");
+                    location.reload();
+                } else {
+                    alert("Erro ao excluir ordem de produção: " + data.message);
+                }
+            }).catch(error => {
+                console.error("Erro:", error);
+                alert("Erro ao excluir ordem de produção.");
+            });
+        });
+
+        document.getElementById('exportExcelTree').addEventListener('click', function() {
+        window.location.href = "{{ url_for('exportar_ordem_producao_tree_excel') }}";
+         });
+
+        document.getElementById('importForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/importar_ordem_producao", true);
+
+            xhr.upload.addEventListener("progress", function(event) {
+                if (event.lengthComputable) {
+                    var percentComplete = (event.loaded / event.total) * 100;
+                    console.log(percentComplete + '% uploaded');
+                }
+            });
+
+            xhr.addEventListener("load", function() {
+                if (xhr.status == 200) {
+                    alert("Importação concluída com sucesso!");
+                    location.reload();
+                } else {
+                    alert("Erro ao importar dados: " + xhr.responseText);
+                }
+            });
+
+            xhr.send(formData);
+        });
+
+        var toggler = document.getElementsByClassName("caret");
+        for (var i = 0; i < toggler.length; i++) {
+            toggler[i].addEventListener("click", function() {
+                this.parentElement.querySelector(".nested").classList.toggle("active");
+                this.classList.toggle("caret-down");
+            });
+        }
+    </script>
+
+{% endblock %}

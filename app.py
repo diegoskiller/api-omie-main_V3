@@ -3539,6 +3539,235 @@ def importar_estruturas():
 
 
 
+@app.route('/ordem_producao_tree', methods=['GET', 'POST'])
+@login_required
+def ordem_producao_tree():
+    page = request.args.get('page', 1, type=int)
+    filtro_cod = request.form.get('filtro_cod', '').upper() if request.method == 'POST' else request.args.get('filtro_cod', '').upper()
+    filtro_desc = request.form.get('filtro_desc', '').upper() if request.method == 'POST' else request.args.get('filtro_desc', '').upper()
+    
+    if request.method == 'POST':
+        filtro_encerrada = request.form.get('filtro_encerrada', '1')
+        session['filtro_encerrada'] = filtro_encerrada
+    else:
+        filtro_encerrada = session.get('filtro_encerrada', '1')
+
+    query = Ops_visual.query.order_by(Ops_visual.id.desc())
+
+    if filtro_cod:
+        query = query.filter(Ops_visual.item.contains(filtro_cod))
+    if filtro_desc:
+        query = query.filter(Ops_visual.descrição.contains(filtro_desc))
+    if filtro_encerrada == '1':
+        query = query.filter(Ops_visual.situação != 'Encerrada')
+
+    ops_visual_page = query.paginate(page=page, per_page=10)
+    ops_visual = ops_visual_page.items
+
+    for op in ops_visual:
+        op.estruturas = Estrutura_op.query.filter_by(op_referencia=op.numero_op_visual).all()
+        for estrutura in op.estruturas:
+            estrutura.lotes = Lotes_mov_op.query.filter_by(item=estrutura.item_estrutura).all()
+
+    return render_template('ordem_producao_tree.html', ops_visual=ops_visual, ops_visual_page=ops_visual_page, filtro_encerrada=filtro_encerrada)
+
+
+
+
+
+
+@app.route('/exportar_ordem_producao_tree_excel')
+@login_required
+def exportar_ordem_producao_tree_excel():
+    try:
+        ops_visual = Ops_visual.query.order_by(Ops_visual.id.desc()).filter(Ops_visual.situação != 'Encerrada').all()
+
+        data = []
+        for op in ops_visual:
+            op_data = {
+                "PIV": op.piv,
+                "Numero OP Visual": op.numero_op_visual,
+                "Situação": op.situação,
+                "Item": op.item,
+                "Descrição": op.descrição,
+                "Quantidade": op.quantidade,
+                "Quantidade Real": op.quantidade_real,
+                "Peso Enviado": op.peso_enviado,
+                "Peso Retornado": op.peso_retornado,
+                "Fino Enviado": op.fino_enviado,
+                "Fino Retornado": op.fino_retornado,
+                "Data Abertura": op.data_abertura,
+                "Hora Abertura": op.hora_abertura,
+                "Setor": op.setor,
+                "Operador": op.operador,                
+                "Estruturas": []
+            }
+            estruturas = Estrutura_op.query.filter_by(op_referencia=op.numero_op_visual).all()
+            for estrutura in estruturas:
+                estrutura_data = {
+                    "ID": estrutura.id,
+                    "OP Referência": estrutura.op_referencia,
+                    "Tipo Mov": estrutura.tipo_mov,
+                    "Item Estrutura": estrutura.item_estrutura,
+                    "Descrição Item": estrutura.descricao_item,
+                    "Quantidade Item": estrutura.quantidade_item,
+                    "Quantidade Real": estrutura.quantidade_real,
+                    "Peso": estrutura.peso,
+                    "Fino": estrutura.fino,
+                    "Lotes": []
+                }
+                lotes = Lotes_mov_op.query.filter_by(item=estrutura.item_estrutura, referencia=estrutura.op_referencia).all()
+                for lote in lotes:
+                    lote_data = {
+                        "ID": lote.id,
+                        "Referência": lote.referencia,
+                        "Tipo": lote.tipo,
+                        "Item": lote.item,
+                        "Lote Visual": lote.lote_visual,
+                        "Número Lote": lote.numero_lote,
+                        "Quantidade": lote.quantidade,
+                        "Peso": lote.peso,
+                        "Fino": lote.fino,
+                        "Data Mov": lote.data_mov,
+                        "ID do Lote": lote.id_lote,
+                        "Operador": lote.operador
+                    }
+                    estrutura_data["Lotes"].append(lote_data)
+                op_data["Estruturas"].append(estrutura_data)
+            data.append(op_data)
+
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            workbook = writer.book
+            worksheet = workbook.add_worksheet('Ordem de Produção Tree')
+            writer.sheets['Ordem de Produção Tree'] = worksheet
+
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            header_format1 = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#d35ff0',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            header_format2 = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#f0995f',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+
+            row = 0
+            col = 0
+
+            headers = ["PIV", "Numero OP Visual", "Situação", "Item", "Descrição", "Quantidade", "Quantidade Real", "Peso Enviado", "Peso Retornado", "Fino Enviado", "Fino Retornado", "Data Abertura", "Hora Abertura", "Setor", "Operador"]
+            estrutura_headers = ["ID", "OP Referência", "Tipo Mov", "Item Estrutura", "Descrição Item", "Quantidade Item", "Quantidade Real", "Peso", "Fino"]
+            lote_headers = ["ID", "Referência", "Tipo", "Item", "Lote Visual", "Número Lote", "Quantidade", "Peso", "Fino", "Data Mov", "ID do Lote", "Operador"]
+
+            for op in data:
+                # Write headers for OP Visual
+                for header in headers:
+                    worksheet.write(row, col, header, header_format)
+                    worksheet.set_column(col, col, 15)
+                    col += 1
+
+                row += 1
+                col = 0
+
+                # Write OP Visual data
+                worksheet.write(row, 0, op["PIV"], cell_format)
+                worksheet.write(row, 1, op["Numero OP Visual"], cell_format)
+                worksheet.write(row, 2, op["Situação"], cell_format)
+                worksheet.write(row, 3, op["Item"], cell_format)
+                worksheet.write(row, 4, op["Descrição"], cell_format)
+                worksheet.write(row, 5, op["Quantidade"], cell_format)
+                worksheet.write(row, 6, op["Quantidade Real"], cell_format)
+                worksheet.write(row, 7, op["Peso Enviado"], cell_format)
+                worksheet.write(row, 8, op["Peso Retornado"], cell_format)
+                worksheet.write(row, 9, op["Fino Enviado"], cell_format)
+                worksheet.write(row, 10, op["Fino Retornado"], cell_format)
+                worksheet.write(row, 11, op["Data Abertura"], cell_format)
+                worksheet.write(row, 12, op["Hora Abertura"], cell_format)
+                worksheet.write(row, 13, op["Setor"], cell_format)
+                worksheet.write(row, 14, op["Operador"], cell_format)
+                worksheet.set_row(row, 15)
+                row += 1
+
+                for estrutura in op["Estruturas"]:
+                    # Write headers for Estruturas
+                    for header in estrutura_headers:
+                        worksheet.write(row, col, header, header_format1)
+                        worksheet.set_column(col, col, 15)
+                        col += 1
+
+                    row += 1
+                    col = 0
+
+                    # Write Estrutura data
+                    worksheet.write(row, 0, estrutura["ID"], cell_format)
+                    worksheet.write(row, 1, estrutura["OP Referência"], cell_format)
+                    worksheet.write(row, 2, estrutura["Tipo Mov"], cell_format)
+                    worksheet.write(row, 3, estrutura["Item Estrutura"], cell_format)
+                    worksheet.write(row, 4, estrutura["Descrição Item"], cell_format)
+                    worksheet.write(row, 5, estrutura["Quantidade Item"], cell_format)
+                    worksheet.write(row, 6, estrutura["Quantidade Real"], cell_format)
+                    worksheet.write(row, 7, estrutura["Peso"], cell_format)
+                    worksheet.write(row, 8, estrutura["Fino"], cell_format)
+                    worksheet.set_row(row, 15)
+                    row += 1
+
+                    # Write headers for Lotes (once per Estrutura)
+                    if estrutura["Lotes"]:
+                        for header in lote_headers:
+                            worksheet.write(row, col, header, header_format2)
+                            worksheet.set_column(col, col, 15)
+                            col += 1
+
+                        row += 1
+                        col = 0
+
+                        for lote in estrutura["Lotes"]:
+                            # Write Lote data
+                            worksheet.write(row, 0, lote["ID"], cell_format)
+                            worksheet.write(row, 1, lote["Referência"], cell_format)
+                            worksheet.write(row, 2, lote["Tipo"], cell_format)
+                            worksheet.write(row, 3, lote["Item"], cell_format)
+                            worksheet.write(row, 4, lote["Lote Visual"], cell_format)
+                            worksheet.write(row, 5, lote["Número Lote"], cell_format)
+                            worksheet.write(row, 6, lote["Quantidade"], cell_format)
+                            worksheet.write(row, 7, lote["Peso"], cell_format)
+                            worksheet.write(row, 8, lote["Fino"], cell_format)
+                            worksheet.write(row, 9, lote["Data Mov"], cell_format)
+                            worksheet.write(row, 10, lote["ID do Lote"], cell_format)
+                            worksheet.write(row, 11, lote["Operador"], cell_format)
+                            worksheet.set_row(row, 15)
+                            row += 1
+
+        output.seek(0)
+        return send_file(output, download_name='Ordem_Producao_Tree.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+
 
 
 @app.route('/admin_lotes_ops', methods=['GET', 'POST'])
@@ -3572,6 +3801,7 @@ def deletar_lote():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+
 @app.route('/exportar_lotes_excel')
 @login_required
 def exportar_lotes_excel():
@@ -3579,6 +3809,7 @@ def exportar_lotes_excel():
         lotes = Lotes_mov_op.query.all()
 
         data = {
+            "ID": [lote.id for lote in lotes],
             "Referência": [lote.referencia for lote in lotes],
             "Tipo": [lote.tipo for lote in lotes],
             "Item": [lote.item for lote in lotes],
@@ -3588,11 +3819,16 @@ def exportar_lotes_excel():
             "Peso": [lote.peso for lote in lotes],
             "Fino": [lote.fino for lote in lotes],
             "Data Mov": [lote.data_mov for lote in lotes],
+            "ID do Lote": [lote.id_lote for lote in lotes],
             "Operador": [lote.operador for lote in lotes]
         }
         
         df = pd.DataFrame(data)
-        
+
+        # Substituir valores NaN e Inf por 0
+        df = df.fillna(0)
+        df = df.replace([float('inf'), float('-inf')], 0)
+
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='Lotes de Ops')
@@ -3652,6 +3888,7 @@ def importar_lotes():
                 peso=row['Peso'],
                 fino=row['Fino'],
                 data_mov=row['Data Mov'],
+                id_lote=row['ID do Lote'],
                 operador=row['Operador']
             )
             db.session.add(lote)
