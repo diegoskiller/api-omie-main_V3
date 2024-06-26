@@ -53,7 +53,8 @@
     <div class="w-100"> 
     <div class="input-group d-flex justify-content-start">
         <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
-        <button id="exportExcelTree" class="btn btn-warning">Exportar para Excel Tree</button>
+        <button id="exportExcelTree" class="btn btn-primary">Exportar para Excel Tree</button>
+        <a href="/exportar_ordem_producao_json" class="btn btn-warning">Exportar para JSON</a>
         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">Importar do Excel</button>
         <button id="processarSomatoria" class="btn btn-dark">Processar Somatórias</button>
         <form method="POST" action="{{url_for('ordem_producao_tree')}}">

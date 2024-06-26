@@ -3892,6 +3892,72 @@ def exportar_ordem_producao_tree_excel():
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
 
+@app.route('/exportar_ordem_producao_json', methods=['GET'])
+@login_required
+def exportar_ordem_producao_json():
+    try:
+        ops_visual = Ops_visual.query.order_by(Ops_visual.id.desc()).filter(Ops_visual.situação != 'Encerrada').all()
+
+        data = []
+        for op in ops_visual:
+            op_data = {
+                "PIV": op.piv,
+                "Numero OP Visual": op.numero_op_visual,
+                "Situação": op.situação,
+                "Item": op.item,
+                "Descrição": op.descrição,
+                "Quantidade": op.quantidade,
+                "Quantidade Real": op.quantidade_real,
+                "Peso Enviado": op.peso_enviado,
+                "Peso Retornado": op.peso_retornado,
+                "Fino Enviado": op.fino_enviado,
+                "Fino Retornado": op.fino_retornado,
+                "Data Abertura": op.data_abertura,
+                "Hora Abertura": op.hora_abertura,
+                "Setor": op.setor,
+                "Operador": op.operador,
+                "Estruturas": []
+            }
+            estruturas = Estrutura_op.query.filter_by(op_referencia=op.numero_op_visual).all()
+            for estrutura in estruturas:
+                estrutura_data = {
+                    "ID": estrutura.id,
+                    "OP Referência": estrutura.op_referencia,
+                    "Tipo Mov": estrutura.tipo_mov,
+                    "Item Estrutura": estrutura.item_estrutura,
+                    "Descrição Item": estrutura.descricao_item,
+                    "Quantidade Item": estrutura.quantidade_item,
+                    "Quantidade Real": estrutura.quantidade_real,
+                    "Peso": estrutura.peso,
+                    "Fino": estrutura.fino,
+                    "Lotes": []
+                }
+                lotes = Lotes_mov_op.query.filter_by(item=estrutura.item_estrutura, referencia=estrutura.op_referencia).all()
+                for lote in lotes:
+                    lote_data = {
+                        "ID": lote.id,
+                        "Referência": lote.referencia,
+                        "Tipo": lote.tipo,
+                        "Item": lote.item,
+                        "Lote Visual": lote.lote_visual,
+                        "Número Lote": lote.numero_lote,
+                        "Quantidade": lote.quantidade,
+                        "Peso": lote.peso,
+                        "Fino": lote.fino,
+                        "Data Mov": lote.data_mov,
+                        "ID do Lote": lote.id_lote,
+                        "Operador": lote.operador
+                    }
+                    estrutura_data["Lotes"].append(lote_data)
+                op_data["Estruturas"].append(estrutura_data)
+            data.append(op_data)
+
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 
 @app.route('/processar_somatoria', methods=['POST'])
@@ -4527,12 +4593,14 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
 
 
     else:
+        id_lote = int(id_lote)
+        quan = int(quan)
         quantidade = neg(quan)
         lote = Def_numero_lote(referencia)
         numero_lote =  "".join([str(lote), "/", str(referencia) ])
 
         if id_lote > 1:
-            Lote_visual.query.get(id_lote)
+            lote_visual = Lote_visual.query.get(id_lote)
         else:
             lote_visual = Lote_visual.query.filter_by(item=item, lote_visual=lote, referencia = referencia).first()
         if lote_visual:
