@@ -51,14 +51,25 @@
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
-        <div class="input-group d-flex justify-content-start">
+    <div class="input-group d-flex justify-content-start">
         <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button id="exportExcelTree" class="btn btn-warning">Exportar para Excel Tree</button>
         <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">Importar do Excel</button>
+        <button id="processarSomatoria" class="btn btn-dark">Processar Somatórias</button>
         <form method="POST" action="{{url_for('ordem_producao_tree')}}">
             <input type="hidden" name="filtro_encerrada" value="{{ '0' if filtro_encerrada == '1' else '1' }}">
-            <button class="btn btn-dark ms-0" type="submit">{{ 'Mostrar OPs Encerradas ' if filtro_encerrada == '1' else 'Não Mostrar OPs Encerradas' }}</button>
+            <button class="btn btn-primary ms-0" type="submit">{{ 'Mostrar OPs Encerradas ' if filtro_encerrada == '1' else 'Não Mostrar OPs Encerradas' }}</button>
         </form>
+        &nbsp;
+        <div id="processStatus"></div>
+        <p></p>
+        <div id="progressBarContainer" style="display: none; width: 100%; background-color: #f3f3f3;">
+        <div id="progressBar" style="width: 0%; height: 30px; background-color: #9340a3; text-align: center; line-height: 30px; color: white;"></div>
+    </div>
+
+
+
+
         </div>
 
         <h2 class="d-flex justify-content-center mt-2"><strong>Estrutura de Ordem de Produção</strong></h2>
@@ -348,6 +359,45 @@
                 this.classList.toggle("caret-down");
             });
         }
-    </script>
+
+        </script>
+<!-- Adicione isso ao final do corpo -->
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+    var socket = io();
+
+    socket.on('process_status', function(data) {
+        var statusDiv = document.getElementById('processStatus');
+        statusDiv.innerText = data.message;
+        var progressBar = document.getElementById('progressBar');
+        progressBar.style.width = data.percentage + '%';
+        progressBar.innerText = data.percentage.toFixed(2) + '%';
+    });
+
+    document.getElementById('processarSomatoria').addEventListener('click', function() {
+        var statusDiv = document.getElementById('processStatus');
+        statusDiv.innerText = "Iniciando processamento...";
+        var progressBarContainer = document.getElementById('progressBarContainer');
+        progressBarContainer.style.display = 'block';
+        
+        fetch("/processar_somatoria", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Somatória processada com sucesso!");
+                location.reload();
+            } else {
+                alert("Erro ao processar somatória: " + data.message);
+            }
+        }).catch(error => {
+            console.error("Erro:", error);
+            alert("Erro ao processar somatória.");
+        });
+    });
+</script>
 
 {% endblock %}

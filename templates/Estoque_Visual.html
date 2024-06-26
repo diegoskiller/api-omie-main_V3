@@ -1,3 +1,6 @@
+
+
+
 {% extends 'base.html' %}
 
 {% include 'header.html' %}
@@ -20,14 +23,29 @@
     th {
         border-top: 10px solid #5f74f0 !important;
     }
+
+    #progressContainer {
+        display: none;
+        margin-top: 20px;
+    }
+
+    .progress-bar {
+        width: 0;
+        height: 20px;
+        background-color: #4caf50;
+        text-align: center;
+        line-height: 20px;
+        color: white;
+    }
 </style>
 
 <div class="w-100" style="padding-top: 0px !important;">
     <div class="w-100"> 
         <a href="{{url_for('index_uploads')}}" type="button" class="btn btn-success ms-2">Voltar</a>
         <button type="button" class="btn btn-primary ms-2" data-bs-toggle="modal" data-bs-target="#addSaldoModal">Adicionar Saldo</button>
-        <button id="exportExcel" class="btn btn-warning">Exportar para Excel</button>
-        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar Saldos</button>
+        <button id="exportExcel" class="btn btn-warning">Exportar para Excel Resumo</button>
+        <button id="exportExcelcomp" class="btn btn-warning">Exportar para Excel Completo</button>
+        <button type="button" class="btn btn-info ms-2" data-bs-toggle="modal" data-bs-target="#importModal">Importar Estoque</button>
 
         <h2 class="d-flex justify-content-center mt-2"><strong>Estoque Visual</strong></h2>
 
@@ -48,16 +66,28 @@
 
         <div class="container w-100">
             {% with messages=get_flashed_messages(with_categories=true) %}
-                {%if messages%}
-                    {%for category, message in messages%}
+                {% if messages %}
+                    {% for category, message in messages %}
                         <div class="alert alert-success">
-                            {{message}}
+                            {{ message }}
                             <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    {%endfor%}
-                {%endif%}
-            {%endwith%}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
         </div>
+
+<!-- Barra de Progresso --><p>
+
+<!-- Barra de Progresso -->
+<div id="progressContainer" style="display: none;">
+    <p>Importando Item: <span id="currentItem"></span></p>
+    <div class="progress">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+    </div>
+</div>
+
+
 
         <div class="w-100 margin-top p-2">
             <table class="table table-hover table-info">
@@ -66,23 +96,25 @@
                     <th>Item</th>
                     <th>Descrição</th>
                     <th>Lote</th>
-                    <TH>Quantidade</TH>
+                    <th>Quantidade</th>
                     <th>Peso</th>
-                    <th>Operador que Produziu</th>
+                    <th>Local</th>
+                    <th>Produzido Por:</th>
                     <th>Ações</th>
                 </tr>
 
                 {% for row in visual %}
                     <tr class='{{"table-dark" if row.situacao == "Encerrada" else ""}}'>                      
-                        <td>{{row.referencia}}</td>
-                        <td>{{row.item}}</td>
-                        <td>{{row.descricao}}</td>
-                        <td>{{row.numero_lote}}</td>
-                        <td>{{row.quantidade}}</td>
-                        <td>{{row.peso}}</td>
-                        <td>{{row.operador}}</td>
+                        <td>{{ row.referencia }}</td>
+                        <td>{{ row.item }}</td>
+                        <td>{{ row.descricao }}</td>
+                        <td>{{ row.numero_lote }}</td>
+                        <td>{{ row.quantidade }}</td>
+                        <td>{{ row.peso }}</td>
+                        <td>{{ row.local }}</td>
+                        <td>{{ row.operador }}</td>
                         <td>
-                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{row.id}}')">Excluir</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ row.id }}')">Excluir</button>
                         </td>
                     </tr>
                 {% endfor %}
@@ -90,54 +122,26 @@
         </div>
     </div>
 
-    {% for page_num in visual_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %} 
-        {% if page_num %} 
+    {% for page_num in visual_page.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
             {% if visual_page.page == page_num %}
                 <a class="btn btn-dark mb-4" href="{{ url_for('estoque_visual', page=page_num) }}">{{ page_num }}</a>
             {% else %}
                 <a class="btn btn-outline-dark mb-4" href="{{ url_for('estoque_visual', page=page_num) }}">{{ page_num }}</a>
-            {% endif %} 
-        {% else %} 
-            ... 
-        {% endif %} 
+            {% endif %}
+        {% else %}
+            ...
+        {% endif %}
     {% endfor %}
 </div>
 
-<!-- Modal Adicionar Saldo -->
-<div class="modal fade" id="addSaldoModal" tabindex="-1" aria-labelledby="addSaldoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSaldoModalLabel">Adicionar Saldo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addSaldoForm">
-                    <div class="mb-3">
-                        <label for="codigo" class="form-label">Código</label>
-                        <input type="text" class="form-control" id="codigo" name="codigo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="quantidade" class="form-label">Quantidade(GR)</label>
-                        <input type="number" class="form-control" id="quantidade" name="quantidade" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="referencia" class="form-label">Referência</label>
-                        <input type="text" class="form-control" id="referencia" name="referencia" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Adicionar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Modal Importar Saldos -->
+<!-- Modal Importar do Excel -->
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="importModalLabel">Importar Saldos</h5>
+                <h5 class="modal-title" id="importModalLabel">Importar do Excel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -153,25 +157,7 @@
     </div>
 </div>
 
-<!-- Modal Confirmar Exclusão -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Tem certeza de que deseja excluir este item?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+<script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 <script>
     var itemIdToDelete;
 
@@ -206,7 +192,6 @@
         event.preventDefault();
         var formData = new FormData(this);
         
-        
         fetch("/add_saldo_cobre", {
             method: "POST",
             body: JSON.stringify(Object.fromEntries(formData)),
@@ -231,10 +216,28 @@
         window.location.href = "{{ url_for('exportar_visual_excel') }}";
     });
 
-    document.getElementById("importForm").addEventListener("submit", function(event) {
+    document.getElementById('exportExcelcomp').addEventListener('click', function() {
+        window.location.href = "{{ url_for('exportar_visual_excel_completo') }}";
+    });
+
+</script>
+
+
+<script>
+    var socket = io();
+
+    socket.on('import_progress_visual', function(data) {
+        document.getElementById('progressContainer').style.display = 'block';
+        document.getElementById('currentItem').innerText = data.item;
+        var progressBar = document.getElementById('progressBar');
+        progressBar.style.width = data.progress + '%';
+        progressBar.setAttribute('aria-valuenow', data.progress);
+        progressBar.innerText = Math.round(data.progress) + '%';
+    });
+
+    document.getElementById('importForm').addEventListener('submit', function(event) {
         event.preventDefault();
         var formData = new FormData(this);
-
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "/importar_visual", true);
 
@@ -242,7 +245,6 @@
             if (event.lengthComputable) {
                 var percentComplete = (event.loaded / event.total) * 100;
                 console.log(percentComplete + '% uploaded');
-                // Update progress bar here
             }
         });
 
@@ -258,5 +260,6 @@
         xhr.send(formData);
     });
 </script>
+
 
 {% endblock %}

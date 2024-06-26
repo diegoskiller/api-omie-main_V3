@@ -1,8 +1,11 @@
+
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from flask_socketio import SocketIO, emit
+from werkzeug.utils import secure_filename
 from models import *
 import pymysql
 import os
@@ -30,6 +33,11 @@ migrate = Migrate(app, db)
 app.config['SECRET_KEY'] = 'my-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = conexao
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Configure Flask-SocketIO
+socketio = SocketIO(app)
+
+# Restante das configurações e importações
 
 # flask db init
 # flask db migrate -m "teste de migraçãoo"

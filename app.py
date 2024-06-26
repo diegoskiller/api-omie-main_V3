@@ -8,7 +8,7 @@ from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lo
 from models.forms import LoginForm, RegisterForm
 from models import *
 from flask_login import login_user, logout_user, current_user
-from config import app, db, app_key, app_secret, bcrypt, login_manager
+from config import app, db, app_key, app_secret, bcrypt, login_manager, socketio
 from operator import neg
 from reportlab.pdfgen import canvas
 #import time
@@ -358,7 +358,7 @@ def importar_itens():
                     ncm=row['Ncm'],
                     familia=row['Família'],
                     setor=row['Setor'],
-                    valor_unitario=row['Valor Família']
+                    valor_unitario=row['Valor Unitário']
                 )
                 db.session.add(new_item)
         except KeyError as ke:
@@ -394,36 +394,46 @@ def estoque_visual():
         filtro_desc = None
 
     if filtro_cod:
-        visual = Lote_visual.query.filter(Lote_visual.item.ilike(f"%{filtro_cod}%")).paginate(page=page, per_page=10)
+        visual = Lote_visual.query.order_by(Lote_visual.id.desc()).filter(Lote_visual.item.ilike(f"%{filtro_cod}%")).paginate(page=page, per_page=10)
     elif filtro_desc:
-        visual = Lote_visual.query.filter(Lote_visual.descricao.ilike(f"%{filtro_desc}%")).paginate(page=page, per_page=10)
+        visual = Lote_visual.query.order_by(Lote_visual.id.desc()).filter(Lote_visual.descricao.ilike(f"%{filtro_desc}%")).paginate(page=page, per_page=10)
     else:
-        visual = Lote_visual.query.paginate(page=page, per_page=10)
+        visual = Lote_visual.query.order_by(Lote_visual.id.desc()).paginate(page=page, per_page=10)
 
     visual_items = []
     for lote in visual.items:
         desc = Def_cadastro_prod(lote.item)
+        loc = Def_locais(lote.local)
         descricao = desc[5] if len(desc) > 5 else 'N/A'
+        local = loc
         lote_dict = lote.__dict__
+        local_dict = lote.__dict__
         lote_dict['descricao'] = descricao
+        local_dict['local'] = local
         lote_dict.pop('_sa_instance_state', None)
+        local_dict.pop('_sa_instance_state', None)
         visual_items.append(lote_dict)
+        visual_items.append(local_dict)
+
+
 
     return render_template('Estoque_Visual.html', visual=visual_items, visual_page=visual)
 
 @app.route('/exportar_visual_excel')
 def exportar_visual_excel():
     try:
-        visual = Lote_visual.query.filter_by().all()
+        visual = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by().all()
 
         data = {
             "Referencia": [item.referencia for item in visual],
             "Item": [item.item for item in visual],
             "Descrição": [Def_cadastro_prod(item.item)[5] for item in visual],
             "Lote": [item.numero_lote for item in visual],
-            "Peso": [item.quantidade / 1000 for item in visual],
-            "Unid": ['KG' for item in visual],
-            "Operador que Produziu": [item.operador for item in visual],
+            "Quant.": [item.quantidade for item in visual],
+            "Peso": [item.peso for item in visual],
+            "Fino": [item.fino for item in visual],
+            "Local": [Def_locais(item.local) for item in visual],
+            "Produzido por:": [item.operador for item in visual],
         }
         
         df = pd.DataFrame(data)
@@ -474,14 +484,105 @@ def exportar_visual_excel():
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
 
+
+
+
+
+@app.route('/exportar_visual_excel_completo')
+def exportar_visual_excel_completo():
+    try:
+        visual = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by().all()
+
+        data = {
+            "Referencia": [item.referencia for item in visual],
+            "Tipo Movimento": [item.tipo for item in visual],
+            "Item": [item.item for item in visual],
+            "Lote Visual": [item.lote_visual for item in visual],
+            "Lote": [item.numero_lote for item in visual],
+            "Quant.": [item.quantidade for item in visual],
+            "Peso": [item.peso for item in visual],
+            "Fino": [item.fino for item in visual],
+            "Local": [item.local for item in visual],
+            "Observação": [item.obs for item in visual],
+            "Data Criação": [item.data_criacao for item in visual],
+            "OP Processada": [item.processado_op for item in visual],
+            "Qtd Inicial": [item.quant_inicial for item in visual],
+            "Produzido por:": [item.operador for item in visual],
+        }
+        
+        df = pd.DataFrame(data)
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name='Estoque Visual Completo')
+            
+            workbook  = writer.book
+            worksheet = writer.sheets['Estoque Visual Completo']
+            
+            header_format = workbook.add_format({
+                'bold': True,
+                'text_wrap': True,
+                'valign': 'top',
+                'fg_color': '#4472C4',
+                'font_color': 'white',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            cell_format = workbook.add_format({
+                'text_wrap': True,
+                'valign': 'top',
+                'border': 1,
+                'align': 'center'
+            })
+            
+            worksheet.set_column(1, 1, 30)
+            worksheet.set_column(3, 3, 20, cell_format)
+            
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+                if col_num == 0:
+                    worksheet.set_column(col_num, col_num, 16)
+                elif col_num == 1:
+                    worksheet.set_column(col_num, col_num, 18)    
+                elif col_num == 2:
+                    worksheet.set_column(col_num, col_num, 17)
+                elif col_num == 3:
+                    worksheet.set_column(col_num, col_num, 10)
+                elif col_num == 4:
+                    worksheet.set_column(col_num, col_num, 17)
+                elif col_num == 5:
+                    worksheet.set_column(col_num, col_num, 8)
+                elif col_num == 6:
+                    worksheet.set_column(col_num, col_num, 8)
+                elif col_num == 7:
+                    worksheet.set_column(col_num, col_num, 8)                        
+                else:
+                    worksheet.set_column(col_num, col_num, 15)
+                
+               
+            
+            for row_num, row_data in enumerate(df.values, 1):
+                for col_num, cell_data in enumerate(row_data):
+                    worksheet.write(row_num, col_num, cell_data, cell_format)
+
+        output.seek(0)
+        
+        return send_file(output, download_name='Estoque_Visual_Completo.xlsx', as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
+
+
 @app.route('/importar_visual', methods=['POST'])
 def importar_visual():
+    print("import-------------------------------------------import")
     file = request.files.get('file')
     if not file:
         return jsonify({"success": False, "message": "Nenhum arquivo enviado."})
 
     try:
         df = pd.read_excel(file)
+        total_rows = len(df)
         errors = []
         updated = 0
         created = 0
@@ -490,32 +591,40 @@ def importar_visual():
             try:
                 lote_visual = Lote_visual.query.filter_by(item=row['Item'], numero_lote=row['Lote']).first()
                 if lote_visual:
-                    lote_visual.quantidade = row['Peso']
-                    lote_visual.referencia = row['Referencia']
-                    lote_visual.local = row['Unid']
+                    lote_visual.quantidade = row['Quant.']
+                    lote_visual.peso = row['Peso']
+                    lote_visual.fino = row['Fino']
+                    lote_visual.local = row['Local']
                     db.session.commit()
                     updated += 1
                 else:
                     new_lote = Lote_visual(
-                        item=row['Item'],
-                        numero_lote=row['Lote'],
-                        quantidade=row['Peso'],
                         referencia=row['Referencia'],
-                        local=row['Unid'],
-                        tipo='Setor_Visual',
-                        peso=0,
-                        fino=0,
-                        obs='',
-                        data_criacao='',
-                        processado_op=0,
-                        quant_inicial=row['Peso'],
-                        operador=row['Operador']
+                        tipo=row['Tipo Movimento'],
+                        item=row['Item'],
+                        lote_visual=row['Lote Visual'],
+                        numero_lote=row['Lote'],
+                        quantidade=row['Quant.'],
+                        peso=row['Peso'],
+                        fino=row['Fino'],
+                        local=row['Local'],
+                        obs=row['Observação'],
+                        data_criacao=row['Data Criação'],
+                        processado_op=row['OP Processada'],
+                        quant_inicial=row['Qtd Inicial'],
+                        operador=row['Produzido por:']
                     )
                     db.session.add(new_lote)
                     db.session.commit()
                     created += 1
             except Exception as e:
                 errors.append(f"Erro no item {row['Item']} na linha {index}: {str(e)}")
+            
+            # Enviar progresso via socketio
+            socketio.emit('import_progress_visual', {
+                'item': row['Item'],
+                'progress': int((index + 1) / total_rows * 100)
+            }, namespace='/')
 
         return jsonify({"success": True, "message": f"Importação concluída. {updated} itens atualizados, {created} itens criados. Erros: {'; '.join(errors)}"})
     except Exception as e:
@@ -1326,6 +1435,7 @@ def add_lote_mov_op():
     quant = request.form.get("quantidade")
     qtd_parcial = request.form.get("qtd_parcial")
     id_lote = request.form.get("id")
+    local = request.form.get("local")
     id_mov = request.form.get("id_mov")
     peso_parcial = request.form.get("peso_parcial")
     fino = request.form.get("fino")
@@ -1360,27 +1470,30 @@ def add_lote_mov_op():
         db.session.commit()
 
         
-        env_lote = Lote_visual.query.get(id_lote)
-        
-        env_lote.quantidade = y - x
-        env_lote.peso = env_lote.peso - peso_parcial
-        #local = request.form.get("local")
+        # env_lote = Lote_visual.query.get(id_lote)
+        # env_lote.quantidade = y - x
+        # env_lote.peso = env_lote.peso - peso_parcial
+        # env_lote.fino = env_lote.fino - fino_parcial
                 
-        db.session.commit()
-    
+        # db.session.commit()
+
+        Def_ajuste_estoque(item, qtd_parcial, "SAI", local, referencia, tipo, peso_parcial,"-", id_lote, "Não", operador)
         
+
+
+
         ajust_mov = Estrutura_op.query.get(id_mov)
-        if ajust_mov.quantidade_real == None:
+        if ajust_mov.quantidade_real == 0:
             ajust_mov.quantidade_real = int(qtd_parcial)
         else:
             ajust_mov.quantidade_real = ajust_mov.quantidade_real + int(qtd_parcial)
 
-        if ajust_mov.peso == None:
+        if ajust_mov.peso == 0:
             ajust_mov.peso = peso_parcial
         else:
             ajust_mov.peso = ajust_mov.peso + peso_parcial
 
-        if ajust_mov.fino == None:
+        if ajust_mov.fino == 0:
             ajust_mov.fino = fino_parcial
         else:
             ajust_mov.fino = ajust_mov.fino + fino_parcial
@@ -1391,7 +1504,7 @@ def add_lote_mov_op():
         for dados_op in op_dados:
             id_op = dados_op.id
         ajuste_op = Ops_visual.query.get(id_op)
-        if tipo == "Enviar Insumo" or tipo == "Enviar Retalho" or tipo == "Enviar Retalho" or tipo == "Enviar item Substituto":
+        if tipo == "insumo Enviado" or tipo == "Retalho Enviado" or tipo == "Substituto Enviado":
             if ajuste_op.peso_enviado == None:
                 ajuste_op.peso_enviado = peso_parcial
             else:
@@ -1525,30 +1638,31 @@ def add_lote_mov_op_prod():
                 operador = dados_op.operador
             id_op = dados_op.id
         ajuste_op = Ops_visual.query.get(id_op)
-        if tipo == "Enviar Insumo" or tipo == "Enviar Retalho" or tipo == "Enviar Retalho" or tipo == "Enviar item Substituto":
-            if ajuste_op.peso_enviado == None:
+
+        if tipo == "Material Produzido":
+            ajuste_op.quantidade_real = ajuste_op.quantidade_real + int(qtd_parcial)
+
+            if ajuste_op.peso_enviado == 0:
                 ajuste_op.peso_enviado = peso_parcial
             else:
                 ajuste_op.peso_enviado = ajuste_op.peso_enviado + peso_parcial
                 
-            if ajuste_op.fino_enviado == None:
+            if ajuste_op.fino_enviado == 0:
                 ajuste_op.fino_enviado = fino_parcial
             else:
                 ajuste_op.fino_enviado = ajuste_op.fino_enviado + fino_parcial
         else:
-            if ajuste_op.peso_retornado == None:
+            if ajuste_op.peso_retornado == 0:
                 ajuste_op.peso_retornado = peso_parcial
             else:
                 ajuste_op.peso_retornado = ajuste_op.peso_retornado + peso_parcial
-            if ajuste_op.fino_retornado == None:
+            if ajuste_op.fino_retornado == 0:
                 ajuste_op.fino_retornado = fino_parcial
             else:
                 ajuste_op.fino_retornado = ajuste_op.fino_retornado + fino_parcial
 
 
-        if tipo == "Material Produzido":
-            ajuste_op.quantidade_real = ajuste_op.quantidade_real + int(qtd_parcial)
-
+       
         db.session.commit()
 
         error = "Sucesso" 
@@ -3169,7 +3283,7 @@ def restaurar_banco():
             flash('Arquivo inválido! Por favor, envie um arquivo .sql.', 'danger')
             return redirect(url_for('backup_restore'))
 
-        db_url = os.getenv('URL_MYSQL_novo')
+        db_url = os.getenv(caminhobanco)
         if not db_url:
             raise ValueError("URL_MYSQL não está configurada.")
         
@@ -3179,6 +3293,7 @@ def restaurar_banco():
         password = url.password
         host = url.host
         port = url.port or 3306
+        
 
         connection = pymysql.connect(host=host, user=user, password=password, database=db_name, port=port)
         cursor = connection.cursor()
@@ -3216,7 +3331,7 @@ def ordem_producao():
     if filtro_desc == "":
         filtro_desc = None
 
-    query = Ops_visual.query
+    query = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc())
     if filtro_cod:
         query = query.filter_by(item=filtro_cod)
     elif filtro_desc:
@@ -3226,6 +3341,7 @@ def ordem_producao():
         query = query.filter(Ops_visual.situação != 'Encerrada')
 
     ops_visual = query.paginate(page=page, per_page=10)
+    #ops_visual = query.order_by(Ops_visual.id.desc())
 
     ops_visual_items = [item.__dict__ for item in ops_visual.items]
     for item in ops_visual_items:
@@ -3311,6 +3427,10 @@ def exportar_ordem_producao_excel():
     except Exception as e:
         return f"Erro ao exportar para Excel: {str(e)}", 500
 
+
+
+
+
 @app.route('/importar_ordem_producao', methods=['POST'])
 def importar_ordem_producao():
     try:
@@ -3319,6 +3439,7 @@ def importar_ordem_producao():
             return "Arquivo inválido! Por favor, envie um arquivo .xlsx.", 400
 
         df = pd.read_excel(file)
+        total_rows = len(df.index)
         for index, row in df.iterrows():
             numero_op_visual = row.get("Numero OP Visual")
             ordem_producao = Ops_visual.query.filter_by(numero_op_visual=numero_op_visual).first()
@@ -3356,6 +3477,10 @@ def importar_ordem_producao():
                 ordem_producao.setor = row["Setor"]
                 ordem_producao.operador = row["Operador"]
                 ordem_producao.quantidade_real = row["Quantidade Real"]
+
+            # Emitir progresso
+            progress = (index + 1) / total_rows * 100
+            socketio.emit('import_progress', {'numero_op_visual': ordem_producao.numero_op_visual, 'progress': progress})
 
         db.session.commit()
         return "Importação concluída com sucesso!", 200
@@ -3552,7 +3677,7 @@ def ordem_producao_tree():
     else:
         filtro_encerrada = session.get('filtro_encerrada', '1')
 
-    query = Ops_visual.query.order_by(Ops_visual.id.desc())
+    query = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc())
 
     if filtro_cod:
         query = query.filter(Ops_visual.item.contains(filtro_cod))
@@ -3767,6 +3892,47 @@ def exportar_ordem_producao_tree_excel():
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
 
+
+
+@app.route('/processar_somatoria', methods=['POST'])
+@login_required
+def processar_somatoria():
+    try:
+        ops_visual_list = Ops_visual.query.all()
+        total_ops = len(ops_visual_list)
+        processed_ops = 0
+        
+        for op in ops_visual_list:
+            op.peso_enviado = 0
+            op.fino_enviado = 0
+            op.peso_retornado = 0
+            op.fino_retornado = 0
+            op.quantidade_real = 0
+            
+            lotes_mov_op_list = Lotes_mov_op.query.filter_by(referencia=op.numero_op_visual).all()
+            for lote in lotes_mov_op_list:
+                if lote.tipo in ["Substituto Enviado", "Retalho Enviado", "insumo Enviado"]:
+                    op.peso_enviado += lote.peso
+                    op.fino_enviado += lote.fino
+                elif lote.tipo == "Material Produzido":
+                    op.quantidade_real += lote.quantidade
+                    op.peso_retornado += lote.peso
+                    op.fino_retornado += lote.fino
+                elif lote.tipo in ["Retalho Produzido", "Sucata Produzida", "Coproduto Produzido"]:
+                    op.peso_retornado += lote.peso
+                    op.fino_retornado += lote.fino
+
+            db.session.commit()
+            processed_ops += 1
+            percentage = (processed_ops / total_ops) * 100
+            socketio.emit('process_status', {
+                'message': f'Processando OP: {op.numero_op_visual} ({percentage:.2f}%)',
+                'percentage': percentage
+            })
+
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 
 
@@ -4365,6 +4531,22 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
         lote = Def_numero_lote(referencia)
         numero_lote =  "".join([str(lote), "/", str(referencia) ])
 
+        if id_lote > 1:
+            Lote_visual.query.get(id_lote)
+        else:
+            lote_visual = Lote_visual.query.filter_by(item=item, lote_visual=lote, referencia = referencia).first()
+        if lote_visual:
+            lote_visual.quantidade = lote_visual.quantidade - quan
+            lote_visual.peso = lote_visual.peso - peso
+            lote_visual.fino = lote_visual.fino - fino
+                
+            db.session.commit()
+
+
+
+
+
+
     movs_status = Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
     print("id_lote")
     print(id_lote)
@@ -4909,11 +5091,15 @@ def indicadores():
 
 
 
+# if __name__ == "__main__":
+    
+#     db.create_all()
+#     db.session.commit()
+#     app.run(port=3333, debug=True)
+
+ # Inicie o servidor Flask-SocketIO
 if __name__ == "__main__":
     
     db.create_all()
     db.session.commit()
-
-    app.run(port=3333, debug=True)
-
- 
+    socketio.run(app, port=3333, debug=True)
