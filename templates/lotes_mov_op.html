@@ -144,10 +144,15 @@
                          <div>
                             <form action="{{url_for('deleta_lotes_mov_op')}}" method="post" type="hidden" onclick="return confirm('Deseja desfazer este movimento?')">
                                 <input type="hidden" name="id" value="{{row.id}}">
+                                <input type="hidden" name="referencia" value="{{row.referencia}}">
                                 <input type="hidden" name="id_lote" value="{{row.id_lote}}">
                                 <input type="hidden" name="quantidade" value="{{row.quantidade}}">
                                 <input type="hidden" name="id_mov" value="{{id_mov}}">
-                                <input type="hidden" name="peso" value="{{row.peso}}">     
+                                <input type="hidden" name="peso" value="{{row.peso}}">
+                                <input type="hidden" name="local" value="{{row.local}}">
+                                <input type="hidden" name="tipo" value="{{row.tipo}}">
+                                <input type="hidden" name="fino" value="{{row.fino}}">
+                                <input type="hidden" name="item" value="{{row.item}}">
                                 <button type="submit" class="btn btn-danger btn-xs"><img
                                     src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
                                 </button>                           
@@ -231,10 +236,10 @@
                     <form method="POST" action="{{url_for('add_lote_mov_op')}}" class="input-group w-50 input-group d-flex justify-content-start ms-4">
 
                     
-                    <input class="form-control" type="text" placeholder="Quantidade" value={{row.quantidade}} name="qtd_parcial">
+                    <input class="form-control" type="text"  autocomplete="off" placeholder="Quantidade" value={{row.quantidade}} name="qtd_parcial">
                 </td>
                 <td>
-                    <input class="form-control" type="text" placeholder="Peso" value={{row.peso}} name="peso_parcial">
+                    <input class="form-control" type="text"  autocomplete="off" placeholder="Peso" value={{row.peso}} name="peso_parcial">
                     
                 </td>
                 <td>

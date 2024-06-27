@@ -121,7 +121,7 @@
                 <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
             {%else%}
                 <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: '{{((row.peso_retornado / row.peso_enviado)*100)}}%'"></div>
+                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.peso_retornado / row.peso_enviado)*100)}}%"></div>
                     
             {%endif%}
                 
@@ -134,7 +134,7 @@
                     <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                 {%else%}
                 <div class="progress" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: '{{((row.fino_retornado / row.fino_enviado)*100)}}%'"></div>
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.fino_retornado / row.fino_enviado)*100)}}%"></div>
                     
             {%endif%}
                 
