@@ -96,19 +96,19 @@
                     <tr class='{{"table-dark" if row.situação == "Encerrada" else ""}}'>                      
                         <td>{{row.numero_op_visual}}</td>
                         <td>{%if row.peso_enviado == 0 %}
-                            <div class="progress bg-dark" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress bg-secondary" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                             {%else%}
-                           <div class="progress bg-dark" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                           <div class="progress bg-secondary" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.peso_retornado / row.peso_enviado)*100)}}%"></div>
                             {%endif%}
                         </td>
                         <td>
                         {%if row.fino_enviado == 0 %}
-                        <div class="progress bg-dark" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress bg-secondary" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                         {%else%}
-                        <div class="progress bg-dark" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress bg-secondary" style= "width: 150px;" role="progressbar" aria-label="Animated striped example" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">
                         <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{((row.fino_retornado / row.fino_enviado)*100)}}%"></div>
                     
                         {%endif%}
